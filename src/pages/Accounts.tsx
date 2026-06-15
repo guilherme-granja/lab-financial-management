@@ -28,28 +28,34 @@ const EMPTY_FORM: AccountPayload = {
   color: '#6366f1',
   icon: '🏦',
   include_in_dashboard: true,
+  initial_balance: 0,
 }
 
 export default function Accounts() {
-  const { accounts, loading, createAccount, updateAccount, deleteAccount, getAccountBalance } = useAccounts()
+  const { accounts, loading, createAccount, updateAccount, deleteAccount, getAccountBalance, getAccountTransactionCount } = useAccounts()
   const [balances, setBalances] = useState<Record<string, number>>({})
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [deleteId, setDeleteId] = useState<string | null>(null)
   const [form, setForm] = useState<AccountPayload>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
+  // Delete state
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleteCount, setDeleteCount] = useState<number>(0)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
   useEffect(() => {
     if (accounts.length === 0) return
-    Promise.all(accounts.map((a) => getAccountBalance(a.id).then((b) => ({ id: a.id, balance: b })))).then(
-      (results) => {
-        const map: Record<string, number> = {}
-        for (const r of results) map[r.id] = r.balance
-        setBalances(map)
-      }
-    )
+    Promise.all(
+      accounts.map((a) => getAccountBalance(a.id, a.initial_balance).then((b) => ({ id: a.id, balance: b })))
+    ).then((results) => {
+      const map: Record<string, number> = {}
+      for (const r of results) map[r.id] = r.balance
+      setBalances(map)
+    })
   }, [accounts]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function openCreate() {
@@ -66,6 +72,7 @@ export default function Accounts() {
       color: account.color,
       icon: account.icon,
       include_in_dashboard: account.include_in_dashboard,
+      initial_balance: account.initial_balance,
     })
     setEditingId(account.id)
     setFormError(null)
@@ -93,14 +100,32 @@ export default function Accounts() {
     }
   }
 
+  async function openDelete(id: string) {
+    setDeleteLoading(true)
+    setDeleteId(id)
+    setDeleteConfirmText('')
+    const count = await getAccountTransactionCount(id)
+    setDeleteCount(count)
+    setDeleteLoading(false)
+  }
+
+  function closeDelete() {
+    setDeleteId(null)
+    setDeleteCount(0)
+    setDeleteConfirmText('')
+  }
+
   async function handleDelete() {
     if (!deleteId) return
     try {
       await deleteAccount(deleteId)
     } finally {
-      setDeleteId(null)
+      closeDelete()
     }
   }
+
+  const hasTransactions = deleteCount > 0
+  const canConfirmDelete = !hasTransactions || deleteConfirmText === 'excluir'
 
   return (
     <div className="space-y-4">
@@ -153,7 +178,7 @@ export default function Accounts() {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-slate-400 hover:text-red-400"
-                      onClick={() => setDeleteId(account.id)}
+                      onClick={() => openDelete(account.id)}
                     >
                       <Trash2 size={13} />
                     </Button>
@@ -233,6 +258,21 @@ export default function Accounts() {
               </div>
             </div>
 
+            <div className="space-y-1">
+              <Label className="text-slate-400 text-xs">Saldo inicial</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={form.initial_balance}
+                onChange={(e) => setForm((f) => ({ ...f, initial_balance: parseFloat(e.target.value) || 0 }))}
+                className="bg-[#0f1117] border-[#2d3148]"
+                placeholder="0,00"
+              />
+              <p className="text-slate-500 text-xs">
+                Valor já existente na conta antes de começar a registrar transações. Não gera uma transação.
+              </p>
+            </div>
+
             <div className="flex items-center gap-3">
               <Switch
                 id="include_in_dashboard"
@@ -257,18 +297,44 @@ export default function Accounts() {
       </Dialog>
 
       {/* Delete Confirm Dialog */}
-      <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+      <Dialog open={!!deleteId} onOpenChange={closeDelete}>
         <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
           <DialogHeader>
             <DialogTitle>Excluir conta</DialogTitle>
           </DialogHeader>
-          <p className="text-slate-400 text-sm">Essa ação não pode ser desfeita. As transações desta conta não serão excluídas.</p>
+
+          {deleteLoading ? (
+            <p className="text-slate-400 text-sm">Verificando transações...</p>
+          ) : hasTransactions ? (
+            <div className="space-y-4">
+              <p className="text-red-400 text-sm">
+                Esta ação não pode ser desfeita. Ao excluir esta conta, todas as {deleteCount}{' '}
+                {deleteCount === 1 ? 'transação vinculada também será excluída permanentemente' : 'transações vinculadas também serão excluídas permanentemente'}.
+              </p>
+              <div className="space-y-1">
+                <Label className="text-slate-400 text-xs">Para confirmar, digite "excluir" abaixo:</Label>
+                <Input
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  className="bg-[#0f1117] border-[#2d3148]"
+                  placeholder="excluir"
+                />
+              </div>
+            </div>
+          ) : (
+            <p className="text-slate-400 text-sm">Essa ação não pode ser desfeita.</p>
+          )}
+
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setDeleteId(null)} className="text-slate-400">
+            <Button variant="ghost" onClick={closeDelete} className="text-slate-400">
               Cancelar
             </Button>
-            <Button onClick={handleDelete} className="bg-red-700 hover:bg-red-800 text-white">
-              Excluir
+            <Button
+              onClick={handleDelete}
+              disabled={!canConfirmDelete || deleteLoading}
+              className="bg-red-700 hover:bg-red-800 text-white disabled:opacity-40"
+            >
+              Excluir conta
             </Button>
           </DialogFooter>
         </DialogContent>

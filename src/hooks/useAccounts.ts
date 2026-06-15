@@ -8,6 +8,7 @@ export interface AccountPayload {
   color: string
   icon: string
   include_in_dashboard: boolean
+  initial_balance: number
 }
 
 export function useAccounts() {
@@ -48,17 +49,25 @@ export function useAccounts() {
     await fetchAccounts()
   }
 
-  async function getAccountBalance(id: string): Promise<number> {
+  async function getAccountBalance(id: string, initialBalance: number): Promise<number> {
     const { data } = await supabase
       .from('transactions')
       .select('amount, type')
       .eq('account_id', id)
       .eq('paid', true)
       .in('type', ['income', 'expense'])
-    if (!data) return 0
+    if (!data) return initialBalance
     const income = data.filter((t) => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
     const expense = data.filter((t) => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
-    return income - expense
+    return initialBalance + income - expense
+  }
+
+  async function getAccountTransactionCount(id: string): Promise<number> {
+    const { count } = await supabase
+      .from('transactions')
+      .select('id', { count: 'exact', head: true })
+      .or(`account_id.eq.${id},to_account_id.eq.${id}`)
+    return count ?? 0
   }
 
   return {
@@ -70,5 +79,6 @@ export function useAccounts() {
     updateAccount,
     deleteAccount,
     getAccountBalance,
+    getAccountTransactionCount,
   }
 }

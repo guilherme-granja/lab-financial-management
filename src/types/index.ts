@@ -20,6 +20,7 @@ export interface Account {
   color: string
   icon: string
   include_in_dashboard: boolean
+  initial_balance: number
   created_at: string
 }
 
