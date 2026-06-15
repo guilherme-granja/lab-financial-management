@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { MoneyInput } from '@/components/ui/money-input'
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   checking: 'Corrente',
@@ -260,13 +261,11 @@ export default function Accounts() {
 
             <div className="space-y-1">
               <Label className="text-slate-400 text-xs">Saldo inicial</Label>
-              <Input
-                type="number"
-                step="0.01"
+              <MoneyInput
+                key={`balance-${editingId ?? 'new'}-${dialogOpen}`}
                 value={form.initial_balance}
-                onChange={(e) => setForm((f) => ({ ...f, initial_balance: parseFloat(e.target.value) || 0 }))}
+                onChange={(v) => setForm((f) => ({ ...f, initial_balance: v }))}
                 className="bg-[#0f1117] border-[#2d3148]"
-                placeholder="0,00"
               />
               <p className="text-slate-500 text-xs">
                 Valor já existente na conta antes de começar a registrar transações. Não gera uma transação.
