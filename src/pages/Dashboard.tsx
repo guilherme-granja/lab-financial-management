@@ -67,6 +67,8 @@ export default function Dashboard() {
         supabase
           .from('transactions')
           .select('*, categories(*), accounts!account_id(*)')
+          .gte('date', monthStart)
+          .lte('date', monthEnd)
           .order('date', { ascending: false })
           .limit(5),
 

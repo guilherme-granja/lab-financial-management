@@ -29,7 +29,7 @@ export interface TransactionPayload {
 const PAGE_SIZE = 20
 
 const SELECT_FIELDS =
-  '*, categories(*), accounts!account_id(*), to_accounts:accounts!to_account_id(*)'
+  '*, categories(*), accounts!account_id(*)'
 
 export function useTransactions(filters: TransactionFilters) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -90,6 +90,8 @@ export function useTransactions(filters: TransactionFilters) {
   }, [filters])
 
   async function createTransaction(payload: TransactionPayload) {
+    const currentMonth = format(new Date(), 'yyyy-MM')
+
     if (payload.recurrence === 'installment' && payload.installments && payload.installments > 1) {
       const groupId = crypto.randomUUID()
       const n = payload.installments
@@ -98,7 +100,7 @@ export function useTransactions(filters: TransactionFilters) {
         const desc = payload.description
           ? `${payload.description} (${i + 1}/${n})`
           : `(${i + 1}/${n})`
-        const isPaid = i === 0 ? payload.paid : false
+        const isPaid = date.startsWith(currentMonth) ? payload.paid : false
         return {
           amount: payload.amount,
           type: payload.type,
@@ -127,7 +129,7 @@ export function useTransactions(filters: TransactionFilters) {
       const n = 24
       const records = Array.from({ length: n }, (_, i) => {
         const date = format(addMonths(parseISO(payload.date), i), 'yyyy-MM-dd')
-        const isPaid = i === 0 ? payload.paid : false
+        const isPaid = date.startsWith(currentMonth) ? payload.paid : false
         return {
           amount: payload.amount,
           type: payload.type,

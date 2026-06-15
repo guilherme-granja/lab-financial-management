@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { format } from 'date-fns'
+import { format, addMonths, parseISO } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import { useTransactions } from '@/hooks/useTransactions'
 import type { TransactionFilters, TransactionPayload } from '@/hooks/useTransactions'
 import { useCategories } from '@/hooks/useCategories'
@@ -247,20 +248,39 @@ export default function Transactions() {
     )
   }
 
+  function navigatePeriod(delta: number) {
+    const current = parseISO(`${filters.period}-01`)
+    const next = addMonths(current, delta)
+    setFilters((f) => ({ ...f, period: format(next, 'yyyy-MM'), periodType: 'monthly' }))
+  }
+
   return (
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-end">
         <div className="space-y-1">
           <Label className="text-slate-400 text-xs">Período</Label>
-          <Input
-            type="month"
-            value={filters.period}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, period: e.target.value, periodType: 'monthly' }))
-            }
-            className="bg-[#1a1d27] border-[#2d3148] text-slate-200 w-40"
-          />
+          <div className="flex items-center gap-0.5 bg-[#1a1d27] border border-[#2d3148] rounded-lg h-9 px-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-[#2d3148]"
+              onClick={() => navigatePeriod(-1)}
+            >
+              <ChevronLeft size={14} />
+            </Button>
+            <span className="text-slate-200 text-sm w-32 text-center capitalize select-none">
+              {format(parseISO(`${filters.period}-01`), 'MMMM yyyy', { locale: ptBR })}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-[#2d3148]"
+              onClick={() => navigatePeriod(1)}
+            >
+              <ChevronRight size={14} />
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-1">
@@ -354,7 +374,11 @@ export default function Transactions() {
                 </TableCell>
               </TableRow>
             )}
-            {transactions.map((tx) => (
+            {transactions.map((tx) => {
+              const toAccount = tx.type === 'transfer' && tx.to_account_id
+                ? (accounts.find((a) => a.id === tx.to_account_id) ?? null)
+                : null
+              return (
               <TableRow key={tx.id} className="border-[#2d3148] hover:bg-[#2d3148]/30">
                 <TableCell className="text-slate-300">{formatDate(tx.date)}</TableCell>
                 <TableCell className="text-slate-300">
@@ -367,9 +391,9 @@ export default function Transactions() {
                       <span>{tx.accounts.icon}</span>
                       <span>{tx.accounts.name}</span>
                     </span>
-                  ) : tx.type === 'transfer' && tx.to_accounts ? (
+                  ) : toAccount ? (
                     <span className="text-slate-500 text-xs">
-                      → {tx.to_accounts.icon} {tx.to_accounts.name}
+                      → {toAccount.icon} {toAccount.name}
                     </span>
                   ) : (
                     '—'
@@ -433,7 +457,8 @@ export default function Transactions() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+              )
+            })}
           </TableBody>
         </Table>
       </div>
