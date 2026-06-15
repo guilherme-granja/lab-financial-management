@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { format, addMonths, parseISO } from 'date-fns'
+import { format, addMonths, parseISO, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns'
 import { supabase } from '@/lib/supabase'
 import type { Transaction, TransactionType, RecurrenceType } from '@/types'
 
@@ -29,7 +29,7 @@ export interface TransactionPayload {
 const PAGE_SIZE = 20
 
 const SELECT_FIELDS =
-  '*, categories(*), accounts!account_id(*)'
+  '*, categories(*), accounts!account_id(*), to_accounts:accounts!to_account_id(*)'
 
 export function useTransactions(filters: TransactionFilters) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -45,15 +45,28 @@ export function useTransactions(filters: TransactionFilters) {
     const from = (page - 1) * PAGE_SIZE
     const to = from + PAGE_SIZE - 1
 
-    const datePattern =
-      filters.periodType === 'monthly'
-        ? `${filters.period}-%`
-        : `${filters.period}%`
+    const [dateStart, dateEnd]: [string, string] = (() => {
+      if (filters.periodType === 'monthly') {
+        const [year, month] = filters.period.split('-').map(Number)
+        const ref = new Date(year, month - 1, 1)
+        return [
+          format(startOfMonth(ref), 'yyyy-MM-dd'),
+          format(endOfMonth(ref), 'yyyy-MM-dd'),
+        ]
+      } else {
+        const ref = new Date(Number(filters.period), 0, 1)
+        return [
+          format(startOfYear(ref), 'yyyy-MM-dd'),
+          format(endOfYear(ref), 'yyyy-MM-dd'),
+        ]
+      }
+    })()
 
     let query = supabase
       .from('transactions')
       .select(SELECT_FIELDS, { count: 'exact' })
-      .like('date', datePattern)
+      .gte('date', dateStart)
+      .lte('date', dateEnd)
       .order('date', { ascending: false })
       .range(from, to)
 
