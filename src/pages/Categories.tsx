@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useCategories } from '@/hooks/useCategories'
-import { Category, CategoryType } from '@/types'
+import type { Category, CategoryType } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'

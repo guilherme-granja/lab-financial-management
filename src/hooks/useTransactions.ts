@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Transaction, TransactionType } from '@/types'
+import type { Transaction, TransactionType } from '@/types'
 
 export interface TransactionFilters {
   period: string        // 'YYYY-MM' for monthly or 'YYYY' for yearly

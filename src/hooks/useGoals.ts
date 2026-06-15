@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Goal, GoalWithProgress, PeriodType } from '@/types'
+import type { Goal, GoalWithProgress, PeriodType } from '@/types'
 
 export function useGoals() {
   const [goals, setGoals] = useState<GoalWithProgress[]>([])

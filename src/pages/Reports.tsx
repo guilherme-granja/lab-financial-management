@@ -3,7 +3,7 @@ import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
 import { useCategories } from '@/hooks/useCategories'
-import { Category } from '@/types'
+import type { Category } from '@/types'
 import { formatCurrency } from '@/lib/formatters'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { MonthlyBarChart, MonthlyDataPoint } from '@/components/charts/MonthlyBarChart'
+import { MonthlyBarChart } from '@/components/charts/MonthlyBarChart'
+import type { MonthlyDataPoint } from '@/components/charts/MonthlyBarChart'
 import { Download } from 'lucide-react'
 
 interface CategoryRow {

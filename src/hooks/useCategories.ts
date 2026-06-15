@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Category, CategoryType } from '@/types'
+import type { Category, CategoryType } from '@/types'
 
 export function useCategories() {
   const [categories, setCategories] = useState<Category[]>([])

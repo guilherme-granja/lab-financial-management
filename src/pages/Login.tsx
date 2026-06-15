@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
-import { Github } from 'lucide-react'
+import { GitBranch } from 'lucide-react'
 
 export default function Login() {
   const { user, loading, signInWithGithub } = useAuth()
@@ -36,7 +36,7 @@ export default function Login() {
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white gap-2"
           disabled={loading}
         >
-          <Github size={18} />
+          <GitBranch size={18} />
           Entrar com GitHub
         </Button>
       </div>
