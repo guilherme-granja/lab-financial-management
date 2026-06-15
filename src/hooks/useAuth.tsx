@@ -15,9 +15,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const handleUser = (u: User | null) => {
+  const handleUser = async (u: User | null) => {
     if (u && u.email !== import.meta.env.VITE_ALLOWED_EMAIL) {
-      supabase.auth.signOut()
+      await supabase.auth.signOut()
       setUser(null)
     } else {
       setUser(u)

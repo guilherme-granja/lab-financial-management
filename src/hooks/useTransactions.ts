@@ -60,6 +60,10 @@ export function useTransactions(filters: TransactionFilters) {
     fetch()
   }, [fetch])
 
+  useEffect(() => {
+    setPage(1)
+  }, [filters])
+
   const createTransaction = async (
     payload: Omit<Transaction, 'id' | 'created_at' | 'categories'>
   ) => {

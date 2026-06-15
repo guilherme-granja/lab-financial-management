@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "deploy": "tsc && vite build && gh-pages -d dist"
+    "deploy": "tsc && vite build && cp dist/index.html dist/404.html && gh-pages -d dist"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.16",

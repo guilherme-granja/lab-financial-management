@@ -108,7 +108,7 @@ export default function Reports() {
     }
 
     load()
-  }, [selectedMonth, categories])
+  }, [selectedMonth])
 
   function exportCSV() {
     const header = 'Categoria,Tipo,Total,Percentual'
