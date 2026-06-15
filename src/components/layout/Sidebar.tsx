@@ -6,6 +6,7 @@ import {
   Tag,
   BarChart2,
   Target,
+  Wallet,
   Menu,
   X,
 } from 'lucide-react'
@@ -15,6 +16,7 @@ import { Button } from '@/components/ui/button'
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/transactions', label: 'Transações', icon: ArrowLeftRight },
+  { to: '/accounts', label: 'Contas', icon: Wallet },
   { to: '/categories', label: 'Categorias', icon: Tag },
   { to: '/reports', label: 'Relatórios', icon: BarChart2 },
   { to: '/goals', label: 'Metas', icon: Target },

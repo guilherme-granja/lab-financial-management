@@ -58,6 +58,8 @@ export default function Reports() {
         .select('amount, type, category_id, categories(name, icon, color)')
         .gte('date', start)
         .lte('date', end)
+        .eq('paid', true)
+        .neq('type', 'transfer')
 
       const txs = txData ?? []
 
@@ -96,6 +98,8 @@ export default function Reports() {
             .select('amount, type')
             .gte('date', s)
             .lte('date', e)
+            .eq('paid', true)
+            .neq('type', 'transfer')
             .then(({ data }) => ({
               month: format(d, 'MMM/yy', { locale: ptBR }),
               receitas: (data ?? []).filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0),

@@ -1,6 +1,8 @@
 export type CategoryType = 'income' | 'expense' | 'both'
-export type TransactionType = 'income' | 'expense'
+export type TransactionType = 'income' | 'expense' | 'transfer'
 export type PeriodType = 'monthly' | 'yearly'
+export type AccountType = 'checking' | 'savings' | 'cash' | 'credit' | 'investment' | 'other'
+export type RecurrenceType = 'none' | 'installment' | 'fixed'
 
 export interface Category {
   id: string
@@ -11,15 +13,36 @@ export interface Category {
   created_at: string
 }
 
+export interface Account {
+  id: string
+  name: string
+  type: AccountType
+  color: string
+  icon: string
+  include_in_dashboard: boolean
+  created_at: string
+}
+
 export interface Transaction {
   id: string
   amount: number
   type: TransactionType
   category_id: string | null
+  account_id: string | null
+  to_account_id: string | null
   description: string | null
   date: string
   created_at: string
+  recurrence: RecurrenceType
+  installments: number | null
+  installment_index: number | null
+  recurrence_group_id: string | null
+  paid: boolean
+  paid_at: string | null
+  paid_amount: number | null
   categories?: Category
+  accounts?: Account
+  to_accounts?: Account
 }
 
 export interface Goal {

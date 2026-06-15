@@ -11,16 +11,17 @@ import { BalanceLineChart } from '@/components/charts/BalanceLineChart'
 import type { BalanceDataPoint } from '@/components/charts/BalanceLineChart'
 import { ExpensePieChart } from '@/components/charts/ExpensePieChart'
 import type { PieDataPoint } from '@/components/charts/ExpensePieChart'
-import { TrendingUp, TrendingDown, Wallet } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, Clock } from 'lucide-react'
 
 interface MonthSummary {
   income: number
   expenses: number
   balance: number
+  pending: number
 }
 
 export default function Dashboard() {
-  const [summary, setSummary] = useState<MonthSummary>({ income: 0, expenses: 0, balance: 0 })
+  const [summary, setSummary] = useState<MonthSummary>({ income: 0, expenses: 0, balance: 0, pending: 0 })
   const [lineData, setLineData] = useState<BalanceDataPoint[]>([])
   const [pieData, setPieData] = useState<PieDataPoint[]>([])
   const [recentTx, setRecentTx] = useState<Transaction[]>([])
@@ -32,30 +33,43 @@ export default function Dashboard() {
       const monthStart = format(startOfMonth(now), 'yyyy-MM-dd')
       const monthEnd = format(endOfMonth(now), 'yyyy-MM-dd')
 
-      const [summaryRes, pieRes, recentRes, historyData] = await Promise.all([
-        // Current month totals
+      const { data: accountsData } = await supabase
+        .from('accounts')
+        .select('id')
+        .eq('include_in_dashboard', true)
+
+      const dashboardIds: string[] = (accountsData ?? []).map((a: { id: string }) => a.id)
+
+      function accountFilter() {
+        if (dashboardIds.length === 0) return 'account_id.is.null'
+        return `account_id.is.null,account_id.in.(${dashboardIds.join(',')})`
+      }
+
+      const [summaryRes, pieRes, recentRes, historyData, pendingRes] = await Promise.all([
         supabase
           .from('transactions')
           .select('amount, type')
           .gte('date', monthStart)
-          .lte('date', monthEnd),
+          .lte('date', monthEnd)
+          .eq('paid', true)
+          .neq('type', 'transfer')
+          .or(accountFilter()),
 
-        // Expenses by category this month
         supabase
           .from('transactions')
           .select('amount, categories(name, color)')
           .eq('type', 'expense')
+          .eq('paid', true)
           .gte('date', monthStart)
-          .lte('date', monthEnd),
+          .lte('date', monthEnd)
+          .or(accountFilter()),
 
-        // 5 most recent transactions
         supabase
           .from('transactions')
-          .select('*, categories(*)')
+          .select('*, categories(*), accounts!account_id(*)')
           .order('date', { ascending: false })
           .limit(5),
 
-        // Last 6 months history
         Promise.all(
           Array.from({ length: 6 }, (_, i) => {
             const d = subMonths(now, 5 - i)
@@ -66,38 +80,47 @@ export default function Dashboard() {
               .select('amount, type')
               .gte('date', start)
               .lte('date', end)
+              .eq('paid', true)
+              .neq('type', 'transfer')
+              .or(accountFilter())
               .then(({ data }) => ({
                 month: format(d, 'MMM/yy', { locale: ptBR }),
                 data: data ?? [],
               }))
           })
         ),
+
+        supabase
+          .from('transactions')
+          .select('amount')
+          .gte('date', monthStart)
+          .lte('date', monthEnd)
+          .eq('paid', false)
+          .neq('type', 'transfer')
+          .or(accountFilter()),
       ])
 
-      // Summary
       const txs = summaryRes.data ?? []
-      const income = txs.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-      const expenses = txs.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-      setSummary({ income, expenses, balance: income - expenses })
+      const income = txs.filter((t) => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
+      const expenses = txs.filter((t) => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
+      const pending = (pendingRes.data ?? []).reduce((s, t) => s + Number(t.amount), 0)
+      setSummary({ income, expenses, balance: income - expenses, pending })
 
-      // Pie chart — group by category
       const catMap: Record<string, { name: string; color: string; total: number }> = {}
       for (const tx of pieRes.data ?? []) {
         const cat = tx.categories as unknown as Category | null
         const key = cat?.name ?? 'Sem categoria'
         if (!catMap[key]) catMap[key] = { name: key, color: cat?.color ?? '#6366f1', total: 0 }
-        catMap[key].total += tx.amount
+        catMap[key].total += Number(tx.amount)
       }
       setPieData(Object.values(catMap).map((c) => ({ name: c.name, value: c.total, color: c.color })))
 
-      // Recent transactions
-      setRecentTx((recentRes.data as Transaction[]) ?? [])
+      setRecentTx((recentRes.data as unknown as Transaction[]) ?? [])
 
-      // Line chart
       setLineData(
         historyData.map(({ month, data }) => {
-          const inc = data.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-          const exp = data.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+          const inc = data.filter((t) => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
+          const exp = data.filter((t) => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
           return { month, balance: inc - exp }
         })
       )
@@ -115,7 +138,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-[#1a1d27] border-[#2d3148]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-slate-400 text-sm font-medium">Receitas do mês</CardTitle>
@@ -145,6 +168,16 @@ export default function Dashboard() {
             <p className={`text-2xl font-bold ${summary.balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
               {formatCurrency(summary.balance)}
             </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#1a1d27] border-[#2d3148]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-slate-400 text-sm font-medium">A pagar este mês</CardTitle>
+            <Clock size={16} className="text-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-yellow-500">{formatCurrency(summary.pending)}</p>
           </CardContent>
         </Card>
       </div>
@@ -208,17 +241,28 @@ export default function Dashboard() {
                   </TableCell>
                   <TableCell>
                     <Badge
-                      className={tx.type === 'income'
-                        ? 'bg-green-950 text-green-400 border-green-800'
-                        : 'bg-red-950 text-red-400 border-red-800'
+                      className={
+                        tx.type === 'income'
+                          ? 'bg-green-950 text-green-400 border-green-800'
+                          : tx.type === 'transfer'
+                          ? 'bg-blue-950 text-blue-400 border-blue-800'
+                          : 'bg-red-950 text-red-400 border-red-800'
                       }
                       variant="outline"
                     >
-                      {tx.type === 'income' ? 'Receita' : 'Despesa'}
+                      {tx.type === 'income' ? 'Receita' : tx.type === 'transfer' ? 'Transferência' : 'Despesa'}
                     </Badge>
                   </TableCell>
-                  <TableCell className={`text-right font-medium ${tx.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
-                    {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                  <TableCell
+                    className={`text-right font-medium ${
+                      tx.type === 'income'
+                        ? 'text-green-500'
+                        : tx.type === 'transfer'
+                        ? 'text-blue-400'
+                        : 'text-red-500'
+                    }`}
+                  >
+                    {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}{formatCurrency(tx.amount)}
                   </TableCell>
                 </TableRow>
               ))}
