@@ -10,7 +10,7 @@ import { formatCurrency, formatDate } from '@/lib/formatters'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -74,7 +74,7 @@ export default function Transactions() {
     updateTransactionPayment,
     deleteTransaction,
   } = useTransactions(filters)
-  const { categories } = useCategories()
+  const { categories, categoryTree } = useCategories()
   const { accounts } = useAccounts()
 
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -205,10 +205,6 @@ export default function Transactions() {
     }
   }
 
-  const availableCategories = categories.filter(
-    (c) => c.type === form.type || c.type === 'both'
-  )
-
   function typeColor(type: TransactionType) {
     if (type === 'income') return 'bg-green-950 text-green-400 border-green-800'
     if (type === 'expense') return 'bg-red-950 text-red-400 border-red-800'
@@ -329,10 +325,25 @@ export default function Transactions() {
             </SelectTrigger>
             <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
               <SelectItem value="all">Todas</SelectItem>
-              {categories.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.icon} {c.name}
-                </SelectItem>
+              {categoryTree.map((parent) => (
+                <SelectGroup key={parent.id}>
+                  {(parent.subcategories?.length ?? 0) > 0 ? (
+                    <>
+                      <SelectLabel className="text-slate-500 text-xs px-2 py-1">
+                        {parent.icon} {parent.name}
+                      </SelectLabel>
+                      {parent.subcategories!.map((sub) => (
+                        <SelectItem key={sub.id} value={sub.id} className="pl-6">
+                          {sub.icon} {sub.name}
+                        </SelectItem>
+                      ))}
+                    </>
+                  ) : (
+                    <SelectItem key={parent.id} value={parent.id}>
+                      {parent.icon} {parent.name}
+                    </SelectItem>
+                  )}
+                </SelectGroup>
               ))}
             </SelectContent>
           </Select>
@@ -602,11 +613,30 @@ export default function Transactions() {
                     <SelectValue placeholder="Selecionar categoria" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
-                    {availableCategories.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.icon} {c.name}
-                      </SelectItem>
-                    ))}
+                    {categoryTree
+                      .filter((p) => p.type === form.type || p.type === 'both')
+                      .map((parent) => (
+                        <SelectGroup key={parent.id}>
+                          {(parent.subcategories?.length ?? 0) > 0 ? (
+                            <>
+                              <SelectLabel className="text-slate-500 text-xs px-2 py-1">
+                                {parent.icon} {parent.name}
+                              </SelectLabel>
+                              {parent.subcategories!
+                                .filter((s) => s.type === form.type || s.type === 'both')
+                                .map((sub) => (
+                                  <SelectItem key={sub.id} value={sub.id} className="pl-6">
+                                    {sub.icon} {sub.name}
+                                  </SelectItem>
+                                ))}
+                            </>
+                          ) : (
+                            <SelectItem key={parent.id} value={parent.id}>
+                              {parent.icon} {parent.name}
+                            </SelectItem>
+                          )}
+                        </SelectGroup>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
