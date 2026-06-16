@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CreditCard, X } from 'lucide-react'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import type { SearchableSelectOption } from '@/components/ui/searchable-select'
@@ -95,6 +96,8 @@ export default function Transactions() {
     updateTransaction,
     updateTransactionPayment,
     deleteTransaction,
+    deleteTransactionGroupUnpaid,
+    deleteTransactionGroup,
   } = useTransactions(filters)
   const { categories, categoryTree } = useCategories()
   const { accounts } = useAccounts()
@@ -103,6 +106,8 @@ export default function Transactions() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleteScope, setDeleteScope] = useState<'only' | 'unpaid' | 'all'>('only')
+  const [deleteTx, setDeleteTx] = useState<Transaction | null>(null)
   const [payingTx, setPayingTx] = useState<Transaction | null>(null)
   const [payForm, setPayForm] = useState<PayFormState>({ paid_at: '', paid_amount: '' })
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
@@ -214,6 +219,22 @@ export default function Transactions() {
       await deleteTransaction(deleteId)
     } finally {
       setDeleteId(null)
+    }
+  }
+
+  async function handleRecurrentDelete() {
+    if (!deleteTx) return
+    try {
+      if (deleteScope === 'only') {
+        await deleteTransaction(deleteTx.id)
+      } else if (deleteScope === 'unpaid') {
+        await deleteTransactionGroupUnpaid(deleteTx.id, deleteTx.recurrence_group_id!)
+      } else {
+        await deleteTransactionGroup(deleteTx.recurrence_group_id!)
+      }
+    } finally {
+      setDeleteTx(null)
+      setDeleteScope('only')
     }
   }
 
@@ -647,7 +668,14 @@ export default function Transactions() {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-slate-400 hover:text-red-400"
-                      onClick={() => setDeleteId(tx.id)}
+                      onClick={() => {
+                        if (tx.recurrence_group_id) {
+                          setDeleteTx(tx)
+                          setDeleteScope('only')
+                        } else {
+                          setDeleteId(tx.id)
+                        }
+                      }}
                     >
                       <Trash2 size={14} />
                     </Button>
@@ -968,6 +996,42 @@ export default function Transactions() {
               Cancelar
             </Button>
             <Button onClick={handleDelete} className="bg-red-700 hover:bg-red-800 text-white">
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Recurrent Delete Dialog */}
+      <Dialog open={!!deleteTx} onOpenChange={() => setDeleteTx(null)}>
+        <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
+          <DialogHeader>
+            <DialogTitle>Excluir transação recorrente</DialogTitle>
+          </DialogHeader>
+          <p className="text-slate-400 text-sm">
+            Esta transação faz parte de um grupo recorrente. O que deseja excluir?
+          </p>
+          <RadioGroup
+            value={deleteScope}
+            onValueChange={(v) => setDeleteScope(v as typeof deleteScope)}
+            className="space-y-2"
+          >
+            {[
+              { value: 'only',   label: 'Somente esta transação' },
+              { value: 'unpaid', label: 'Esta e as pendentes do grupo (não pagas)' },
+              { value: 'all',    label: 'Todas as transações do grupo' },
+            ].map(({ value, label }) => (
+              <div key={value} className="flex items-center gap-3 p-3 rounded-lg border border-[#2d3148] cursor-pointer hover:border-indigo-600 transition-colors">
+                <RadioGroupItem value={value} id={value} className="border-slate-600" />
+                <Label htmlFor={value} className="text-slate-200 text-sm cursor-pointer">{label}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDeleteTx(null)} className="text-slate-400">
+              Cancelar
+            </Button>
+            <Button onClick={handleRecurrentDelete} className="bg-red-700 hover:bg-red-800 text-white">
               Excluir
             </Button>
           </DialogFooter>
