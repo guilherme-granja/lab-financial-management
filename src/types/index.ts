@@ -10,7 +10,9 @@ export interface Category {
   color: string
   icon: string
   type: CategoryType
+  parent_id: string | null
   created_at: string
+  subcategories?: Category[]
 }
 
 export interface Account {
