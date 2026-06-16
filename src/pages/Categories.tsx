@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, AlertTriangle, Loader2 } from 'lucide-react'
 
 const CATEGORY_TYPE_LABELS: Record<CategoryType, string> = {
   income: 'Receita',
@@ -33,11 +33,18 @@ interface FormState {
 const EMPTY_FORM: FormState = { name: '', icon: '📦', color: '#6366f1', type: 'expense', parent_id: null }
 
 export default function Categories() {
-  const { categoryTree, loading, createCategory, updateCategory, deleteCategory } = useCategories()
+  const { categoryTree, categories, loading, createCategory, updateCategory, deleteCategory, checkCategoryUsage, deleteCategoryWithTransfer } = useCategories()
+
+  type DeleteStage = 'checking' | 'confirm' | 'warn' | 'transfer'
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null)
+  const [deleteStage, setDeleteStage] = useState<DeleteStage>('checking')
+  const [deleteCount, setDeleteCount] = useState(0)
+  const [transferTargetId, setTransferTargetId] = useState('')
+  const [transferring, setTransferring] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
@@ -109,24 +116,59 @@ export default function Categories() {
     }
   }
 
-  function requestDelete(cat: Category, isParent: boolean) {
+  function closeDeleteDialog() {
+    setDeleteId(null)
+    setDeletingCategory(null)
+    setDeleteStage('checking')
+    setDeleteCount(0)
+    setTransferTargetId('')
+    setDeleteError(null)
+  }
+
+  async function requestDelete(cat: Category, isParent: boolean) {
     if (isParent && (cat.subcategories?.length ?? 0) > 0) {
       setDeleteError('Remova as subcategorias antes de excluir o grupo.')
-      setDeleteId(null)
       return
     }
-    setDeleteError(null)
+
     setDeleteId(cat.id)
+    setDeletingCategory(cat)
+    setDeleteStage('checking')
+    setDeleteError(null)
+    setTransferTargetId('')
+
+    try {
+      const count = await checkCategoryUsage(cat.id)
+      setDeleteCount(count)
+      setDeleteStage(count === 0 ? 'confirm' : 'warn')
+    } catch (e) {
+      setDeleteError((e as Error).message)
+      setDeleteStage('confirm')
+    }
   }
 
   async function handleDelete() {
     if (!deleteId) return
     try {
       await deleteCategory(deleteId)
-      setDeleteId(null)
     } catch (e) {
       setDeleteError((e as Error).message)
-      setDeleteId(null)
+    } finally {
+      closeDeleteDialog()
+    }
+  }
+
+  async function handleTransferAndDelete() {
+    if (!deleteId || !transferTargetId) return
+    setTransferring(true)
+    setDeleteError(null)
+    try {
+      await deleteCategoryWithTransfer(deleteId, transferTargetId)
+      closeDeleteDialog()
+    } catch (e) {
+      setDeleteError((e as Error).message)
+    } finally {
+      setTransferring(false)
     }
   }
 
@@ -351,25 +393,116 @@ export default function Categories() {
       </Dialog>
 
       {/* Delete Confirm Dialog */}
-      <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+      <Dialog open={!!deleteId} onOpenChange={closeDeleteDialog}>
         <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
-          <DialogHeader>
-            <DialogTitle>Excluir categoria</DialogTitle>
-            <DialogDescription className="sr-only">
-              Confirme a exclusão desta categoria e a transferência de suas transações.
-            </DialogDescription>
-          </DialogHeader>
-          <p className="text-slate-400 text-sm">
-            Essa ação não pode ser desfeita. Transações vinculadas perderão a categoria.
-          </p>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setDeleteId(null)} className="text-slate-400">
-              Cancelar
-            </Button>
-            <Button onClick={handleDelete} className="bg-red-700 hover:bg-red-800 text-white">
-              Excluir
-            </Button>
-          </DialogFooter>
+          <DialogDescription className="sr-only">
+            Confirme a exclusão desta categoria e a transferência de suas transações.
+          </DialogDescription>
+
+          {deleteStage === 'checking' && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Verificando uso...</DialogTitle>
+              </DialogHeader>
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="animate-spin text-slate-400" size={28} />
+              </div>
+            </>
+          )}
+
+          {deleteStage === 'confirm' && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Excluir categoria</DialogTitle>
+              </DialogHeader>
+              <p className="text-slate-400 text-sm">
+                Tem certeza que deseja excluir <span className="text-slate-200 font-medium">
+                {deletingCategory?.icon} {deletingCategory?.name}</span>? Essa ação não pode ser desfeita.
+              </p>
+              {deleteError && <p className="text-red-400 text-sm">{deleteError}</p>}
+              <DialogFooter>
+                <Button variant="ghost" onClick={closeDeleteDialog} className="text-slate-400">Cancelar</Button>
+                <Button onClick={handleDelete} className="bg-red-700 hover:bg-red-800 text-white">Excluir</Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {deleteStage === 'warn' && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Categoria em uso</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3 bg-yellow-950/40 border border-yellow-800 rounded-lg p-3">
+                  <AlertTriangle className="text-yellow-400 mt-0.5 flex-shrink-0" size={18} />
+                  <p className="text-yellow-200 text-sm">
+                    A categoria <span className="font-semibold">{deletingCategory?.icon} {deletingCategory?.name}</span> está
+                    vinculada a <span className="font-semibold">{deleteCount} {deleteCount === 1 ? 'transação' : 'transações'}</span>.
+                    Para excluí-la, você precisa transferir essas transações para outra categoria.
+                  </p>
+                </div>
+              </div>
+              {deleteError && <p className="text-red-400 text-sm">{deleteError}</p>}
+              <DialogFooter>
+                <Button variant="ghost" onClick={closeDeleteDialog} className="text-slate-400">Cancelar</Button>
+                <Button
+                  onClick={() => setDeleteStage('transfer')}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                >
+                  Continuar
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {deleteStage === 'transfer' && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Transferir transações</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-slate-400 text-sm">
+                  Selecione a categoria para onde as <span className="text-slate-200 font-medium">
+                  {deleteCount} {deleteCount === 1 ? 'transação' : 'transações'}</span> serão transferidas
+                  antes da exclusão de <span className="text-slate-200 font-medium">
+                  {deletingCategory?.icon} {deletingCategory?.name}</span>.
+                </p>
+                <div className="space-y-1">
+                  <Label className="text-slate-400 text-xs">Categoria de destino</Label>
+                  <Select value={transferTargetId} onValueChange={setTransferTargetId}>
+                    <SelectTrigger className="bg-[#0f1117] border-[#2d3148]">
+                      <SelectValue placeholder="Selecionar categoria" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1d27] border-[#2d3148] max-h-60 overflow-y-auto">
+                      {categories
+                        .filter((c) =>
+                          c.id !== deleteId &&
+                          (c.type === deletingCategory?.type || c.type === 'both' || deletingCategory?.type === 'both')
+                        )
+                        .map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.icon} {c.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {deleteError && <p className="text-red-400 text-sm">{deleteError}</p>}
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => setDeleteStage('warn')} className="text-slate-400">
+                  Voltar
+                </Button>
+                <Button
+                  onClick={handleTransferAndDelete}
+                  disabled={!transferTargetId || transferring}
+                  className="bg-red-700 hover:bg-red-800 text-white"
+                >
+                  {transferring ? 'Transferindo...' : 'Transferir e excluir'}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
