@@ -18,10 +18,11 @@ import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CreditCard, X } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CreditCard, X, AlertTriangle } from 'lucide-react'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import type { SearchableSelectOption } from '@/components/ui/searchable-select'
 import { MoneyInput } from '@/components/ui/money-input'
+import { checkDuplicate } from '@/hooks/useDuplicateCheck'
 
 const CURRENT_MONTH = format(new Date(), 'yyyy-MM')
 
@@ -113,11 +114,13 @@ export default function Transactions() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [duplicateWarning, setDuplicateWarning] = useState<Transaction | null>(null)
 
   function openCreate() {
     setForm(EMPTY_FORM)
     setEditingId(null)
     setFormError(null)
+    setDuplicateWarning(null)
     setDialogOpen(true)
   }
 
@@ -137,6 +140,7 @@ export default function Transactions() {
     })
     setEditingId(tx.id)
     setFormError(null)
+    setDuplicateWarning(null)
     setDialogOpen(true)
   }
 
@@ -177,6 +181,21 @@ export default function Transactions() {
       return
     }
 
+    if (form.description?.trim() && !isNaN(amount)) {
+      const duplicate = await checkDuplicate({
+        type: form.type,
+        amount,
+        date: form.date,
+        description: form.description,
+        excludeId: editingId ?? undefined,
+      })
+      if (duplicate && !duplicateWarning) {
+        setDuplicateWarning(duplicate)
+        return
+      }
+    }
+
+    setDuplicateWarning(null)
     setSaving(true)
     setFormError(null)
 
@@ -714,7 +733,7 @@ export default function Transactions() {
       )}
 
       {/* Create / Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) setDuplicateWarning(null); setDialogOpen(open) }}>
         <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingId ? 'Editar transação' : 'Nova transação'}</DialogTitle>
@@ -725,6 +744,25 @@ export default function Transactions() {
 
           <div className="space-y-4 py-2">
             {formError && <p className="text-red-400 text-sm">{formError}</p>}
+
+            {duplicateWarning && (
+              <div className="flex items-start gap-3 bg-yellow-950/40 border border-yellow-800 rounded-lg p-3">
+                <AlertTriangle className="text-yellow-400 mt-0.5 flex-shrink-0" size={16} />
+                <div className="space-y-1">
+                  <p className="text-yellow-200 text-sm font-medium">Possível transação duplicada</p>
+                  <p className="text-yellow-300/80 text-xs">
+                    Já existe uma transação com esses dados em{' '}
+                    <span className="font-semibold">{formatDate(duplicateWarning.date)}</span>
+                    {duplicateWarning.description && ` — "${duplicateWarning.description}"`}
+                    {' '}no valor de{' '}
+                    <span className="font-semibold">{formatCurrency(duplicateWarning.amount)}</span>.
+                  </p>
+                  <p className="text-yellow-400/70 text-xs">
+                    Clique em <span className="font-semibold">Salvar</span> novamente para confirmar mesmo assim.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
