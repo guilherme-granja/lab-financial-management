@@ -1,6 +1,7 @@
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { useTransactions } from './useTransactions'
+import type { TransactionPayload } from './useTransactions'
 import { mockSupabaseResult, mockLike, mockGte, mockLte, mockFrom } from '@/test/mocks/supabase'
 
 vi.mock('@/lib/supabase', () => import('@/test/mocks/supabase'))
@@ -105,5 +106,134 @@ describe('useTransactions', () => {
       expect(mockGte).toHaveBeenCalled()
       expect(mockLte).toHaveBeenCalled()
     })
+  })
+
+  it('createTransaction simples não lança erro', async () => {
+    mockSupabaseResult({ data: [], count: 0 })
+    const { result } = renderHook(() => useTransactions(DEFAULT_FILTERS))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    const payload: TransactionPayload = {
+      amount: 100,
+      type: 'expense',
+      category_id: null,
+      account_id: null,
+      to_account_id: null,
+      description: 'Test',
+      date: '2026-06-15',
+      recurrence: 'none',
+      installments: null,
+      paid: true,
+      paid_at: '2026-06-15',
+      paid_amount: 100,
+    }
+    await expect(result.current.createTransaction(payload)).resolves.toBeUndefined()
+  })
+
+  it('createTransaction lança erro se Supabase falhar', async () => {
+    mockSupabaseResult({ data: null, error: { message: 'insert error' } })
+    const { result } = renderHook(() => useTransactions(DEFAULT_FILTERS))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    const payload: TransactionPayload = {
+      amount: 50,
+      type: 'income',
+      category_id: null,
+      account_id: null,
+      to_account_id: null,
+      description: null,
+      date: '2026-06-01',
+      recurrence: 'none',
+      installments: null,
+      paid: false,
+      paid_at: null,
+      paid_amount: null,
+    }
+    await expect(result.current.createTransaction(payload)).rejects.toThrow('insert error')
+  })
+
+  it('createTransaction parcelado cria múltiplos registros', async () => {
+    mockSupabaseResult({ data: [], count: 0 })
+    const { result } = renderHook(() => useTransactions(DEFAULT_FILTERS))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    const payload: TransactionPayload = {
+      amount: 300,
+      type: 'expense',
+      category_id: null,
+      account_id: null,
+      to_account_id: null,
+      description: 'Parcelado',
+      date: '2026-06-01',
+      recurrence: 'installment',
+      installments: 3,
+      paid: false,
+      paid_at: null,
+      paid_amount: null,
+    }
+    await expect(result.current.createTransaction(payload)).resolves.toBeUndefined()
+  })
+
+  it('createTransaction fixo cria 24 registros', async () => {
+    mockSupabaseResult({ data: [], count: 0 })
+    const { result } = renderHook(() => useTransactions(DEFAULT_FILTERS))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    const payload: TransactionPayload = {
+      amount: 500,
+      type: 'expense',
+      category_id: null,
+      account_id: null,
+      to_account_id: null,
+      description: 'Aluguel',
+      date: '2026-06-01',
+      recurrence: 'fixed',
+      installments: null,
+      paid: false,
+      paid_at: null,
+      paid_amount: null,
+    }
+    await expect(result.current.createTransaction(payload)).resolves.toBeUndefined()
+  })
+
+  it('updateTransaction não lança erro', async () => {
+    mockSupabaseResult({ data: [], count: 0 })
+    const { result } = renderHook(() => useTransactions(DEFAULT_FILTERS))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    await expect(
+      result.current.updateTransaction('tx-1', { amount: 200 })
+    ).resolves.toBeUndefined()
+  })
+
+  it('updateTransaction lança erro se Supabase falhar', async () => {
+    mockSupabaseResult({ data: null, error: { message: 'update failed' } })
+    const { result } = renderHook(() => useTransactions(DEFAULT_FILTERS))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    await expect(
+      result.current.updateTransaction('tx-1', { amount: 200 })
+    ).rejects.toThrow('update failed')
+  })
+
+  it('updateTransactionPayment não lança erro', async () => {
+    mockSupabaseResult({ data: [], count: 0 })
+    const { result } = renderHook(() => useTransactions(DEFAULT_FILTERS))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    await expect(
+      result.current.updateTransactionPayment('tx-1', '2026-06-15', 100)
+    ).resolves.toBeUndefined()
+  })
+
+  it('deleteTransaction não lança erro', async () => {
+    mockSupabaseResult({ data: [], count: 0 })
+    const { result } = renderHook(() => useTransactions(DEFAULT_FILTERS))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    await expect(
+      result.current.deleteTransaction('tx-1')
+    ).resolves.toBeUndefined()
+  })
+
+  it('deleteTransaction lança erro se Supabase falhar', async () => {
+    mockSupabaseResult({ data: null, error: { message: 'delete failed' } })
+    const { result } = renderHook(() => useTransactions(DEFAULT_FILTERS))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    await expect(
+      result.current.deleteTransaction('tx-1')
+    ).rejects.toThrow('delete failed')
   })
 })
