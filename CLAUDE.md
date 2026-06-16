@@ -26,29 +26,25 @@
 ## Convenções do projeto
 
 - Componentes em PascalCase, arquivos em kebab-case
-- Usar sempre a skill `.claude/skills/frontend-design` ao criar ou editar componentes
-- Estados obrigatórios em toda operação Supabase: `loading`, `success`, `error`
+- Componentes novos: consultar `.claude/skills/frontend-design/SKILL.md` para tokens de cor, padrões de Card/Dialog/Grid e checklist de entrega
+- Estados obrigatórios em toda operação Supabase: `loading`, `error`, `empty` em queries; `saving`, `formError` em mutações
 - Chamadas ao Supabase centralizadas em hooks ou services — nunca diretamente em componentes de UI
 - Sem `any` em TypeScript — use tipos específicos ou `unknown`
 - Imports organizados: externos → internos → tipos
 
 ---
 
-## Fluxo obrigatório ao finalizar qualquer task
+## Code Review
 
-Antes de executar `git commit` ou `git push`, execute o **Code Review automático** de tudo que foi alterado.
+Executar apenas quando o usuário disser "review" ou "faz o review".
 
 ```
-1. Identificar os arquivos modificados na task atual via: git diff --name-only
+1. git diff --name-only para identificar arquivos alterados
 2. Ler cada arquivo alterado
-3. Executar o Code Review seguindo a spec em: .claude/code-review-spec.md
-4. Apresentar o relatório completo ao usuário
-5. Aguardar aprovação ou corrigir os problemas apontados
-6. Somente após aprovação: git add → git commit → git push
+3. Aplicar critérios em .claude/code-review-spec.md
+4. Apresentar relatório ao usuário
+5. Aguardar aprovação antes de commitar
 ```
-
-> NUNCA pule o Code Review. Se o usuário pedir para commitar diretamente, informe que o
-> processo exige o review primeiro e pergunte se deseja prosseguir mesmo assim.
 
 ---
 

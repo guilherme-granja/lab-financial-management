@@ -25,3 +25,4 @@ __recovery/
 
 modules/
 node_modules/
+package-lock.json
