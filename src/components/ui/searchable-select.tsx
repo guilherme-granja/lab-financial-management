@@ -1,8 +1,9 @@
 import * as React from "react"
+import * as PopoverPrimitive from "@radix-ui/react-popover"
 import { Check, ChevronDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Popover, PopoverTrigger } from "@/components/ui/popover"
 import {
   Command,
   CommandEmpty,
@@ -91,10 +92,11 @@ export function SearchableSelect({
           <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
         </button>
       </PopoverTrigger>
-      <PopoverContent
-        className="w-[var(--radix-popover-trigger-width)] p-0"
+      <PopoverPrimitive.Content
         align="start"
+        sideOffset={4}
         onOpenAutoFocus={(e) => { e.preventDefault(); inputRef.current?.focus() }}
+        className="z-50 w-[var(--radix-popover-trigger-width)] p-0 rounded-md border border-[#2d3148] bg-[#0f1117] shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
       >
         <Command shouldFilter={false}>
           <CommandInput
@@ -144,7 +146,7 @@ export function SearchableSelect({
             )}
           </CommandList>
         </Command>
-      </PopoverContent>
+      </PopoverPrimitive.Content>
     </Popover>
   )
 }
