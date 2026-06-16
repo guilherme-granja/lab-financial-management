@@ -5,6 +5,7 @@ import Login from '@/pages/Login'
 import AuthCallback from '@/pages/AuthCallback'
 import Dashboard from '@/pages/Dashboard'
 import Transactions from '@/pages/Transactions'
+import Duplicates from '@/pages/Duplicates'
 import Categories from '@/pages/Categories'
 import Reports from '@/pages/Reports'
 import Goals from '@/pages/Goals'
@@ -45,6 +46,7 @@ export const router = createBrowserRouter(
       children: [
         { path: '/', element: <Dashboard /> },
         { path: '/transactions', element: <Transactions /> },
+        { path: '/duplicates', element: <Duplicates /> },
         { path: '/categories', element: <Categories /> },
         { path: '/reports', element: <Reports /> },
         { path: '/goals', element: <Goals /> },

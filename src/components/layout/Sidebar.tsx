@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
   ArrowLeftRight,
+  Copy,
   Tag,
   Tags,
   BarChart2,
@@ -17,6 +18,7 @@ import { Button } from '@/components/ui/button'
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/transactions', label: 'Transações', icon: ArrowLeftRight },
+  { to: '/duplicates', label: 'Duplicidades', icon: Copy },
   { to: '/accounts', label: 'Contas', icon: Wallet },
   { to: '/categories', label: 'Categorias', icon: Tag },
   { to: '/tags', label: 'Tags', icon: Tags },
