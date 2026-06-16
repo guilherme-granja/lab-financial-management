@@ -9,6 +9,7 @@ export interface TransactionFilters {
   type: TransactionType | 'all'
   categoryId: string
   status: 'all' | 'paid' | 'unpaid'
+  account_id: string | null
 }
 
 export interface TransactionPayload {
@@ -80,6 +81,9 @@ export function useTransactions(filters: TransactionFilters) {
       query = query.eq('paid', true)
     } else if (filters.status === 'unpaid') {
       query = query.eq('paid', false)
+    }
+    if (filters.account_id) {
+      query = query.eq('account_id', filters.account_id)
     }
 
     const { data, error: err, count } = await query

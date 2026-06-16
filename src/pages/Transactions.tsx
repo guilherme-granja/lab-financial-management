@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { format, addMonths, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { useSearchParams } from 'react-router-dom'
 import { useTransactions } from '@/hooks/useTransactions'
 import type { TransactionFilters, TransactionPayload } from '@/hooks/useTransactions'
 import { useCategories } from '@/hooks/useCategories'
@@ -55,13 +56,31 @@ interface PayFormState {
 }
 
 export default function Transactions() {
+  const [searchParams] = useSearchParams()
+
   const [filters, setFilters] = useState<TransactionFilters>({
     period: CURRENT_MONTH,
     periodType: 'monthly',
     type: 'all',
     categoryId: 'all',
     status: 'all',
+    account_id: null,
   })
+
+  useEffect(() => {
+    const accountId = searchParams.get('account_id')
+    const type = searchParams.get('type')
+    const month = searchParams.get('month')
+
+    if (accountId || type || month) {
+      setFilters((f) => ({
+        ...f,
+        ...(accountId ? { account_id: accountId } : {}),
+        ...(type ? { type: type as TransactionType | 'all' } : {}),
+        ...(month ? { period: month } : {}),
+      }))
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const {
     transactions,

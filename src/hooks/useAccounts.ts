@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { format, endOfMonth, parseISO } from 'date-fns'
 import { supabase } from '@/lib/supabase'
 import type { Account, AccountType } from '@/types'
 
@@ -70,6 +71,31 @@ export function useAccounts() {
     return count ?? 0
   }
 
+  async function getAccountStats(
+    accountId: string,
+    month: string,
+  ): Promise<{ income: number; expense: number; transfer: number }> {
+    const from = `${month}-01`
+    const to = format(endOfMonth(parseISO(from)), 'yyyy-MM-dd')
+
+    const { data } = await supabase
+      .from('transactions')
+      .select('type, account_id, to_account_id')
+      .or(`account_id.eq.${accountId},to_account_id.eq.${accountId}`)
+      .gte('date', from)
+      .lte('date', to)
+
+    const rows = data ?? []
+    return {
+      income: rows.filter((r) => r.account_id === accountId && r.type === 'income').length,
+      expense: rows.filter((r) => r.account_id === accountId && r.type === 'expense').length,
+      transfer: rows.filter(
+        (r) =>
+          (r.account_id === accountId || r.to_account_id === accountId) && r.type === 'transfer',
+      ).length,
+    }
+  }
+
   return {
     accounts,
     loading,
@@ -80,5 +106,6 @@ export function useAccounts() {
     deleteAccount,
     getAccountBalance,
     getAccountTransactionCount,
+    getAccountStats,
   }
 }

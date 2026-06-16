@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { format } from 'date-fns'
 import { useAccounts } from '@/hooks/useAccounts'
 import type { Account, AccountType } from '@/types'
 import type { AccountPayload } from '@/hooks/useAccounts'
@@ -32,9 +34,13 @@ const EMPTY_FORM: AccountPayload = {
   initial_balance: 0,
 }
 
+const currentMonth = format(new Date(), 'yyyy-MM')
+
 export default function Accounts() {
-  const { accounts, loading, createAccount, updateAccount, deleteAccount, getAccountBalance, getAccountTransactionCount } = useAccounts()
+  const { accounts, loading, createAccount, updateAccount, deleteAccount, getAccountBalance, getAccountTransactionCount, getAccountStats } = useAccounts()
+  const navigate = useNavigate()
   const [balances, setBalances] = useState<Record<string, number>>({})
+  const [stats, setStats] = useState<Record<string, { income: number; expense: number; transfer: number }>>({})
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -51,11 +57,21 @@ export default function Accounts() {
   useEffect(() => {
     if (accounts.length === 0) return
     Promise.all(
-      accounts.map((a) => getAccountBalance(a.id, a.initial_balance).then((b) => ({ id: a.id, balance: b })))
+      accounts.map((a) =>
+        Promise.all([
+          getAccountBalance(a.id, a.initial_balance),
+          getAccountStats(a.id, currentMonth),
+        ]).then(([balance, accountStats]) => ({ id: a.id, balance, accountStats })),
+      ),
     ).then((results) => {
-      const map: Record<string, number> = {}
-      for (const r of results) map[r.id] = r.balance
-      setBalances(map)
+      const balanceMap: Record<string, number> = {}
+      const statsMap: Record<string, { income: number; expense: number; transfer: number }> = {}
+      for (const r of results) {
+        balanceMap[r.id] = r.balance
+        statsMap[r.id] = r.accountStats
+      }
+      setBalances(balanceMap)
+      setStats(statsMap)
     })
   }, [accounts]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -195,6 +211,30 @@ export default function Accounts() {
                       Não contabiliza
                     </Badge>
                   )}
+                </div>
+
+                <div className="mt-3 pt-3 border-t border-[#2d3148] flex items-center gap-2">
+                  <button
+                    onClick={() => navigate(`/transactions?account_id=${account.id}&type=income&month=${currentMonth}`)}
+                    className="flex-1 text-center rounded-md py-1 text-xs text-green-400 hover:bg-green-950/40 transition-colors"
+                  >
+                    <span className="block font-semibold">{stats[account.id]?.income ?? 0}</span>
+                    <span className="text-slate-500">Receitas</span>
+                  </button>
+                  <button
+                    onClick={() => navigate(`/transactions?account_id=${account.id}&type=expense&month=${currentMonth}`)}
+                    className="flex-1 text-center rounded-md py-1 text-xs text-red-400 hover:bg-red-950/40 transition-colors"
+                  >
+                    <span className="block font-semibold">{stats[account.id]?.expense ?? 0}</span>
+                    <span className="text-slate-500">Despesas</span>
+                  </button>
+                  <button
+                    onClick={() => navigate(`/transactions?account_id=${account.id}&type=transfer&month=${currentMonth}`)}
+                    className="flex-1 text-center rounded-md py-1 text-xs text-blue-400 hover:bg-blue-950/40 transition-colors"
+                  >
+                    <span className="block font-semibold">{stats[account.id]?.transfer ?? 0}</span>
+                    <span className="text-slate-500">Transf.</span>
+                  </button>
                 </div>
               </CardContent>
             </Card>
