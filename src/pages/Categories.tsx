@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 
@@ -256,6 +256,9 @@ export default function Categories() {
                 ? 'Nova subcategoria'
                 : 'Novo grupo'}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Preencha os dados para criar ou editar uma categoria.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
@@ -352,6 +355,9 @@ export default function Categories() {
         <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
           <DialogHeader>
             <DialogTitle>Excluir categoria</DialogTitle>
+            <DialogDescription className="sr-only">
+              Confirme a exclusão desta categoria e a transferência de suas transações.
+            </DialogDescription>
           </DialogHeader>
           <p className="text-slate-400 text-sm">
             Essa ação não pode ser desfeita. Transações vinculadas perderão a categoria.

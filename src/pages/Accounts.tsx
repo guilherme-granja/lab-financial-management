@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
@@ -247,6 +247,9 @@ export default function Accounts() {
         <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
           <DialogHeader>
             <DialogTitle>{editingId ? 'Editar conta' : 'Nova conta'}</DialogTitle>
+            <DialogDescription className="sr-only">
+              Preencha os dados para criar ou editar uma conta.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
@@ -340,6 +343,9 @@ export default function Accounts() {
         <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
           <DialogHeader>
             <DialogTitle>Excluir conta</DialogTitle>
+            <DialogDescription className="sr-only">
+              Confirme a exclusão permanente desta conta.
+            </DialogDescription>
           </DialogHeader>
 
           {deleteLoading ? (

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Trash2 } from 'lucide-react'
 
 export default function Tags() {
@@ -115,6 +115,9 @@ export default function Tags() {
         <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
           <DialogHeader>
             <DialogTitle>Nova tag</DialogTitle>
+            <DialogDescription className="sr-only">
+              Preencha o nome para criar uma nova tag.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
@@ -147,6 +150,9 @@ export default function Tags() {
         <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
           <DialogHeader>
             <DialogTitle>Excluir tag</DialogTitle>
+            <DialogDescription className="sr-only">
+              Confirme a exclusão permanente desta tag.
+            </DialogDescription>
           </DialogHeader>
           <p className="text-slate-400 text-sm">Essa ação não pode ser desfeita.</p>
           {deleteError && <p className="text-red-400 text-sm">{deleteError}</p>}

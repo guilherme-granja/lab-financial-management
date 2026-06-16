@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 
 interface FormState {
@@ -214,6 +214,9 @@ export default function Goals() {
         <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
           <DialogHeader>
             <DialogTitle>{editingId ? 'Editar meta' : 'Nova meta'}</DialogTitle>
+            <DialogDescription className="sr-only">
+              Preencha os dados para criar ou editar uma meta financeira.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
@@ -292,6 +295,9 @@ export default function Goals() {
         <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
           <DialogHeader>
             <DialogTitle>Excluir meta</DialogTitle>
+            <DialogDescription className="sr-only">
+              Confirme a exclusão permanente desta meta.
+            </DialogDescription>
           </DialogHeader>
           <p className="text-slate-400 text-sm">Essa ação não pode ser desfeita.</p>
           <DialogFooter>
