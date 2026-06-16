@@ -21,9 +21,7 @@ describe('formatDate', () => {
     expect(formatDate('2026-06-15')).toBe('15/06/2026')
   })
   it('aceita string com timestamp ISO', () => {
-    // parseISO interprets based on local timezone, so use a date without T
-    const result = formatDate('2026-01-15')
-    expect(result).toBe('15/01/2026')
+    expect(formatDate('2026-06-15T12:00:00Z')).toBe('15/06/2026')
   })
 })
 
