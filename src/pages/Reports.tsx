@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
@@ -16,6 +16,7 @@ import type { MonthlyDataPoint } from '@/components/charts/MonthlyBarChart'
 import { Download } from 'lucide-react'
 
 interface CategoryRow {
+  category_id: string | null
   name: string
   icon: string
   total: number
@@ -40,7 +41,34 @@ export default function Reports() {
   const [categoryRows, setCategoryRows] = useState<CategoryRow[]>([])
   const [barData, setBarData] = useState<MonthlyDataPoint[]>([])
   const [loading, setLoading] = useState(true)
-  const { categories } = useCategories()
+  const [groupByParent, setGroupByParent] = useState(true)
+  const { categoryTree } = useCategories()
+
+  const displayRows = useMemo(() => {
+    if (!groupByParent) return categoryRows
+
+    const parentMap: Record<string, { category_id: string | null; name: string; icon: string; total: number; type: 'income' | 'expense' }> = {}
+
+    for (const row of categoryRows) {
+      const parent = categoryTree.find((p) =>
+        p.subcategories?.some((s) => s.id === row.category_id)
+      ) ?? null
+
+      const key = parent ? parent.id : (row.category_id ?? '__none__')
+      const displayName = parent ? parent.name : row.name
+      const displayIcon = parent ? parent.icon : row.icon
+
+      if (!parentMap[key]) {
+        parentMap[key] = { category_id: parent?.id ?? row.category_id, name: displayName, icon: displayIcon, total: 0, type: row.type }
+      }
+      parentMap[key].total += row.total
+    }
+
+    const grandTotal = Object.values(parentMap).reduce((s, r) => s + r.total, 0) || 1
+    return Object.values(parentMap)
+      .map((r) => ({ ...r, percent: (r.total / grandTotal) * 100 }))
+      .sort((a, b) => b.total - a.total)
+  }, [categoryRows, groupByParent, categoryTree])
 
   useEffect(() => {
     async function load() {
@@ -69,6 +97,7 @@ export default function Reports() {
         const key = tx.category_id ?? '__none__'
         if (!catMap[key]) {
           catMap[key] = {
+            category_id: tx.category_id,
             name: cat?.name ?? 'Sem categoria',
             icon: cat?.icon ?? '❓',
             total: 0,
@@ -166,6 +195,29 @@ export default function Reports() {
         </TabsList>
 
         <TabsContent value="summary">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-slate-400 text-xs">Agrupar por:</span>
+            <button
+              onClick={() => setGroupByParent(true)}
+              className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                groupByParent
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'text-slate-400 border-[#2d3148] hover:text-slate-200'
+              }`}
+            >
+              Grupo
+            </button>
+            <button
+              onClick={() => setGroupByParent(false)}
+              className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                !groupByParent
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'text-slate-400 border-[#2d3148] hover:text-slate-200'
+              }`}
+            >
+              Subcategoria
+            </button>
+          </div>
           <Card className="bg-[#1a1d27] border-[#2d3148]">
             <CardContent className="p-0">
               <Table>
@@ -185,14 +237,14 @@ export default function Reports() {
                       </TableCell>
                     </TableRow>
                   )}
-                  {!loading && categoryRows.length === 0 && (
+                  {!loading && displayRows.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={4} className="text-center text-slate-500 py-8">
                         Nenhum dado no período
                       </TableCell>
                     </TableRow>
                   )}
-                  {categoryRows.map((row, i) => (
+                  {displayRows.map((row, i) => (
                     <TableRow key={i} className="border-[#2d3148]">
                       <TableCell className="text-slate-300">
                         {row.icon} {row.name}
