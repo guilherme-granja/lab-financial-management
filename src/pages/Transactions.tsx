@@ -18,6 +18,9 @@ import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
 import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CreditCard } from 'lucide-react'
+import { SearchableSelect } from '@/components/ui/searchable-select'
+import type { SearchableSelectOption } from '@/components/ui/searchable-select'
+import { MoneyInput } from '@/components/ui/money-input'
 
 const CURRENT_MONTH = format(new Date(), 'yyyy-MM')
 
@@ -32,8 +35,6 @@ interface FormState {
   recurrence: RecurrenceType
   installments: string
   paid: boolean
-  paid_at: string
-  paid_amount: string
   tag_id: string
 }
 
@@ -48,8 +49,6 @@ const EMPTY_FORM: FormState = {
   recurrence: 'none',
   installments: '',
   paid: true,
-  paid_at: format(new Date(), 'yyyy-MM-dd'),
-  paid_amount: '',
   tag_id: '',
 }
 
@@ -129,8 +128,6 @@ export default function Transactions() {
       recurrence: tx.recurrence ?? 'none',
       installments: tx.installments ? String(tx.installments) : '',
       paid: tx.paid ?? true,
-      paid_at: tx.paid_at ?? format(new Date(), 'yyyy-MM-dd'),
-      paid_amount: tx.paid_amount ? String(tx.paid_amount) : String(tx.amount),
       tag_id: tx.tag_id ?? '',
     })
     setEditingId(tx.id)
@@ -178,8 +175,8 @@ export default function Transactions() {
     setSaving(true)
     setFormError(null)
 
-    const paid_at = form.paid ? form.paid_at || form.date : null
-    const paid_amount_val = form.paid ? (parseFloat(form.paid_amount) || amount) : null
+    const paid_at = form.paid ? form.date : null
+    const paid_amount_val = form.paid ? amount : null
 
     const payload: TransactionPayload = {
       amount,
@@ -349,7 +346,7 @@ export default function Transactions() {
             <SelectTrigger className="bg-[#1a1d27] border-[#2d3148] text-slate-200 w-44">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
+            <SelectContent className="bg-[#1a1d27] border-[#2d3148] max-h-72 overflow-y-auto">
               <SelectItem value="all">Todas</SelectItem>
               {categoryTree.map((parent) => (
                 <SelectGroup key={parent.id}>
@@ -591,14 +588,10 @@ export default function Transactions() {
 
               <div className="space-y-1">
                 <Label className="text-slate-400 text-xs">Valor (R$)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={form.amount}
-                  onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+                <MoneyInput
+                  value={parseFloat(form.amount) || 0}
+                  onChange={(v) => setForm((f) => ({ ...f, amount: String(v) }))}
                   className="bg-[#0f1117] border-[#2d3148]"
-                  placeholder="0,00"
                 />
               </div>
             </div>
@@ -660,40 +653,32 @@ export default function Transactions() {
             {form.type !== 'transfer' && (
               <div className="space-y-1">
                 <Label className="text-slate-400 text-xs">Categoria</Label>
-                <Select
+                <SearchableSelect
                   value={form.category_id}
                   onValueChange={(v) => setForm((f) => ({ ...f, category_id: v }))}
-                >
-                  <SelectTrigger className="bg-[#0f1117] border-[#2d3148]">
-                    <SelectValue placeholder="Selecionar categoria" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
-                    {categoryTree
-                      .filter((p) => p.type === form.type || p.type === 'both')
-                      .map((parent) => (
-                        <SelectGroup key={parent.id}>
-                          {(parent.subcategories?.length ?? 0) > 0 ? (
-                            <>
-                              <SelectLabel className="text-slate-500 text-xs px-2 py-1">
-                                {parent.icon} {parent.name}
-                              </SelectLabel>
-                              {parent.subcategories!
-                                .filter((s) => s.type === form.type || s.type === 'both')
-                                .map((sub) => (
-                                  <SelectItem key={sub.id} value={sub.id} className="pl-6">
-                                    {sub.icon} {sub.name}
-                                  </SelectItem>
-                                ))}
-                            </>
-                          ) : (
-                            <SelectItem key={parent.id} value={parent.id}>
-                              {parent.icon} {parent.name}
-                            </SelectItem>
-                          )}
-                        </SelectGroup>
-                      ))}
-                  </SelectContent>
-                </Select>
+                  options={categoryTree
+                    .filter((p) => p.type === form.type || p.type === 'both')
+                    .flatMap((parent) => {
+                      const subs = (parent.subcategories ?? []).filter(
+                        (s) => s.type === form.type || s.type === 'both'
+                      )
+                      if (subs.length > 0) {
+                        return subs.map((sub): SearchableSelectOption => ({
+                          value: sub.id,
+                          label: sub.name,
+                          display: `${sub.icon} ${sub.name}`,
+                          group: `${parent.icon} ${parent.name}`,
+                        }))
+                      }
+                      return [{
+                        value: parent.id,
+                        label: parent.name,
+                        display: `${parent.icon} ${parent.name}`,
+                      }]
+                    })}
+                  placeholder="Selecionar categoria"
+                  searchPlaceholder="Buscar categoria..."
+                />
               </div>
             )}
 
@@ -774,31 +759,6 @@ export default function Transactions() {
                 </Label>
               </div>
 
-              {form.paid && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-slate-400 text-xs">Data do pagamento</Label>
-                    <Input
-                      type="date"
-                      value={form.paid_at}
-                      onChange={(e) => setForm((f) => ({ ...f, paid_at: e.target.value }))}
-                      className="bg-[#0f1117] border-[#2d3148]"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-slate-400 text-xs">Valor pago (R$)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={form.paid_amount || form.amount}
-                      onChange={(e) => setForm((f) => ({ ...f, paid_amount: e.target.value }))}
-                      className="bg-[#0f1117] border-[#2d3148]"
-                      placeholder={form.amount || '0,00'}
-                    />
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
