@@ -54,9 +54,10 @@ export default function Duplicates() {
     load()
   }, [])
 
-  async function resolveDuplicate(key: string, keepId: string, removeId: string) {
+  async function resolveDuplicate(_groupKey: string, keepId: string, removeId: string) {
     setResolving(removeId)
     try {
+      setError(null)
       const { error: deleteError } = await supabase.from('transactions').delete().eq('id', removeId)
       if (deleteError) throw new Error(deleteError.message)
       setGroups((prev) =>
@@ -69,8 +70,6 @@ export default function Duplicates() {
     } finally {
       setResolving(null)
     }
-    // suppress unused variable warning — key is passed for future use / spec compatibility
-    void key
   }
 
   return (
@@ -172,9 +171,9 @@ export default function Duplicates() {
                           variant="ghost"
                           disabled={!!resolving}
                           className="text-xs text-indigo-400 hover:text-indigo-200 gap-1.5"
-                          onClick={() => {
+                          onClick={async () => {
                             for (const other of others) {
-                              resolveDuplicate(key, tx.id, other.id)
+                              await resolveDuplicate(key, tx.id, other.id)
                             }
                           }}
                         >
