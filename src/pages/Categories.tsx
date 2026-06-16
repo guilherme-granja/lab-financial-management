@@ -123,7 +123,9 @@ export default function Categories() {
     if (!deleteId) return
     try {
       await deleteCategory(deleteId)
-    } finally {
+      setDeleteId(null)
+    } catch (e) {
+      setDeleteError((e as Error).message)
       setDeleteId(null)
     }
   }
@@ -297,7 +299,6 @@ export default function Categories() {
                   onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value }))}
                   className="bg-[#0f1117] border-[#2d3148] text-xl"
                   placeholder="🍕"
-                  maxLength={2}
                 />
               </div>
 
