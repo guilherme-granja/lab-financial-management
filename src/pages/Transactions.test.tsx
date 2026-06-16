@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { Transaction } from '@/types'
@@ -7,9 +8,19 @@ import type { Transaction } from '@/types'
 vi.mock('@/hooks/useTransactions', () => ({
   useTransactions: vi.fn(),
 }))
+vi.mock('@/hooks/useDuplicateCheck', () => ({
+  checkDuplicate: vi.fn().mockResolvedValue(null),
+  fetchAllDuplicateGroups: vi.fn().mockResolvedValue([]),
+  deleteTransaction: vi.fn().mockResolvedValue(undefined),
+  useDuplicateCheck: vi.fn(() => ({
+    checkDuplicate: vi.fn().mockResolvedValue(null),
+    fetchAllDuplicateGroups: vi.fn().mockResolvedValue([]),
+  })),
+}))
 vi.mock('@/hooks/useCategories', () => ({
   useCategories: vi.fn(() => ({
     categories: [],
+    categoryTree: [],
     loading: false,
     error: null,
     refresh: vi.fn(),
@@ -86,6 +97,10 @@ beforeEach(() => {
   }
 })
 
+function renderTx() {
+  return render(<MemoryRouter><Transactions /></MemoryRouter>)
+}
+
 describe('Transactions', () => {
   it('exibe "Carregando..." enquanto loading=true', () => {
     vi.mocked(useTransactions).mockReturnValue({
@@ -93,7 +108,7 @@ describe('Transactions', () => {
       loading: true,
       transactions: [],
     })
-    render(<Transactions />)
+    renderTx()
     expect(screen.getByText('Carregando...')).toBeInTheDocument()
   })
 
@@ -103,7 +118,7 @@ describe('Transactions', () => {
       loading: false,
       transactions: [],
     })
-    render(<Transactions />)
+    renderTx()
     expect(screen.getByText('Nenhuma transação encontrada')).toBeInTheDocument()
   })
 
@@ -114,7 +129,7 @@ describe('Transactions', () => {
       transactions: [baseTx],
       total: 1,
     })
-    render(<Transactions />)
+    renderTx()
     expect(screen.getByText('Aluguel')).toBeInTheDocument()
   })
 
@@ -124,7 +139,7 @@ describe('Transactions', () => {
       loading: false,
       transactions: [],
     })
-    render(<Transactions />)
+    renderTx()
     await userEvent.click(screen.getByText('Nova transação'))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
@@ -136,7 +151,7 @@ describe('Transactions', () => {
       transactions: [{ ...baseTx, paid: false }],
       total: 1,
     })
-    render(<Transactions />)
+    renderTx()
     expect(screen.getByText('Pendente')).toBeInTheDocument()
   })
 
@@ -150,7 +165,7 @@ describe('Transactions', () => {
       ],
       total: 2,
     })
-    render(<Transactions />)
+    renderTx()
     const payButtons = screen.getAllByTitle('Pagar')
     expect(payButtons).toHaveLength(1)
   })
@@ -164,7 +179,7 @@ describe('Transactions', () => {
       transactions: [{ ...baseTx, recurrence: 'fixed', installment_index: 1, installments: 24 }],
       total: 1,
     })
-    render(<Transactions />)
+    renderTx()
     expect(screen.getByText('Fixo')).toBeInTheDocument()
   })
 
@@ -175,7 +190,7 @@ describe('Transactions', () => {
       transactions: [{ ...baseTx, recurrence: 'installment', installment_index: 2, installments: 6 }],
       total: 1,
     })
-    render(<Transactions />)
+    renderTx()
     expect(screen.getByText('2/6')).toBeInTheDocument()
   })
 
@@ -186,7 +201,7 @@ describe('Transactions', () => {
       transactions: [{ ...baseTx, type: 'income' }],
       total: 1,
     })
-    render(<Transactions />)
+    renderTx()
     expect(screen.getByText('Receita')).toBeInTheDocument()
   })
 
@@ -197,7 +212,7 @@ describe('Transactions', () => {
       transactions: [{ ...baseTx, type: 'transfer' }],
       total: 1,
     })
-    render(<Transactions />)
+    renderTx()
     expect(screen.getByText('Transferência')).toBeInTheDocument()
   })
 
@@ -208,7 +223,7 @@ describe('Transactions', () => {
       transactions: [baseTx],
       total: 1,
     })
-    render(<Transactions />)
+    renderTx()
     // baseTx has paid: true, so there's no "Pagar" button — row has Pencil then Trash2
     // Find all icon-only buttons (no text content) — exclude "Nova transação"
     const allButtons = screen.getAllByRole('button')
@@ -229,7 +244,7 @@ describe('Transactions', () => {
       transactions: [{ ...baseTx, paid: false }],
       total: 1,
     })
-    render(<Transactions />)
+    renderTx()
     await userEvent.click(screen.getByTitle('Pagar'))
     expect(screen.getByText('Registrar pagamento')).toBeInTheDocument()
   })
@@ -241,7 +256,7 @@ describe('Transactions', () => {
       transactions: [baseTx],
       total: 1,
     })
-    render(<Transactions />)
+    renderTx()
     // baseTx has paid: true, so row has: Pencil, Trash2
     // All icon-only buttons: ChevronLeft, ChevronRight, Pencil, Trash2
     const allButtons = screen.getAllByRole('button')
@@ -260,7 +275,7 @@ describe('Transactions', () => {
       total: 1,
       deleteTransaction,
     })
-    render(<Transactions />)
+    renderTx()
     // Open delete dialog via Trash2 button
     const allButtons = screen.getAllByRole('button')
     const iconButtons = allButtons.filter(btn => !btn.textContent?.trim())
@@ -280,7 +295,7 @@ describe('Transactions', () => {
       total: 1,
       updateTransactionPayment,
     })
-    render(<Transactions />)
+    renderTx()
     await userEvent.click(screen.getByTitle('Pagar'))
     // Click the "Pagar" button in the dialog footer
     const pagarButtons = screen.getAllByText('Pagar')
@@ -296,12 +311,11 @@ describe('Transactions', () => {
       transactions: [],
       createTransaction,
     })
-    render(<Transactions />)
+    renderTx()
     await userEvent.click(screen.getByText('Nova transação'))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    // Fill amount — the number input labeled "Valor (R$)" with placeholder "0,00"
-    const amountInputs = screen.getAllByPlaceholderText('0,00')
-    const amountInput = amountInputs[0]
+    // MoneyInput renders type="text" inputMode="numeric" — no placeholder attribute
+    const amountInput = document.querySelector<HTMLInputElement>('[inputmode="numeric"]')!
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '500')
     await userEvent.click(screen.getByText('Salvar'))
@@ -314,7 +328,7 @@ describe('Transactions', () => {
       loading: false,
       transactions: [],
     })
-    render(<Transactions />)
+    renderTx()
     await userEvent.click(screen.getByText('Nova transação'))
     // Try to save without filling the amount (empty by default)
     await userEvent.click(screen.getByText('Salvar'))
@@ -329,7 +343,7 @@ describe('Transactions', () => {
       totalPages: 3,
       page: 2,
     })
-    render(<Transactions />)
+    renderTx()
     expect(screen.getByText('2 / 3')).toBeInTheDocument()
   })
 
@@ -339,7 +353,7 @@ describe('Transactions', () => {
       loading: false,
       transactions: [],
     })
-    render(<Transactions />)
+    renderTx()
     // The period section has two icon-only buttons: ChevronLeft and ChevronRight
     const allButtons = screen.getAllByRole('button')
     const iconButtons = allButtons.filter(btn => !btn.textContent?.trim())
@@ -356,7 +370,7 @@ describe('Transactions', () => {
       loading: false,
       transactions: [],
     })
-    render(<Transactions />)
+    renderTx()
     const allButtons = screen.getAllByRole('button')
     const iconButtons = allButtons.filter(btn => !btn.textContent?.trim())
     // Second icon button is ChevronRight (period navigation)
@@ -370,7 +384,7 @@ describe('Transactions', () => {
       loading: false,
       transactions: [],
     })
-    render(<Transactions />)
+    renderTx()
     await userEvent.click(screen.getByText('Nova transação'))
     // Switch starts as "Pago" (EMPTY_FORM.paid = true)
     expect(screen.getByText('Pago')).toBeInTheDocument()
@@ -385,7 +399,7 @@ describe('Transactions', () => {
       loading: false,
       transactions: [],
     })
-    render(<Transactions />)
+    renderTx()
     await userEvent.click(screen.getByText('Nova transação'))
     const descInput = screen.getByPlaceholderText('Opcional')
     await userEvent.type(descInput, 'Teste descrição')
@@ -398,7 +412,7 @@ describe('Transactions', () => {
       loading: false,
       transactions: [],
     })
-    render(<Transactions />)
+    renderTx()
     await userEvent.click(screen.getByText('Nova transação'))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     await userEvent.click(screen.getByText('Cancelar'))
@@ -412,7 +426,7 @@ describe('Transactions', () => {
       transactions: [{ ...baseTx, paid: false }],
       total: 1,
     })
-    render(<Transactions />)
+    renderTx()
     await userEvent.click(screen.getByTitle('Pagar'))
     expect(screen.getByText('Registrar pagamento')).toBeInTheDocument()
     const cancelarButtons = screen.getAllByText('Cancelar')
@@ -427,7 +441,7 @@ describe('Transactions', () => {
       transactions: [baseTx],
       total: 1,
     })
-    render(<Transactions />)
+    renderTx()
     const allButtons = screen.getAllByRole('button')
     const iconButtons = allButtons.filter(btn => !btn.textContent?.trim())
     await userEvent.click(iconButtons[iconButtons.length - 1])
@@ -444,7 +458,7 @@ describe('Transactions', () => {
       transactions: [{ ...baseTx, paid: false }],
       total: 1,
     })
-    render(<Transactions />)
+    renderTx()
     await userEvent.click(screen.getByTitle('Pagar'))
     // Find the paid_amount input in the pay dialog — it's a number input with value = tx.amount
     const inputs = screen.getAllByRole('spinbutton')
@@ -464,7 +478,7 @@ describe('Transactions', () => {
       }],
       total: 1,
     })
-    render(<Transactions />)
+    renderTx()
     expect(screen.getByText('Nubank')).toBeInTheDocument()
   })
 
@@ -478,7 +492,7 @@ describe('Transactions', () => {
       }],
       total: 1,
     })
-    render(<Transactions />)
+    renderTx()
     expect(screen.getByText(/Alimentação/)).toBeInTheDocument()
   })
 
@@ -491,7 +505,7 @@ describe('Transactions', () => {
       total: 1,
       updateTransaction,
     })
-    render(<Transactions />)
+    renderTx()
     // Open edit dialog
     const allButtons = screen.getAllByRole('button')
     const iconButtons = allButtons.filter(btn => !btn.textContent?.trim())
@@ -513,7 +527,7 @@ describe('Transactions', () => {
       page: 1,
       setPage,
     })
-    render(<Transactions />)
+    renderTx()
     // With totalPages > 1, pagination renders additional ChevronLeft/Right buttons
     const allButtons = screen.getAllByRole('button')
     const iconButtons = allButtons.filter(btn => !btn.textContent?.trim())
@@ -529,7 +543,7 @@ describe('Transactions', () => {
       loading: false,
       transactions: [],
     })
-    render(<Transactions />)
+    renderTx()
     const allButtons = screen.getAllByRole('button')
     const iconButtons = allButtons.filter(btn => !btn.textContent?.trim())
     await userEvent.click(iconButtons[0])
@@ -543,7 +557,7 @@ describe('Transactions', () => {
       loading: false,
       transactions: [],
     })
-    render(<Transactions />)
+    renderTx()
     const allButtons = screen.getAllByRole('button')
     const iconButtons = allButtons.filter(btn => !btn.textContent?.trim())
     await userEvent.click(iconButtons[1])
@@ -556,12 +570,12 @@ describe('Transactions', () => {
       loading: false,
       transactions: [],
     })
-    render(<Transactions />)
+    renderTx()
     await userEvent.click(screen.getByText('Nova transação'))
-    // Fill amount
-    const amountInputs = screen.getAllByPlaceholderText('0,00')
-    await userEvent.clear(amountInputs[0])
-    await userEvent.type(amountInputs[0], '100')
+    // Fill amount — MoneyInput has no placeholder, find by inputmode attribute
+    const amountInput = document.querySelector<HTMLInputElement>('[inputmode="numeric"]')!
+    await userEvent.clear(amountInput)
+    await userEvent.type(amountInput, '100')
     // Clear the date field
     const dateInput = screen.getAllByDisplayValue('')[0]
     fireEvent.change(dateInput, { target: { value: '' } })
@@ -579,7 +593,7 @@ describe('Transactions', () => {
       transactions: [{ ...baseTx, paid: false }],
       total: 1,
     })
-    render(<Transactions />)
+    renderTx()
     await userEvent.click(screen.getByTitle('Pagar'))
     // Find the date input in the pay dialog
     const dateInputs = screen.getAllByDisplayValue(/\d{4}-\d{2}-\d{2}/)
