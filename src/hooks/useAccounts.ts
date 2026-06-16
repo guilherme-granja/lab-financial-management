@@ -51,16 +51,36 @@ export function useAccounts() {
   }
 
   async function getAccountBalance(id: string, initialBalance: number): Promise<number> {
-    const { data } = await supabase
-      .from('transactions')
-      .select('amount, type')
-      .eq('account_id', id)
-      .eq('paid', true)
-      .in('type', ['income', 'expense'])
-    if (!data) return initialBalance
+    const [txRes, transferOutRes, transferInRes] = await Promise.all([
+      supabase
+        .from('transactions')
+        .select('amount, type')
+        .eq('account_id', id)
+        .eq('paid', true)
+        .in('type', ['income', 'expense']),
+
+      supabase
+        .from('transactions')
+        .select('amount')
+        .eq('account_id', id)
+        .eq('type', 'transfer')
+        .eq('paid', true),
+
+      supabase
+        .from('transactions')
+        .select('amount')
+        .eq('to_account_id', id)
+        .eq('type', 'transfer')
+        .eq('paid', true),
+    ])
+
+    const data = txRes.data ?? []
     const income = data.filter((t) => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
     const expense = data.filter((t) => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
-    return initialBalance + income - expense
+    const transferOut = (transferOutRes.data ?? []).reduce((s, t) => s + Number(t.amount), 0)
+    const transferIn = (transferInRes.data ?? []).reduce((s, t) => s + Number(t.amount), 0)
+
+    return initialBalance + income - expense - transferOut + transferIn
   }
 
   async function getAccountTransactionCount(id: string): Promise<number> {
