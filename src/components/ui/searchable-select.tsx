@@ -12,14 +12,14 @@ import {
   CommandList,
 } from "@/components/ui/command"
 
-interface SearchableSelectOption {
+export interface SearchableSelectOption {
   value: string
   label: string
   display?: string
   group?: string
 }
 
-interface SearchableSelectProps {
+export interface SearchableSelectProps {
   value: string
   onValueChange: (value: string) => void
   options: SearchableSelectOption[]
@@ -53,10 +53,6 @@ export function SearchableSelect({
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState("")
   const inputRef = React.useRef<HTMLInputElement>(null)
-
-  React.useEffect(() => {
-    if (open) inputRef.current?.focus()
-  }, [open])
 
   const selectedOption = options.find((o) => o.value === value)
 
@@ -95,7 +91,11 @@ export function SearchableSelect({
           <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] p-0"
+        align="start"
+        onOpenAutoFocus={(e) => { e.preventDefault(); inputRef.current?.focus() }}
+      >
         <Command shouldFilter={false}>
           <CommandInput
             ref={inputRef}

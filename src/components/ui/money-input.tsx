@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 interface MoneyInputProps {
@@ -11,6 +11,10 @@ interface MoneyInputProps {
 export function MoneyInput({ value, onChange, className, id }: MoneyInputProps) {
   const [cents, setCents] = useState(() => Math.round(Math.abs(value) * 100))
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setCents(Math.round(Math.abs(value) * 100))
+  }, [value])
 
   function formatted(c: number) {
     return new Intl.NumberFormat('pt-BR', {
