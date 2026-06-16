@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { CheckCircle2, RefreshCw, Trash2 } from 'lucide-react'
-import { fetchAllDuplicateGroups } from '@/hooks/useDuplicateCheck'
-import { supabase } from '@/lib/supabase'
+import { fetchAllDuplicateGroups, deleteTransaction } from '@/hooks/useDuplicateCheck'
 import type { Transaction, TransactionType } from '@/types'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import { Button } from '@/components/ui/button'
@@ -54,19 +53,18 @@ export default function Duplicates() {
     load()
   }, [])
 
-  async function resolveDuplicate(_groupKey: string, keepId: string, removeId: string) {
+  async function resolveDuplicate(_groupKey: string, removeId: string): Promise<boolean> {
     setResolving(removeId)
     try {
       setError(null)
-      const { error: deleteError } = await supabase.from('transactions').delete().eq('id', removeId)
-      if (deleteError) throw new Error(deleteError.message)
+      await deleteTransaction(removeId)
       setGroups((prev) =>
-        prev
-          .map((g) => g.filter((tx) => tx.id !== removeId))
-          .filter((g) => g.length >= 2)
+        prev.map((g) => g.filter((tx) => tx.id !== removeId)).filter((g) => g.length >= 2)
       )
+      return true
     } catch (e) {
       setError((e as Error).message)
+      return false
     } finally {
       setResolving(null)
     }
@@ -173,7 +171,8 @@ export default function Duplicates() {
                           className="text-xs text-indigo-400 hover:text-indigo-200 gap-1.5"
                           onClick={async () => {
                             for (const other of others) {
-                              await resolveDuplicate(key, tx.id, other.id)
+                              const ok = await resolveDuplicate(key, other.id)
+                              if (!ok) break
                             }
                           }}
                         >

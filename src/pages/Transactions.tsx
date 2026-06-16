@@ -181,7 +181,7 @@ export default function Transactions() {
       return
     }
 
-    if (form.description?.trim() && !isNaN(amount)) {
+    if (form.description?.trim()) {
       const duplicate = await checkDuplicate({
         type: form.type,
         amount,

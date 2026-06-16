@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabase'
 import type { Transaction } from '@/types'
-import { startOfMonth, endOfMonth, format } from 'date-fns'
 
 // Camada 1: verifica se já existe transação com os mesmos 4 campos no mesmo mês.
 // Retorna a transação duplicada encontrada ou null.
@@ -13,9 +12,7 @@ export async function checkDuplicate(params: {
 }): Promise<Transaction | null> {
   if (!params.description?.trim()) return null // sem descrição: nunca duplicata
 
-  const ref = new Date(params.date)
-  const dateStart = format(startOfMonth(ref), 'yyyy-MM-dd')
-  const dateEnd   = format(endOfMonth(ref),   'yyyy-MM-dd')
+  const escaped = params.description.trim().replace(/%/g, '\\%').replace(/_/g, '\\_')
 
   let query = supabase
     .from('transactions')
@@ -23,17 +20,21 @@ export async function checkDuplicate(params: {
     .eq('type', params.type)
     .eq('amount', params.amount)
     .eq('date', params.date)
-    .ilike('description', params.description.trim())  // case-insensitive
-    .gte('date', dateStart)
-    .lte('date', dateEnd)
+    .ilike('description', escaped)  // case-insensitive
     .limit(1)
 
   if (params.excludeId) {
     query = query.neq('id', params.excludeId)
   }
 
-  const { data } = await query
+  const { data, error } = await query
+  if (error) console.error('[checkDuplicate]', error.message)
   return data?.[0] ?? null
+}
+
+export async function deleteTransaction(id: string): Promise<void> {
+  const { error } = await supabase.from('transactions').delete().eq('id', id)
+  if (error) throw new Error(error.message)
 }
 
 // Camada 2: busca todos os grupos de duplicatas no banco.
