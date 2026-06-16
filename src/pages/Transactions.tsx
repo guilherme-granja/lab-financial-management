@@ -701,14 +701,14 @@ export default function Transactions() {
               <div className="space-y-1">
                 <Label className="text-slate-400 text-xs">Tag</Label>
                 <Select
-                  value={form.tag_id}
-                  onValueChange={(v) => setForm((f) => ({ ...f, tag_id: v }))}
+                  value={form.tag_id || 'none'}
+                  onValueChange={(v) => setForm((f) => ({ ...f, tag_id: v === 'none' ? '' : v }))}
                 >
                   <SelectTrigger className="bg-[#0f1117] border-[#2d3148]">
                     <SelectValue placeholder="Sem tag" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
-                    <SelectItem value="">Sem tag</SelectItem>
+                    <SelectItem value="none">Sem tag</SelectItem>
                     {tags.map((tag) => (
                       <SelectItem key={tag.id} value={tag.id}>
                         {tag.name}

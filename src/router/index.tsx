@@ -10,6 +10,7 @@ import Reports from '@/pages/Reports'
 import Goals from '@/pages/Goals'
 import Accounts from '@/pages/Accounts'
 import Tags from '@/pages/Tags'
+import ErrorPage from '@/pages/ErrorPage'
 
 function PrivateRoute() {
   const { user, loading } = useAuth()
@@ -36,10 +37,11 @@ function PrivateRoute() {
 
 export const router = createBrowserRouter(
   [
-    { path: '/login', element: <Login /> },
-    { path: '/auth/callback', element: <AuthCallback /> },
+    { path: '/login', element: <Login />, errorElement: <ErrorPage /> },
+    { path: '/auth/callback', element: <AuthCallback />, errorElement: <ErrorPage /> },
     {
       element: <PrivateRoute />,
+      errorElement: <ErrorPage />,
       children: [
         { path: '/', element: <Dashboard /> },
         { path: '/transactions', element: <Transactions /> },
