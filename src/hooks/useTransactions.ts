@@ -10,6 +10,7 @@ export interface TransactionFilters {
   categoryId: string
   status: 'all' | 'paid' | 'unpaid'
   account_id: string | null
+  tagId: string
 }
 
 export interface TransactionPayload {
@@ -25,12 +26,13 @@ export interface TransactionPayload {
   paid: boolean
   paid_at: string | null
   paid_amount: number | null
+  tag_id: string | null
 }
 
 const PAGE_SIZE = 20
 
 const SELECT_FIELDS =
-  '*, categories(*), accounts!account_id(*), to_accounts:accounts!to_account_id(*)'
+  '*, categories(*), accounts!account_id(*), to_accounts:accounts!to_account_id(*), tags(*)'
 
 export function useTransactions(filters: TransactionFilters) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -85,6 +87,9 @@ export function useTransactions(filters: TransactionFilters) {
     if (filters.account_id) {
       query = query.eq('account_id', filters.account_id)
     }
+    if (filters.tagId !== 'all') {
+      query = query.eq('tag_id', filters.tagId)
+    }
 
     const { data, error: err, count } = await query
 
@@ -133,6 +138,7 @@ export function useTransactions(filters: TransactionFilters) {
           paid: isPaid,
           paid_at: isPaid ? payload.paid_at : null,
           paid_amount: isPaid ? payload.paid_amount : null,
+          tag_id: payload.tag_id,
         }
       })
       const { error: err } = await supabase.from('transactions').insert(records)
@@ -162,6 +168,7 @@ export function useTransactions(filters: TransactionFilters) {
           paid: isPaid,
           paid_at: isPaid ? payload.paid_at : null,
           paid_amount: isPaid ? payload.paid_amount : null,
+          tag_id: payload.tag_id,
         }
       })
       const { error: err } = await supabase.from('transactions').insert(records)
@@ -185,6 +192,7 @@ export function useTransactions(filters: TransactionFilters) {
       paid: payload.paid,
       paid_at: payload.paid_at,
       paid_amount: payload.paid_amount,
+      tag_id: payload.tag_id,
     })
     if (err) throw new Error(err.message)
     await fetch()

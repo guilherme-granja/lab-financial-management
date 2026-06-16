@@ -26,6 +26,12 @@ export interface Account {
   created_at: string
 }
 
+export interface Tag {
+  id: string
+  name: string
+  created_at: string
+}
+
 export interface Transaction {
   id: string
   amount: number
@@ -46,6 +52,8 @@ export interface Transaction {
   categories?: Category
   accounts?: Account
   to_accounts?: Account
+  tag_id: string | null
+  tags?: Tag
 }
 
 export interface Goal {

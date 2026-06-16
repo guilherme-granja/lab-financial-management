@@ -9,6 +9,7 @@ import Categories from '@/pages/Categories'
 import Reports from '@/pages/Reports'
 import Goals from '@/pages/Goals'
 import Accounts from '@/pages/Accounts'
+import Tags from '@/pages/Tags'
 
 function PrivateRoute() {
   const { user, loading } = useAuth()
@@ -46,6 +47,7 @@ export const router = createBrowserRouter(
         { path: '/reports', element: <Reports /> },
         { path: '/goals', element: <Goals /> },
         { path: '/accounts', element: <Accounts /> },
+        { path: '/tags', element: <Tags /> },
       ],
     },
   ],

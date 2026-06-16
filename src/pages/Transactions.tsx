@@ -6,6 +6,7 @@ import { useTransactions } from '@/hooks/useTransactions'
 import type { TransactionFilters, TransactionPayload } from '@/hooks/useTransactions'
 import { useCategories } from '@/hooks/useCategories'
 import { useAccounts } from '@/hooks/useAccounts'
+import { useTags } from '@/hooks/useTags'
 import type { Transaction, TransactionType, RecurrenceType } from '@/types'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import { Button } from '@/components/ui/button'
@@ -33,6 +34,7 @@ interface FormState {
   paid: boolean
   paid_at: string
   paid_amount: string
+  tag_id: string
 }
 
 const EMPTY_FORM: FormState = {
@@ -48,6 +50,7 @@ const EMPTY_FORM: FormState = {
   paid: true,
   paid_at: format(new Date(), 'yyyy-MM-dd'),
   paid_amount: '',
+  tag_id: '',
 }
 
 interface PayFormState {
@@ -65,6 +68,7 @@ export default function Transactions() {
     categoryId: 'all',
     status: 'all',
     account_id: null,
+    tagId: 'all',
   })
 
   useEffect(() => {
@@ -95,6 +99,7 @@ export default function Transactions() {
   } = useTransactions(filters)
   const { categories, categoryTree } = useCategories()
   const { accounts } = useAccounts()
+  const { tags } = useTags()
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -126,6 +131,7 @@ export default function Transactions() {
       paid: tx.paid ?? true,
       paid_at: tx.paid_at ?? format(new Date(), 'yyyy-MM-dd'),
       paid_amount: tx.paid_amount ? String(tx.paid_amount) : String(tx.amount),
+      tag_id: tx.tag_id ?? '',
     })
     setEditingId(tx.id)
     setFormError(null)
@@ -188,6 +194,7 @@ export default function Transactions() {
       paid: form.paid,
       paid_at,
       paid_amount: paid_amount_val,
+      tag_id: form.tag_id || null,
     }
 
     try {
@@ -368,6 +375,26 @@ export default function Transactions() {
           </Select>
         </div>
 
+        <div className="space-y-1">
+          <Label className="text-slate-400 text-xs">Tag</Label>
+          <Select
+            value={filters.tagId}
+            onValueChange={(v) => setFilters((f) => ({ ...f, tagId: v }))}
+          >
+            <SelectTrigger className="bg-[#1a1d27] border-[#2d3148] text-slate-200 w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
+              <SelectItem value="all">Todas as tags</SelectItem>
+              {tags.map((tag) => (
+                <SelectItem key={tag.id} value={tag.id}>
+                  {tag.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <Button onClick={openCreate} className="ml-auto bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
           <Plus size={16} />
           Nova transação
@@ -383,6 +410,7 @@ export default function Transactions() {
               <TableHead className="text-slate-400">Descrição</TableHead>
               <TableHead className="text-slate-400">Conta</TableHead>
               <TableHead className="text-slate-400">Categoria</TableHead>
+              <TableHead className="text-slate-400">Tag</TableHead>
               <TableHead className="text-slate-400">Tipo</TableHead>
               <TableHead className="text-slate-400">Status</TableHead>
               <TableHead className="text-slate-400 text-right">Valor</TableHead>
@@ -392,14 +420,14 @@ export default function Transactions() {
           <TableBody>
             {loading && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-slate-500 py-8">
+                <TableCell colSpan={9} className="text-center text-slate-500 py-8">
                   Carregando...
                 </TableCell>
               </TableRow>
             )}
             {!loading && transactions.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-slate-500 py-8">
+                <TableCell colSpan={9} className="text-center text-slate-500 py-8">
                   Nenhuma transação encontrada
                 </TableCell>
               </TableRow>
@@ -435,6 +463,13 @@ export default function Transactions() {
                     : tx.categories
                     ? `${tx.categories.icon} ${tx.categories.name}`
                     : '—'}
+                </TableCell>
+                <TableCell className="text-slate-300">
+                  {tx.tags ? (
+                    <Badge variant="outline" className="bg-[#2d3148] text-slate-300 border-[#2d3148]">
+                      {tx.tags.name}
+                    </Badge>
+                  ) : '—'}
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className={typeColor(tx.type)}>
@@ -539,6 +574,7 @@ export default function Transactions() {
                       type: v as TransactionType,
                       category_id: '',
                       to_account_id: '',
+                      tag_id: '',
                     }))
                   }
                 >
@@ -656,6 +692,28 @@ export default function Transactions() {
                           )}
                         </SelectGroup>
                       ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {form.type !== 'transfer' && (
+              <div className="space-y-1">
+                <Label className="text-slate-400 text-xs">Tag</Label>
+                <Select
+                  value={form.tag_id}
+                  onValueChange={(v) => setForm((f) => ({ ...f, tag_id: v }))}
+                >
+                  <SelectTrigger className="bg-[#0f1117] border-[#2d3148]">
+                    <SelectValue placeholder="Sem tag" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
+                    <SelectItem value="">Sem tag</SelectItem>
+                    {tags.map((tag) => (
+                      <SelectItem key={tag.id} value={tag.id}>
+                        {tag.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
