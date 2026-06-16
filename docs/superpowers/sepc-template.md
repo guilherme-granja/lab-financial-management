@@ -3,6 +3,7 @@
 **Data:** YYYY-MM-DD
 **Arquivos afetados:** lista exata de arquivos que serão tocados
 **Não tocar em:** lista de arquivos relacionados que NÃO devem ser alterados
+**Modelo:** Sonnet 4.6 High | Sonnet padrão
 
 ---
 
@@ -13,9 +14,24 @@ Não descrever o que vai ser feito — isso vai nas tasks. Apenas o ponto de par
 
 ---
 
-## Task 1 — [Nome curto]
+## Task 1 — Migration (quando houver — sempre primeira)
+
+**Arquivo:** `supabase/migrations/YYYYMMDDHHMMSS_nome_descritivo.sql`
+> Review: não
+
+Criar o arquivo com o conteúdo abaixo e aplicar com `npx supabase db push` antes de prosseguir.
+
+```sql
+-- SQL aqui
+-- Nunca hardcodar UUIDs — usar SELECT por name quando referenciar registros existentes
+```
+
+---
+
+## Task 2 — [Nome curto]
 
 **Arquivo:** `src/caminho/exato/Arquivo.ts`
+> Review: não
 
 O que fazer, direto ao ponto. Se for adicionar uma função, incluir a assinatura completa.
 Se for modificar algo existente, indicar o trecho aproximado ("na linha ~45" ou "dentro da função `handleSave`").
@@ -29,9 +45,10 @@ Restrições específicas desta task (ex: "não reescrever o hook inteiro", "usa
 
 ---
 
-## Task 2 — [Nome curto]
+## Task 3 — [Nome curto]
 
 **Arquivo:** `src/caminho/exato/Outro.tsx`
+> Review: sim
 
 Mesma estrutura. Uma task por arquivo sempre que possível.
 
@@ -39,24 +56,11 @@ Se a task tocar dois arquivos inseparáveis (ex: hook + página que dependem um 
 
 ---
 
-## Task N — Migration (quando houver)
-
-**Arquivo:** `supabase/migrations/YYYYMMDDHHMMSS_nome_descritivo.sql`
-
-Criar o arquivo com o conteúdo abaixo e aplicar com `npx supabase db push` antes de prosseguir para as próximas tasks.
-
-```sql
--- SQL aqui
-```
-
-> Migrations sempre como primeira task quando existirem.
-
----
-
 ## Checklist
 
 - [ ] Task 1 concluída
 - [ ] Task 2 concluída
+- [ ] Task 3 concluída
 - [ ] `tsc --noEmit` — zero erros
 - [ ] `git commit -m "feat|fix|chore: descrição"`
 - [ ] `git push origin main && npm run deploy`
@@ -82,8 +86,11 @@ TAMANHO IDEAL:
 - Máximo 5 tasks por spec
 - Se passar de 5 tasks, dividir em duas specs
 
-MIGRATION:
-- Sempre primeira task
-- Nunca hardcodar UUIDs — usar SELECT por name quando precisar referenciar registros existentes
-- Confirmar `npx supabase db push` antes de prosseguir
+MODELO:
+- Sonnet 4.6 High: feature com múltiplos arquivos, migration, decisões de arquitetura
+- Sonnet padrão: scaffold puro copiando padrão existente (novo hook igual a um existente, nova rota, nova página seguindo layout já existente)
+
+REVIEW POR TASK — regra:
+> Review: não → migration SQL, types, deploy, scaffold simples
+> Review: sim  → páginas com lógica (hooks complexos, forms, filtros, lógica de negócio)
 -->

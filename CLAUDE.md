@@ -53,3 +53,8 @@ Executar apenas quando o usuário disser "review" ou "faz o review".
 - Critérios de review: `.claude/code-review-spec.md`
 - Padrões de UI/design: `.claude/skills/frontend-design/`
 - Documentação do projeto: `docs/superpowers/`
+
+## MCP Superpowers
+- Nunca usar a skill writing-plans — specs em docs/superpowers/specs/ já definem o plano
+- Usar subagent-driven-development para execução das tasks
+- Spec review: executar apenas em tasks marcadas com `Review: sim` na spec
