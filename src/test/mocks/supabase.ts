@@ -8,26 +8,52 @@ export const mockDelete = vi.fn()
 export const mockEq = vi.fn()
 export const mockGte = vi.fn()
 export const mockLte = vi.fn()
+export const mockLike = vi.fn()
 export const mockOrder = vi.fn()
 export const mockRange = vi.fn()
 export const mockNeq = vi.fn()
 export const mockOr = vi.fn()
 export const mockLimit = vi.fn()
 
-// Chainable builder to simulate supabase-js query builder
-function buildChain(finalResult: object) {
-  const chain: Record<string, unknown> = {}
+type MockFn = ReturnType<typeof vi.fn>
+
+const namedMocks: Record<string, MockFn> = {
+  select: mockSelect,
+  insert: mockInsert,
+  update: mockUpdate,
+  delete: mockDelete,
+  eq: mockEq,
+  gte: mockGte,
+  lte: mockLte,
+  like: mockLike,
+  order: mockOrder,
+  range: mockRange,
+  neq: mockNeq,
+  or: mockOr,
+  limit: mockLimit,
+}
+
+function buildChain(finalResult: { data?: unknown; error?: unknown; count?: number }) {
+  const thenFn = (resolve: (v: unknown) => void) => {
+    resolve(finalResult)
+    return Promise.resolve(finalResult)
+  }
+
+  const chain: Record<string, unknown> = { then: thenFn }
+
   const methods = [
     'select', 'insert', 'update', 'delete', 'upsert',
     'eq', 'neq', 'gte', 'lte', 'lt', 'gt',
     'like', 'ilike', 'in', 'is', 'or', 'not',
     'order', 'range', 'limit', 'single',
   ]
+
   for (const m of methods) {
-    chain[m] = vi.fn(() => ({ ...chain, then: thenFn }))
+    const fn: MockFn = namedMocks[m] ?? vi.fn()
+    fn.mockImplementation(() => chain)
+    chain[m] = fn
   }
-  const thenFn = (resolve: (v: unknown) => unknown) => Promise.resolve(resolve(finalResult))
-  Object.assign(chain, { then: thenFn })
+
   return chain
 }
 
