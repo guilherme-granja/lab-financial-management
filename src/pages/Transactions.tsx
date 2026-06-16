@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
-import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CreditCard } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CreditCard, X } from 'lucide-react'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import type { SearchableSelectOption } from '@/components/ui/searchable-select'
 import { MoneyInput } from '@/components/ui/money-input'
@@ -273,6 +273,84 @@ export default function Transactions() {
     setFilters((f) => ({ ...f, period: format(next, 'yyyy-MM'), periodType: 'monthly' }))
   }
 
+  const DEFAULT_FILTERS: TransactionFilters = {
+    period: CURRENT_MONTH,
+    periodType: 'monthly',
+    type: 'all',
+    categoryId: 'all',
+    status: 'all',
+    account_id: null,
+    tagId: 'all',
+  }
+
+  function clearFilters() {
+    setFilters(DEFAULT_FILTERS)
+  }
+
+  const hasActiveFilters =
+    filters.type !== 'all' ||
+    filters.categoryId !== 'all' ||
+    filters.status !== 'all' ||
+    filters.account_id !== null ||
+    filters.tagId !== 'all'
+
+  interface ActiveChip {
+    key: string
+    label: string
+    onRemove: () => void
+  }
+
+  const activeChips: ActiveChip[] = []
+
+  if (filters.type !== 'all') {
+    const typeLabels: Record<string, string> = {
+      income: 'Receita',
+      expense: 'Despesa',
+      transfer: 'Transferência',
+    }
+    activeChips.push({
+      key: 'type',
+      label: `Tipo: ${typeLabels[filters.type]}`,
+      onRemove: () => setFilters((f) => ({ ...f, type: 'all' })),
+    })
+  }
+
+  if (filters.status !== 'all') {
+    const statusLabels: Record<string, string> = { paid: 'Pagos', unpaid: 'Pendentes' }
+    activeChips.push({
+      key: 'status',
+      label: `Status: ${statusLabels[filters.status]}`,
+      onRemove: () => setFilters((f) => ({ ...f, status: 'all' })),
+    })
+  }
+
+  if (filters.categoryId !== 'all') {
+    const cat = categories.find((c) => c.id === filters.categoryId)
+    activeChips.push({
+      key: 'category',
+      label: `Categoria: ${cat ? `${cat.icon} ${cat.name}` : filters.categoryId}`,
+      onRemove: () => setFilters((f) => ({ ...f, categoryId: 'all' })),
+    })
+  }
+
+  if (filters.account_id !== null) {
+    const acc = accounts.find((a) => a.id === filters.account_id)
+    activeChips.push({
+      key: 'account',
+      label: `Conta: ${acc ? `${acc.icon} ${acc.name}` : filters.account_id}`,
+      onRemove: () => setFilters((f) => ({ ...f, account_id: null })),
+    })
+  }
+
+  if (filters.tagId !== 'all') {
+    const tag = tags.find((t) => t.id === filters.tagId)
+    activeChips.push({
+      key: 'tag',
+      label: `Tag: ${tag ? tag.name : filters.tagId}`,
+      onRemove: () => setFilters((f) => ({ ...f, tagId: 'all' })),
+    })
+  }
+
   return (
     <div className="space-y-4">
       {/* Filters */}
@@ -392,11 +470,68 @@ export default function Transactions() {
           </Select>
         </div>
 
+        <div className="space-y-1">
+          <Label className="text-slate-400 text-xs">Conta</Label>
+          <Select
+            value={filters.account_id ?? 'all'}
+            onValueChange={(v) =>
+              setFilters((f) => ({ ...f, account_id: v === 'all' ? null : v }))
+            }
+          >
+            <SelectTrigger className="bg-[#1a1d27] border-[#2d3148] text-slate-200 w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
+              <SelectItem value="all">Todas as contas</SelectItem>
+              {accounts.map((a) => (
+                <SelectItem key={a.id} value={a.id}>
+                  {a.icon} {a.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+            className="text-slate-400 hover:text-slate-200 gap-1.5 h-9"
+          >
+            <X size={14} />
+            Limpar filtros
+          </Button>
+        )}
+
         <Button onClick={openCreate} className="ml-auto bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
           <Plus size={16} />
           Nova transação
         </Button>
       </div>
+
+      {/* Active Filter Chips */}
+      {hasActiveFilters && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-slate-500 text-xs">Filtros ativos:</span>
+          {activeChips.map((chip) => (
+            <span
+              key={chip.key}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs
+                         bg-indigo-950 border border-indigo-800 text-indigo-300"
+            >
+              {chip.label}
+              <button
+                onClick={chip.onRemove}
+                className="text-indigo-400 hover:text-indigo-200 leading-none"
+                aria-label={`Remover filtro ${chip.label}`}
+              >
+                <X size={11} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-[#1a1d27] border border-[#2d3148] rounded-xl overflow-hidden">
