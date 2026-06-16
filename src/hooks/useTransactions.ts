@@ -219,6 +219,22 @@ export function useTransactions(filters: TransactionFilters) {
     await fetch()
   }
 
+  async function deleteTransactionGroupUnpaid(id: string, groupId: string): Promise<void> {
+    await supabase.from('transactions').delete().eq('id', id)
+    await supabase
+      .from('transactions')
+      .delete()
+      .eq('recurrence_group_id', groupId)
+      .eq('paid', false)
+      .neq('id', id)
+    await fetch()
+  }
+
+  async function deleteTransactionGroup(groupId: string): Promise<void> {
+    await supabase.from('transactions').delete().eq('recurrence_group_id', groupId)
+    await fetch()
+  }
+
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   return {
@@ -234,5 +250,7 @@ export function useTransactions(filters: TransactionFilters) {
     updateTransaction,
     updateTransactionPayment,
     deleteTransaction,
+    deleteTransactionGroupUnpaid,
+    deleteTransactionGroup,
   }
 }
