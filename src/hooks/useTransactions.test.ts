@@ -1,7 +1,7 @@
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { useTransactions } from './useTransactions'
-import { mockSupabaseResult, mockLike, mockFrom } from '@/test/mocks/supabase'
+import { mockSupabaseResult, mockLike, mockGte, mockLte, mockFrom } from '@/test/mocks/supabase'
 
 vi.mock('@/lib/supabase', () => import('@/test/mocks/supabase'))
 
@@ -102,6 +102,8 @@ describe('useTransactions', () => {
     renderHook(() => useTransactions(DEFAULT_FILTERS))
     await waitFor(() => {
       expect(mockLike).not.toHaveBeenCalled()
+      expect(mockGte).toHaveBeenCalled()
+      expect(mockLte).toHaveBeenCalled()
     })
   })
 })
