@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Category, CategoryType } from '@/types'
 
@@ -26,11 +26,21 @@ export function useCategories() {
     fetch()
   }, [fetch])
 
+  const categoryTree = useMemo(() => {
+    const parents = categories.filter((c) => c.parent_id === null)
+    const children = categories.filter((c) => c.parent_id !== null)
+    return parents.map((p) => ({
+      ...p,
+      subcategories: children.filter((c) => c.parent_id === p.id),
+    }))
+  }, [categories])
+
   const createCategory = async (payload: {
     name: string
     color: string
     icon: string
     type: CategoryType
+    parent_id?: string | null
   }) => {
     const { error: err } = await supabase.from('categories').insert(payload)
     if (err) throw new Error(err.message)
@@ -39,7 +49,7 @@ export function useCategories() {
 
   const updateCategory = async (
     id: string,
-    payload: Partial<{ name: string; color: string; icon: string; type: CategoryType }>
+    payload: Partial<{ name: string; color: string; icon: string; type: CategoryType; parent_id: string | null }>
   ) => {
     const { error: err } = await supabase
       .from('categories')
@@ -60,6 +70,7 @@ export function useCategories() {
 
   return {
     categories,
+    categoryTree,
     loading,
     error,
     refresh: fetch,
