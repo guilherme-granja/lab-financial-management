@@ -27,29 +27,44 @@ interface FormState {
   icon: string
   color: string
   type: CategoryType
+  parent_id: string | null
 }
 
-const EMPTY_FORM: FormState = { name: '', icon: '📦', color: '#6366f1', type: 'expense' }
+const EMPTY_FORM: FormState = { name: '', icon: '📦', color: '#6366f1', type: 'expense', parent_id: null }
 
 export default function Categories() {
-  const { categories, loading, createCategory, updateCategory, deleteCategory } = useCategories()
+  const { categoryTree, loading, createCategory, updateCategory, deleteCategory } = useCategories()
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
-  function openCreate() {
-    setForm(EMPTY_FORM)
+  function openCreateGroup() {
+    setForm({ ...EMPTY_FORM, parent_id: null })
+    setEditingId(null)
+    setFormError(null)
+    setDialogOpen(true)
+  }
+
+  function openCreateSub(parent: Category) {
+    setForm({ name: '', icon: '📦', color: parent.color, type: parent.type, parent_id: parent.id })
     setEditingId(null)
     setFormError(null)
     setDialogOpen(true)
   }
 
   function openEdit(cat: Category) {
-    setForm({ name: cat.name, icon: cat.icon, color: cat.color, type: cat.type })
+    setForm({
+      name: cat.name,
+      icon: cat.icon,
+      color: cat.color,
+      type: cat.type,
+      parent_id: cat.parent_id,
+    })
     setEditingId(cat.id)
     setFormError(null)
     setDialogOpen(true)
@@ -70,9 +85,21 @@ export default function Categories() {
 
     try {
       if (editingId) {
-        await updateCategory(editingId, form)
+        await updateCategory(editingId, {
+          name: form.name,
+          icon: form.icon,
+          color: form.color,
+          type: form.type,
+          parent_id: form.parent_id,
+        })
       } else {
-        await createCategory(form)
+        await createCategory({
+          name: form.name,
+          icon: form.icon,
+          color: form.color,
+          type: form.type,
+          parent_id: form.parent_id || null,
+        })
       }
       setDialogOpen(false)
     } catch (e) {
@@ -80,6 +107,16 @@ export default function Categories() {
     } finally {
       setSaving(false)
     }
+  }
+
+  function requestDelete(cat: Category, isParent: boolean) {
+    if (isParent && (cat.subcategories?.length ?? 0) > 0) {
+      setDeleteError('Remova as subcategorias antes de excluir o grupo.')
+      setDeleteId(null)
+      return
+    }
+    setDeleteError(null)
+    setDeleteId(cat.id)
   }
 
   async function handleDelete() {
@@ -91,71 +128,156 @@ export default function Categories() {
     }
   }
 
+  const parentOptions = categoryTree.map((p) => ({ id: p.id, name: p.name, icon: p.icon }))
+
   if (loading) return <div className="text-slate-400 text-sm">Carregando...</div>
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-end">
-        <Button onClick={openCreate} className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
+        <Button onClick={openCreateGroup} className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
           <Plus size={16} />
-          Nova categoria
+          Novo grupo
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {categories.map((cat) => (
-          <Card key={cat.id} className="bg-[#1a1d27] border-[#2d3148]">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center text-xl flex-shrink-0"
-                style={{ backgroundColor: cat.color + '33', border: `1px solid ${cat.color}44` }}
-              >
-                {cat.icon}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-slate-200 font-medium text-sm truncate">{cat.name}</p>
-                <Badge variant="outline" className={`text-xs mt-1 ${CATEGORY_TYPE_COLORS[cat.type]}`}>
-                  {CATEGORY_TYPE_LABELS[cat.type]}
-                </Badge>
-              </div>
-              <div className="flex flex-col gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-slate-400 hover:text-slate-200"
-                  onClick={() => openEdit(cat)}
-                >
-                  <Pencil size={13} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-slate-400 hover:text-red-400"
-                  onClick={() => setDeleteId(cat.id)}
-                >
-                  <Trash2 size={13} />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      {deleteError && (
+        <p className="text-red-400 text-sm bg-red-950/40 border border-red-800 rounded-lg px-4 py-2">
+          {deleteError}
+        </p>
+      )}
 
-        {categories.length === 0 && (
-          <div className="col-span-full text-center text-slate-500 py-12">
-            Nenhuma categoria cadastrada
+      {categoryTree.length === 0 && (
+        <div className="text-center text-slate-500 py-12">Nenhuma categoria cadastrada</div>
+      )}
+
+      {categoryTree.map((parent) => (
+        <div key={parent.id} className="space-y-2">
+          {/* Group header */}
+          <div
+            className="flex items-center justify-between px-4 py-2 rounded-lg"
+            style={{ backgroundColor: parent.color + '1a', borderLeft: `3px solid ${parent.color}` }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{parent.icon}</span>
+              <span className="text-slate-200 font-semibold text-sm">{parent.name}</span>
+              <Badge variant="outline" className={`text-xs ${CATEGORY_TYPE_COLORS[parent.type]}`}>
+                {CATEGORY_TYPE_LABELS[parent.type]}
+              </Badge>
+              <span className="text-slate-500 text-xs ml-1">
+                {parent.subcategories?.length ?? 0} subcategorias
+              </span>
+            </div>
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-slate-400 hover:text-slate-200 gap-1"
+                onClick={() => openCreateSub(parent)}
+              >
+                <Plus size={12} />
+                Nova subcategoria
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-slate-400 hover:text-slate-200"
+                onClick={() => openEdit(parent)}
+              >
+                <Pencil size={13} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-slate-400 hover:text-red-400"
+                onClick={() => requestDelete(parent, true)}
+              >
+                <Trash2 size={13} />
+              </Button>
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Subcategory cards */}
+          {(parent.subcategories?.length ?? 0) > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 pl-4">
+              {parent.subcategories!.map((sub) => (
+                <Card key={sub.id} className="bg-[#1a1d27] border-[#2d3148]">
+                  <CardContent className="p-3 flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded-md flex items-center justify-center text-base flex-shrink-0"
+                      style={{ backgroundColor: sub.color + '33', border: `1px solid ${sub.color}44` }}
+                    >
+                      {sub.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-slate-300 text-xs font-medium truncate">{sub.name}</p>
+                      <Badge variant="outline" className={`text-xs mt-0.5 ${CATEGORY_TYPE_COLORS[sub.type]}`}>
+                        {CATEGORY_TYPE_LABELS[sub.type]}
+                      </Badge>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-slate-400 hover:text-slate-200"
+                        onClick={() => openEdit(sub)}
+                      >
+                        <Pencil size={11} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-slate-400 hover:text-red-400"
+                        onClick={() => requestDelete(sub, false)}
+                      >
+                        <Trash2 size={11} />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="pl-4 text-slate-600 text-xs italic">Nenhuma subcategoria</p>
+          )}
+        </div>
+      ))}
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Editar categoria' : 'Nova categoria'}</DialogTitle>
+            <DialogTitle>
+              {editingId
+                ? 'Editar categoria'
+                : form.parent_id
+                ? 'Nova subcategoria'
+                : 'Novo grupo'}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             {formError && <p className="text-red-400 text-sm">{formError}</p>}
+
+            <div className="space-y-1">
+              <Label className="text-slate-400 text-xs">Grupo pai</Label>
+              <Select
+                value={form.parent_id ?? 'none'}
+                onValueChange={(v) => setForm((f) => ({ ...f, parent_id: v === 'none' ? null : v }))}
+              >
+                <SelectTrigger className="bg-[#0f1117] border-[#2d3148]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
+                  <SelectItem value="none">Grupo principal (sem pai)</SelectItem>
+                  {parentOptions.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.icon} {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="space-y-1">
               <Label className="text-slate-400 text-xs">Nome</Label>
