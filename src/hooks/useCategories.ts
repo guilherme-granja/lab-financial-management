@@ -68,6 +68,24 @@ export function useCategories() {
     await fetch()
   }
 
+  const checkCategoryUsage = async (id: string): Promise<number> => {
+    const { count, error } = await supabase
+      .from('transactions')
+      .select('id', { count: 'exact', head: true })
+      .eq('category_id', id)
+    if (error) throw new Error(error.message)
+    return count ?? 0
+  }
+
+  const deleteCategoryWithTransfer = async (id: string, targetCategoryId: string): Promise<void> => {
+    const { error: updateErr } = await supabase
+      .from('transactions')
+      .update({ category_id: targetCategoryId })
+      .eq('category_id', id)
+    if (updateErr) throw new Error(updateErr.message)
+    await deleteCategory(id)
+  }
+
   return {
     categories,
     categoryTree,
@@ -77,5 +95,7 @@ export function useCategories() {
     createCategory,
     updateCategory,
     deleteCategory,
+    checkCategoryUsage,
+    deleteCategoryWithTransfer,
   }
 }
