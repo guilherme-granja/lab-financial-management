@@ -52,6 +52,11 @@ export function SearchableSelect({
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState("")
+  const inputRef = React.useRef<HTMLInputElement>(null)
+
+  React.useEffect(() => {
+    if (open) inputRef.current?.focus()
+  }, [open])
 
   const selectedOption = options.find((o) => o.value === value)
 
@@ -93,6 +98,7 @@ export function SearchableSelect({
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
         <Command shouldFilter={false}>
           <CommandInput
+            ref={inputRef}
             placeholder={searchPlaceholder}
             value={search}
             onValueChange={setSearch}
