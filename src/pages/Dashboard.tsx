@@ -192,7 +192,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card
           className="bg-[#1a1d27] border-[#2d3148] cursor-pointer hover:border-indigo-600/50 transition-colors"
-          onClick={() => navigate(`/transactions?type=income&month=${period}`)}
+          onClick={() => navigate(`/transactions?type=income&month=${period}&status=paid`)}
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-slate-400 text-sm font-medium">Receitas do mês</CardTitle>
@@ -205,7 +205,7 @@ export default function Dashboard() {
 
         <Card
           className="bg-[#1a1d27] border-[#2d3148] cursor-pointer hover:border-indigo-600/50 transition-colors"
-          onClick={() => navigate(`/transactions?type=expense&month=${period}`)}
+          onClick={() => navigate(`/transactions?type=expense&month=${period}&status=paid`)}
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-slate-400 text-sm font-medium">Despesas do mês</CardTitle>

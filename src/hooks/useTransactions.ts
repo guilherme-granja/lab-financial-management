@@ -103,6 +103,7 @@ export function useTransactions(filters: TransactionFilters) {
         .lte('date', dateEnd)
 
       sq = sq.eq('type', filters.type)
+      sq = sq.neq('type', 'transfer')
       if (filters.categoryId !== 'all') {
         sq = sq.eq('category_id', filters.categoryId)
       }

@@ -2,7 +2,7 @@ import { renderHook, waitFor, act } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { useTransactions } from './useTransactions'
 import type { TransactionPayload } from './useTransactions'
-import { mockSupabaseResult, mockLike, mockGte, mockLte, mockFrom } from '@/test/mocks/supabase'
+import { mockSupabaseResult, mockLike, mockGte, mockLte, mockFrom, mockNeq } from '@/test/mocks/supabase'
 
 vi.mock('@/lib/supabase', () => import('@/test/mocks/supabase'))
 
@@ -12,6 +12,8 @@ const DEFAULT_FILTERS = {
   type: 'all' as const,
   categoryId: 'all',
   status: 'all' as const,
+  account_id: null,
+  tagId: 'all',
 }
 
 beforeEach(() => {
@@ -235,5 +237,32 @@ describe('useTransactions', () => {
     await expect(
       result.current.deleteTransaction('tx-1')
     ).rejects.toThrow('delete failed')
+  })
+
+  it('sumQuery chama neq("type", "transfer") quando type !== "all"', async () => {
+    mockSupabaseResult({ data: [], count: 0 })
+    renderHook(() => useTransactions({ ...DEFAULT_FILTERS, type: 'expense' }))
+    await waitFor(() => {
+      expect(mockNeq).toHaveBeenCalledWith('type', 'transfer')
+    })
+  })
+
+  it('filteredTotal soma corretamente os amounts retornados pelo sumQuery', async () => {
+    // Limitação do mock: buildChain retorna o mesmo data para query principal e sumQuery.
+    // Quando type !== 'all', o hook usa data do sumQuery para calcular filteredTotal,
+    // então o mock com apenas { amount } é válido para esse cálculo.
+    mockSupabaseResult({
+      data: [
+        { amount: 100 },
+        { amount: 250.50 },
+        { amount: 300 },
+      ],
+      count: 3,
+    })
+    const { result } = renderHook(() =>
+      useTransactions({ ...DEFAULT_FILTERS, type: 'expense' })
+    )
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.filteredTotal).toBeCloseTo(650.5)
   })
 })
