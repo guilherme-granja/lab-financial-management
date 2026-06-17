@@ -136,9 +136,9 @@ export default function Dashboard() {
 
       setLineData(
         historyData.map(({ month, data }) => {
-          const inc = data.filter((t) => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
-          const exp = data.filter((t) => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
-          return { month, balance: inc - exp }
+          const income  = data.filter((t) => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
+          const expense = data.filter((t) => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
+          return { month, income, expense }
         })
       )
 
@@ -235,7 +235,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="bg-[#1a1d27] border-[#2d3148]">
           <CardHeader>
-            <CardTitle className="text-slate-200 text-sm font-medium">Saldo — últimos 6 meses</CardTitle>
+            <CardTitle className="text-slate-200 text-sm font-medium">Balanço — últimos 6 meses</CardTitle>
           </CardHeader>
           <CardContent>
             <BalanceLineChart data={lineData} />
