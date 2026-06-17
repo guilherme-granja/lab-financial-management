@@ -1094,7 +1094,7 @@ export default function Transactions() {
           <DialogHeader>
             <DialogTitle>Efetivar transação</DialogTitle>
             <DialogDescription className="sr-only">
-              Informe os dados do pagamento para registrar a liquidação desta transação.
+              Informe os dados para efetivar a liquidação desta transação.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
