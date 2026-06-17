@@ -8,17 +8,17 @@ import {
 } from 'recharts'
 import { formatCurrency } from '@/lib/formatters'
 
-export interface PieDataPoint {
+export interface DonutDataPoint {
   name: string
   value: number
   color: string
 }
 
 interface Props {
-  data: PieDataPoint[]
+  data: DonutDataPoint[]
 }
 
-export function ExpensePieChart({ data }: Props) {
+export function TopCategoriesDonutChart({ data }: Props) {
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center h-48 text-slate-500 text-sm">
@@ -38,6 +38,8 @@ export function ExpensePieChart({ data }: Props) {
           outerRadius={80}
           paddingAngle={2}
           dataKey="value"
+          label={({ name, percent }) => percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''}
+          labelLine={false}
         >
           {data.map((entry, index) => (
             <Cell key={index} fill={entry.color} />

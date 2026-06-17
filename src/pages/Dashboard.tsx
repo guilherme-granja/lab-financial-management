@@ -3,7 +3,7 @@ import { format, subMonths, startOfMonth, endOfMonth, addMonths, parseISO } from
 import { ptBR } from 'date-fns/locale'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
-import type { Transaction, Category } from '@/types'
+import type { Transaction } from '@/types'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -11,8 +11,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { BalanceLineChart } from '@/components/charts/BalanceLineChart'
 import type { BalanceDataPoint } from '@/components/charts/BalanceLineChart'
-import { ExpensePieChart } from '@/components/charts/ExpensePieChart'
-import type { PieDataPoint } from '@/components/charts/ExpensePieChart'
+import { TopCategoriesDonutChart } from '@/components/charts/TopCategoriesDonutChart'
+import type { DonutDataPoint } from '@/components/charts/TopCategoriesDonutChart'
 import { TrendingUp, TrendingDown, Wallet, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface MonthSummary {
@@ -37,7 +37,7 @@ export default function Dashboard() {
 
   const [summary, setSummary] = useState<MonthSummary>({ income: 0, expenses: 0, balance: 0, pending: 0 })
   const [lineData, setLineData] = useState<BalanceDataPoint[]>([])
-  const [pieData, setPieData] = useState<PieDataPoint[]>([])
+  const [donutData, setDonutData] = useState<DonutDataPoint[]>([])
   const [recentTx, setRecentTx] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -72,7 +72,7 @@ export default function Dashboard() {
 
         supabase
           .from('transactions')
-          .select('amount, categories(name, color)')
+          .select('amount, categories(id, name, color, parent_id, parent:categories!parent_id(name))')
           .eq('type', 'expense')
           .eq('paid', true)
           .gte('date', monthStart)
@@ -123,14 +123,25 @@ export default function Dashboard() {
       const pending = (pendingRes.data ?? []).reduce((s, t) => s + Number(t.amount), 0)
       setSummary({ income, expenses, balance: income - expenses, pending })
 
-      const catMap: Record<string, { name: string; color: string; total: number }> = {}
+      const DONUT_COLORS = ['#6366f1', '#22c55e', '#ef4444', '#f59e0b', '#06b6d4']
+
+      const catMap: Record<string, { name: string; total: number }> = {}
       for (const tx of pieRes.data ?? []) {
-        const cat = tx.categories as unknown as Category | null
-        const key = cat?.name ?? 'Sem categoria'
-        if (!catMap[key]) catMap[key] = { name: key, color: cat?.color ?? '#6366f1', total: 0 }
-        catMap[key].total += Number(tx.amount)
+        const cat = tx.categories as unknown as {
+          id: string; name: string; parent_id: string | null;
+          parent?: { name: string } | null
+        } | null
+        const label = cat?.name ?? 'Sem categoria'
+        if (!catMap[label]) catMap[label] = { name: label, total: 0 }
+        catMap[label].total += Number(tx.amount)
       }
-      setPieData(Object.values(catMap).map((c) => ({ name: c.name, value: c.total, color: c.color })))
+
+      const top5 = Object.values(catMap)
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5)
+        .map((c, i) => ({ name: c.name, value: c.total, color: DONUT_COLORS[i] }))
+
+      setDonutData(top5)
 
       setRecentTx((recentRes.data as unknown as Transaction[]) ?? [])
 
@@ -244,10 +255,10 @@ export default function Dashboard() {
 
         <Card className="bg-[#1a1d27] border-[#2d3148]">
           <CardHeader>
-            <CardTitle className="text-slate-200 text-sm font-medium">Despesas por categoria</CardTitle>
+            <CardTitle className="text-slate-200 text-sm font-medium">Top 5 subcategorias — despesas</CardTitle>
           </CardHeader>
           <CardContent>
-            <ExpensePieChart data={pieData} />
+            <TopCategoriesDonutChart data={donutData} />
           </CardContent>
         </Card>
       </div>
