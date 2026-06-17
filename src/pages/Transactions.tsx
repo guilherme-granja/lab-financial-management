@@ -1023,7 +1023,11 @@ export default function Transactions() {
 
       {/* Delete Confirm Dialog */}
       <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
+        <DialogContent
+          className="bg-[#1a1d27] border-[#2d3148] text-slate-200"
+          onEscapeKeyDown={(e) => { e.preventDefault(); setDeleteId(null) }}
+          onInteractOutside={(e) => { e.preventDefault(); setDeleteId(null) }}
+        >
           <DialogHeader>
             <DialogTitle>Excluir transação</DialogTitle>
             <DialogDescription className="sr-only">
@@ -1044,7 +1048,11 @@ export default function Transactions() {
 
       {/* Recurrent Delete Dialog */}
       <Dialog open={!!deleteTx} onOpenChange={() => setDeleteTx(null)}>
-        <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
+        <DialogContent
+          className="bg-[#1a1d27] border-[#2d3148] text-slate-200"
+          onEscapeKeyDown={(e) => { e.preventDefault(); setDeleteTx(null) }}
+          onInteractOutside={(e) => { e.preventDefault(); setDeleteTx(null) }}
+        >
           <DialogHeader>
             <DialogTitle>Excluir transação recorrente</DialogTitle>
           </DialogHeader>
