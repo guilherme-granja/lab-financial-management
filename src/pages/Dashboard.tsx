@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react'
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
+import { format, subMonths, startOfMonth, endOfMonth, addMonths, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import type { Transaction, Category } from '@/types'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { BalanceLineChart } from '@/components/charts/BalanceLineChart'
 import type { BalanceDataPoint } from '@/components/charts/BalanceLineChart'
 import { ExpensePieChart } from '@/components/charts/ExpensePieChart'
 import type { PieDataPoint } from '@/components/charts/ExpensePieChart'
-import { TrendingUp, TrendingDown, Wallet, Clock } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface MonthSummary {
   income: number
@@ -21,6 +23,18 @@ interface MonthSummary {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate()
+
+  // período selecionado no formato 'yyyy-MM'; inicia sempre no mês corrente
+  const [period, setPeriod] = useState<string>(format(new Date(), 'yyyy-MM'))
+
+  function navigatePeriod(delta: number) {
+    setPeriod((prev) => {
+      const current = parseISO(`${prev}-01`)
+      return format(addMonths(current, delta), 'yyyy-MM')
+    })
+  }
+
   const [summary, setSummary] = useState<MonthSummary>({ income: 0, expenses: 0, balance: 0, pending: 0 })
   const [lineData, setLineData] = useState<BalanceDataPoint[]>([])
   const [pieData, setPieData] = useState<PieDataPoint[]>([])
@@ -30,8 +44,9 @@ export default function Dashboard() {
   useEffect(() => {
     async function load() {
       const now = new Date()
-      const monthStart = format(startOfMonth(now), 'yyyy-MM-dd')
-      const monthEnd = format(endOfMonth(now), 'yyyy-MM-dd')
+      const periodDate = parseISO(`${period}-01`)
+      const monthStart = format(startOfMonth(periodDate), 'yyyy-MM-dd')
+      const monthEnd   = format(endOfMonth(periodDate), 'yyyy-MM-dd')
 
       const { data: accountsData } = await supabase
         .from('accounts')
@@ -131,7 +146,7 @@ export default function Dashboard() {
     }
 
     load()
-  }, [])
+  }, [period])
 
   if (loading) {
     return <div className="text-slate-400 text-sm">Carregando...</div>
@@ -139,6 +154,29 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Seletor de mês */}
+      <div className="flex items-center gap-0.5 bg-[#1a1d27] border border-[#2d3148] rounded-lg h-9 px-1 w-fit">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-[#2d3148]"
+          onClick={() => navigatePeriod(-1)}
+        >
+          <ChevronLeft size={14} />
+        </Button>
+        <span className="text-slate-200 text-sm w-36 text-center capitalize select-none">
+          {format(parseISO(`${period}-01`), 'MMMM yyyy', { locale: ptBR })}
+        </span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-[#2d3148]"
+          onClick={() => navigatePeriod(1)}
+        >
+          <ChevronRight size={14} />
+        </Button>
+      </div>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-[#1a1d27] border-[#2d3148]">
