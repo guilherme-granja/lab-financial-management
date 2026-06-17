@@ -1100,12 +1100,9 @@ export default function Transactions() {
           <div className="space-y-4 py-2">
             <div className="space-y-1">
               <Label className="text-slate-400 text-xs">Valor efetivado (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={payForm.paid_amount}
-                onChange={(e) => setPayForm((f) => ({ ...f, paid_amount: e.target.value }))}
+              <MoneyInput
+                value={parseFloat(payForm.paid_amount) || 0}
+                onChange={(v) => setPayForm((f) => ({ ...f, paid_amount: String(v) }))}
                 className="bg-[#0f1117] border-[#2d3148]"
               />
             </div>
