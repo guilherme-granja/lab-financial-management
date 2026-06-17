@@ -1025,8 +1025,8 @@ export default function Transactions() {
       <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <DialogContent
           className="bg-[#1a1d27] border-[#2d3148] text-slate-200"
-          onEscapeKeyDown={(e) => { e.preventDefault(); setDeleteId(null) }}
-          onInteractOutside={(e) => { e.preventDefault(); setDeleteId(null) }}
+          onEscapeKeyDown={() => setDeleteId(null)}
+          onInteractOutside={() => setDeleteId(null)}
         >
           <DialogHeader>
             <DialogTitle>Excluir transação</DialogTitle>
@@ -1050,8 +1050,8 @@ export default function Transactions() {
       <Dialog open={!!deleteTx} onOpenChange={() => setDeleteTx(null)}>
         <DialogContent
           className="bg-[#1a1d27] border-[#2d3148] text-slate-200"
-          onEscapeKeyDown={(e) => { e.preventDefault(); setDeleteTx(null) }}
-          onInteractOutside={(e) => { e.preventDefault(); setDeleteTx(null) }}
+          onEscapeKeyDown={() => setDeleteTx(null)}
+          onInteractOutside={() => setDeleteTx(null)}
         >
           <DialogHeader>
             <DialogTitle>Excluir transação recorrente</DialogTitle>
