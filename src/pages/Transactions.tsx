@@ -18,13 +18,38 @@ import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CreditCard, X, AlertTriangle } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CreditCard, X, AlertTriangle, Columns } from 'lucide-react'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import type { SearchableSelectOption } from '@/components/ui/searchable-select'
 import { MoneyInput } from '@/components/ui/money-input'
 import { checkDuplicate } from '@/hooks/useDuplicateCheck'
 
 const CURRENT_MONTH = format(new Date(), 'yyyy-MM')
+
+type ColumnKey = 'date' | 'account' | 'category' | 'type' | 'amount' | 'description' | 'tag' | 'status'
+
+const DEFAULT_VISIBLE: Record<ColumnKey, boolean> = {
+  date: true,
+  account: true,
+  category: true,
+  type: true,
+  amount: true,
+  description: false,
+  tag: false,
+  status: false,
+}
+
+const STORAGE_KEY = 'transactions_column_visibility'
+
+function loadColumnVisibility(): Record<ColumnKey, boolean> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return DEFAULT_VISIBLE
+    return { ...DEFAULT_VISIBLE, ...JSON.parse(raw) }
+  } catch {
+    return DEFAULT_VISIBLE
+  }
+}
 
 interface FormState {
   amount: string
@@ -105,6 +130,19 @@ export default function Transactions() {
   const { categories, categoryTree } = useCategories()
   const { accounts } = useAccounts()
   const { tags } = useTags()
+
+  const [columnVisibility, setColumnVisibility] = useState<Record<ColumnKey, boolean>>(loadColumnVisibility)
+  const [columnPickerOpen, setColumnPickerOpen] = useState(false)
+
+  function toggleColumn(key: ColumnKey) {
+    const FIXED: ColumnKey[] = ['date', 'account', 'category', 'type', 'amount']
+    if (FIXED.includes(key)) return
+    setColumnVisibility((prev) => {
+      const next = { ...prev, [key]: !prev[key] }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      return next
+    })
+  }
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -546,6 +584,58 @@ export default function Transactions() {
           </Button>
         )}
 
+        {/* Column picker */}
+        <div className="relative">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setColumnPickerOpen((v) => !v)}
+            className="text-slate-400 hover:text-slate-200 gap-1.5 h-9 border border-[#2d3148]"
+          >
+            <Columns size={14} />
+            Colunas
+          </Button>
+
+          {columnPickerOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setColumnPickerOpen(false)}
+              />
+              <div className="absolute right-0 top-10 z-20 bg-[#1a1d27] border border-[#2d3148] rounded-lg shadow-xl p-3 w-52 space-y-1">
+                <p className="text-slate-500 text-xs pb-1 border-b border-[#2d3148]">Exibir colunas</p>
+                {(
+                  [
+                    { key: 'date',        label: 'Data',      fixed: true  },
+                    { key: 'description', label: 'Descrição', fixed: false },
+                    { key: 'account',     label: 'Conta',     fixed: true  },
+                    { key: 'category',    label: 'Categoria', fixed: true  },
+                    { key: 'tag',         label: 'Tag',       fixed: false },
+                    { key: 'type',        label: 'Tipo',      fixed: true  },
+                    { key: 'status',      label: 'Status',    fixed: false },
+                    { key: 'amount',      label: 'Valor',     fixed: true  },
+                  ] as { key: ColumnKey; label: string; fixed: boolean }[]
+                ).map(({ key, label, fixed }) => (
+                  <label
+                    key={key}
+                    className={`flex items-center gap-2.5 px-1 py-1 rounded cursor-pointer hover:bg-[#2d3148] transition-colors ${fixed ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={columnVisibility[key]}
+                      disabled={fixed}
+                      onChange={() => toggleColumn(key)}
+                      className="accent-indigo-500 w-3.5 h-3.5"
+                    />
+                    <span className="text-slate-300 text-sm">{label}</span>
+                    {fixed && <span className="ml-auto text-slate-600 text-xs">padrão</span>}
+                  </label>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
         <Button onClick={openCreate} className="ml-auto bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
           <Plus size={16} />
           Nova transação
@@ -576,138 +666,157 @@ export default function Transactions() {
       )}
 
       {/* Table */}
-      <div className="bg-[#1a1d27] border border-[#2d3148] rounded-xl overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-[#2d3148] hover:bg-transparent">
-              <TableHead className="text-slate-400">Data</TableHead>
-              <TableHead className="text-slate-400">Descrição</TableHead>
-              <TableHead className="text-slate-400">Conta</TableHead>
-              <TableHead className="text-slate-400">Categoria</TableHead>
-              <TableHead className="text-slate-400">Tag</TableHead>
-              <TableHead className="text-slate-400">Tipo</TableHead>
-              <TableHead className="text-slate-400">Status</TableHead>
-              <TableHead className="text-slate-400 text-right">Valor</TableHead>
-              <TableHead className="text-slate-400 w-28" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading && (
-              <TableRow>
-                <TableCell colSpan={9} className="text-center text-slate-500 py-8">
-                  Carregando...
-                </TableCell>
-              </TableRow>
-            )}
-            {!loading && transactions.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={9} className="text-center text-slate-500 py-8">
-                  Nenhuma transação encontrada
-                </TableCell>
-              </TableRow>
-            )}
-            {transactions.map((tx) => {
-              const toAccount = tx.type === 'transfer' && tx.to_account_id
-                ? (accounts.find((a) => a.id === tx.to_account_id) ?? null)
-                : null
-              return (
-              <TableRow key={tx.id} className="border-[#2d3148] hover:bg-[#2d3148]/30">
-                <TableCell className="text-slate-300">{formatDate(tx.date)}</TableCell>
-                <TableCell className="text-slate-300">
-                  <span>{tx.description ?? '—'}</span>
-                  {recurrenceBadge(tx)}
-                </TableCell>
-                <TableCell className="text-slate-300 text-sm">
-                  {tx.accounts ? (
-                    <span className="flex items-center gap-1">
-                      <span>{tx.accounts.icon}</span>
-                      <span>{tx.accounts.name}</span>
-                    </span>
-                  ) : toAccount ? (
-                    <span className="text-slate-500 text-xs">
-                      → {toAccount.icon} {toAccount.name}
-                    </span>
-                  ) : (
-                    '—'
-                  )}
-                </TableCell>
-                <TableCell className="text-slate-300">
-                  {tx.type === 'transfer'
-                    ? '—'
-                    : tx.categories
-                    ? `${tx.categories.icon} ${tx.categories.name}`
-                    : '—'}
-                </TableCell>
-                <TableCell className="text-slate-300">
-                  {tx.tags ? (
-                    <Badge variant="outline" className="bg-[#2d3148] text-slate-300 border-[#2d3148]">
-                      {tx.tags.name}
-                    </Badge>
-                  ) : '—'}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={typeColor(tx.type)}>
-                    {typeLabel(tx.type)}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {tx.paid ? (
-                    <Badge variant="outline" className="bg-green-950 text-green-400 border-green-800 text-xs">
-                      Pago
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="bg-yellow-950 text-yellow-400 border-yellow-800 text-xs">
-                      Pendente
-                    </Badge>
-                  )}
-                </TableCell>
-                <TableCell className={`text-right font-medium ${amountColor(tx.type)}`}>
-                  {amountPrefix(tx.type)}{formatCurrency(tx.amount)}
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-1 justify-end">
-                    {!tx.paid && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-yellow-400 hover:text-yellow-300"
-                        title="Pagar"
-                        onClick={() => openPay(tx)}
-                      >
-                        <CreditCard size={14} />
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-slate-400 hover:text-slate-200"
-                      onClick={() => openEdit(tx)}
-                    >
-                      <Pencil size={14} />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-slate-400 hover:text-red-400"
-                      onClick={() => {
-                        if (tx.recurrence_group_id) {
-                          setDeleteTx(tx)
-                          setDeleteScope('only')
-                        } else {
-                          setDeleteId(tx.id)
-                        }
-                      }}
-                    >
-                      <Trash2 size={14} />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
-      </div>
+      {(() => {
+        const visibleCount = Object.values(columnVisibility).filter(Boolean).length + 1
+        return (
+          <div className="bg-[#1a1d27] border border-[#2d3148] rounded-xl overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-[#2d3148] hover:bg-transparent">
+                  {columnVisibility.date        && <TableHead className="text-slate-400">Data</TableHead>}
+                  {columnVisibility.description && <TableHead className="text-slate-400">Descrição</TableHead>}
+                  {columnVisibility.account     && <TableHead className="text-slate-400">Conta</TableHead>}
+                  {columnVisibility.category    && <TableHead className="text-slate-400">Categoria</TableHead>}
+                  {columnVisibility.tag         && <TableHead className="text-slate-400">Tag</TableHead>}
+                  {columnVisibility.type        && <TableHead className="text-slate-400">Tipo</TableHead>}
+                  {columnVisibility.status      && <TableHead className="text-slate-400">Status</TableHead>}
+                  {columnVisibility.amount      && <TableHead className="text-slate-400 text-right">Valor</TableHead>}
+                  <TableHead className="text-slate-400 w-28" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading && (
+                  <TableRow>
+                    <TableCell colSpan={visibleCount} className="text-center text-slate-500 py-8">
+                      Carregando...
+                    </TableCell>
+                  </TableRow>
+                )}
+                {!loading && transactions.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={visibleCount} className="text-center text-slate-500 py-8">
+                      Nenhuma transação encontrada
+                    </TableCell>
+                  </TableRow>
+                )}
+                {transactions.map((tx) => {
+                  const toAccount = tx.type === 'transfer' && tx.to_account_id
+                    ? (accounts.find((a) => a.id === tx.to_account_id) ?? null)
+                    : null
+                  return (
+                    <TableRow key={tx.id} className="border-[#2d3148] hover:bg-[#2d3148]/30">
+                      {columnVisibility.date        && <TableCell className="text-slate-300">{formatDate(tx.date)}</TableCell>}
+                      {columnVisibility.description && (
+                        <TableCell className="text-slate-300">
+                          <span>{tx.description ?? '—'}</span>
+                          {recurrenceBadge(tx)}
+                        </TableCell>
+                      )}
+                      {columnVisibility.account && (
+                        <TableCell className="text-slate-300 text-sm">
+                          {tx.accounts ? (
+                            <span className="flex items-center gap-1">
+                              <span>{tx.accounts.icon}</span>
+                              <span>{tx.accounts.name}</span>
+                            </span>
+                          ) : toAccount ? (
+                            <span className="text-slate-500 text-xs">
+                              → {toAccount.icon} {toAccount.name}
+                            </span>
+                          ) : (
+                            '—'
+                          )}
+                        </TableCell>
+                      )}
+                      {columnVisibility.category && (
+                        <TableCell className="text-slate-300">
+                          {tx.type === 'transfer'
+                            ? '—'
+                            : tx.categories
+                            ? `${tx.categories.icon} ${tx.categories.name}`
+                            : '—'}
+                        </TableCell>
+                      )}
+                      {columnVisibility.tag && (
+                        <TableCell className="text-slate-300">
+                          {tx.tags ? (
+                            <Badge variant="outline" className="bg-[#2d3148] text-slate-300 border-[#2d3148]">
+                              {tx.tags.name}
+                            </Badge>
+                          ) : '—'}
+                        </TableCell>
+                      )}
+                      {columnVisibility.type && (
+                        <TableCell>
+                          <Badge variant="outline" className={typeColor(tx.type)}>
+                            {typeLabel(tx.type)}
+                          </Badge>
+                        </TableCell>
+                      )}
+                      {columnVisibility.status && (
+                        <TableCell>
+                          {tx.paid ? (
+                            <Badge variant="outline" className="bg-green-950 text-green-400 border-green-800 text-xs">
+                              Pago
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-yellow-950 text-yellow-400 border-yellow-800 text-xs">
+                              Pendente
+                            </Badge>
+                          )}
+                        </TableCell>
+                      )}
+                      {columnVisibility.amount && (
+                        <TableCell className={`text-right font-medium ${amountColor(tx.type)}`}>
+                          {amountPrefix(tx.type)}{formatCurrency(tx.amount)}
+                        </TableCell>
+                      )}
+                      <TableCell>
+                        <div className="flex gap-1 justify-end">
+                          {!tx.paid && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-yellow-400 hover:text-yellow-300"
+                              title="Pagar"
+                              onClick={() => openPay(tx)}
+                            >
+                              <CreditCard size={14} />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-slate-400 hover:text-slate-200"
+                            onClick={() => openEdit(tx)}
+                          >
+                            <Pencil size={14} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-slate-400 hover:text-red-400"
+                            onClick={() => {
+                              if (tx.recurrence_group_id) {
+                                setDeleteTx(tx)
+                                setDeleteScope('only')
+                              } else {
+                                setDeleteId(tx.id)
+                              }
+                            }}
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )
+      })()}
 
       {/* Pagination */}
       {totalPages > 1 && (
