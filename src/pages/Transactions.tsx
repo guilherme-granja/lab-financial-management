@@ -76,13 +76,15 @@ export default function Transactions() {
     const accountId = searchParams.get('account_id')
     const type = searchParams.get('type')
     const month = searchParams.get('month')
+    const status = searchParams.get('status')
 
-    if (accountId || type || month) {
+    if (accountId || type || month || status) {
       setFilters((f) => ({
         ...f,
         ...(accountId ? { account_id: accountId } : {}),
         ...(type ? { type: type as TransactionType | 'all' } : {}),
         ...(month ? { period: month } : {}),
+        ...(status ? { status: status as 'all' | 'paid' | 'unpaid' } : {}),
       }))
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
