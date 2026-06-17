@@ -126,6 +126,7 @@ export default function Transactions() {
     deleteTransaction,
     deleteTransactionGroupUnpaid,
     deleteTransactionGroup,
+    filteredTotal,
   } = useTransactions(filters)
   const { categories, categoryTree } = useCategories()
   const { accounts } = useAccounts()
@@ -662,6 +663,34 @@ export default function Transactions() {
               </button>
             </span>
           ))}
+        </div>
+      )}
+
+      {/* Valor Total */}
+      {filteredTotal !== null && (
+        <div className="flex items-center justify-between px-4 py-2.5
+                        bg-[#1a1d27] border border-[#2d3148] rounded-xl">
+          <span className="text-slate-400 text-sm">
+            Total de{' '}
+            <span className="font-medium text-slate-200">
+              {filters.type === 'income' ? 'Receitas' : filters.type === 'expense' ? 'Despesas' : 'Transferências'}
+            </span>
+            {/* se houver outros filtros ativos além de tipo, acrescentar contexto */}
+            {activeChips.length > 1 && ' (filtros aplicados)'}
+            {activeChips.length === 1 && ' no período'}
+          </span>
+          <span
+            className={`text-lg font-bold tabular-nums ${
+              filters.type === 'income'
+                ? 'text-green-400'
+                : filters.type === 'expense'
+                ? 'text-red-400'
+                : 'text-blue-400'
+            }`}
+          >
+            {filters.type === 'income' ? '+' : filters.type === 'expense' ? '−' : ''}
+            {formatCurrency(filteredTotal)}
+          </span>
         </div>
       )}
 
