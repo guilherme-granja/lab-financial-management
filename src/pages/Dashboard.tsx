@@ -179,7 +179,10 @@ export default function Dashboard() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-[#1a1d27] border-[#2d3148]">
+        <Card
+          className="bg-[#1a1d27] border-[#2d3148] cursor-pointer hover:border-indigo-600/50 transition-colors"
+          onClick={() => navigate(`/transactions?type=income&month=${period}`)}
+        >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-slate-400 text-sm font-medium">Receitas do mês</CardTitle>
             <TrendingUp size={16} className="text-green-500" />
@@ -189,7 +192,10 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-[#1a1d27] border-[#2d3148]">
+        <Card
+          className="bg-[#1a1d27] border-[#2d3148] cursor-pointer hover:border-indigo-600/50 transition-colors"
+          onClick={() => navigate(`/transactions?type=expense&month=${period}`)}
+        >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-slate-400 text-sm font-medium">Despesas do mês</CardTitle>
             <TrendingDown size={16} className="text-red-500" />
@@ -211,7 +217,10 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-[#1a1d27] border-[#2d3148]">
+        <Card
+          className="bg-[#1a1d27] border-[#2d3148] cursor-pointer hover:border-indigo-600/50 transition-colors"
+          onClick={() => navigate(`/transactions?status=unpaid&month=${period}`)}
+        >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-slate-400 text-sm font-medium">A pagar este mês</CardTitle>
             <Clock size={16} className="text-yellow-500" />
