@@ -778,7 +778,7 @@ export default function Transactions() {
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 text-yellow-400 hover:text-yellow-300"
-                              title="Pagar"
+                              title="Efetivar"
                               onClick={() => openPay(tx)}
                             >
                               <CreditCard size={14} />
@@ -1092,14 +1092,14 @@ export default function Transactions() {
       <Dialog open={!!payingTx} onOpenChange={() => setPayingTx(null)}>
         <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
           <DialogHeader>
-            <DialogTitle>Registrar pagamento</DialogTitle>
+            <DialogTitle>Efetivar transação</DialogTitle>
             <DialogDescription className="sr-only">
               Informe os dados do pagamento para registrar a liquidação desta transação.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
-              <Label className="text-slate-400 text-xs">Valor pago (R$)</Label>
+              <Label className="text-slate-400 text-xs">Valor efetivado (R$)</Label>
               <Input
                 type="number"
                 step="0.01"
