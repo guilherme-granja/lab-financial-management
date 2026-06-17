@@ -37,6 +37,7 @@ const SELECT_FIELDS =
 export function useTransactions(filters: TransactionFilters) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [total, setTotal] = useState(0)
+  const [filteredTotal, setFilteredTotal] = useState<number | null>(null)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -91,13 +92,50 @@ export function useTransactions(filters: TransactionFilters) {
       query = query.eq('tag_id', filters.tagId)
     }
 
-    const { data, error: err, count } = await query
+    // Sum query — only runs when type filter is active
+    let sumQuery: Promise<{ data: { amount: number }[] | null; error: unknown }> | null = null
+    if (filters.type !== 'all') {
+      let sq = supabase
+        .from('transactions')
+        .select('amount')
+        .gte('date', dateStart)
+        .lte('date', dateEnd)
+
+      sq = sq.eq('type', filters.type)
+      if (filters.categoryId !== 'all') {
+        sq = sq.eq('category_id', filters.categoryId)
+      }
+      if (filters.status === 'paid') {
+        sq = sq.eq('paid', true)
+      } else if (filters.status === 'unpaid') {
+        sq = sq.eq('paid', false)
+      }
+      if (filters.account_id) {
+        sq = sq.eq('account_id', filters.account_id)
+      }
+      if (filters.tagId !== 'all') {
+        sq = sq.eq('tag_id', filters.tagId)
+      }
+
+      sumQuery = sq.then(({ data, error }) => ({ data: data as { amount: number }[] | null, error }))
+    }
+
+    const [{ data, error: err, count }, sumResult] = await Promise.all([
+      query,
+      sumQuery ?? Promise.resolve({ data: null, error: null }),
+    ])
 
     if (err) {
       setError(err.message)
     } else {
       setTransactions((data as unknown as Transaction[]) ?? [])
       setTotal(count ?? 0)
+    }
+
+    if (filters.type !== 'all' && sumResult.data) {
+      setFilteredTotal(sumResult.data.reduce((acc, tx) => acc + tx.amount, 0))
+    } else {
+      setFilteredTotal(null)
     }
 
     setLoading(false)
@@ -240,6 +278,7 @@ export function useTransactions(filters: TransactionFilters) {
   return {
     transactions,
     total,
+    filteredTotal,
     totalPages,
     page,
     setPage,
