@@ -115,7 +115,7 @@ export default function Dashboard() {
           .gte('date', monthStart)
           .lte('date', monthEnd)
           .eq('paid', false)
-          .neq('type', 'transfer')
+          .eq('type', 'expense')
           .or(accountFilter()),
       ])
 
