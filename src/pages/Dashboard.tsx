@@ -22,6 +22,8 @@ interface MonthSummary {
   pending: number
 }
 
+const DONUT_COLORS = ['#6366f1', '#22c55e', '#ef4444', '#f59e0b', '#06b6d4']
+
 export default function Dashboard() {
   const navigate = useNavigate()
 
@@ -72,7 +74,7 @@ export default function Dashboard() {
 
         supabase
           .from('transactions')
-          .select('amount, categories(id, name, color, parent_id, parent:categories!parent_id(name))')
+          .select('amount, categories(id, name, parent_id)')
           .eq('type', 'expense')
           .eq('paid', true)
           .gte('date', monthStart)
@@ -123,17 +125,15 @@ export default function Dashboard() {
       const pending = (pendingRes.data ?? []).reduce((s, t) => s + Number(t.amount), 0)
       setSummary({ income, expenses, balance: income - expenses, pending })
 
-      const DONUT_COLORS = ['#6366f1', '#22c55e', '#ef4444', '#f59e0b', '#06b6d4']
-
       const catMap: Record<string, { name: string; total: number }> = {}
       for (const tx of pieRes.data ?? []) {
         const cat = tx.categories as unknown as {
-          id: string; name: string; parent_id: string | null;
-          parent?: { name: string } | null
+          id: string; name: string; parent_id: string | null
         } | null
+        const key   = cat?.id   ?? 'no-category'
         const label = cat?.name ?? 'Sem categoria'
-        if (!catMap[label]) catMap[label] = { name: label, total: 0 }
-        catMap[label].total += Number(tx.amount)
+        if (!catMap[key]) catMap[key] = { name: label, total: 0 }
+        catMap[key].total += Number(tx.amount)
       }
 
       const top5 = Object.values(catMap)
