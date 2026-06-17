@@ -394,7 +394,11 @@ export default function Categories() {
 
       {/* Delete Confirm Dialog */}
       <Dialog open={!!deleteId} onOpenChange={closeDeleteDialog}>
-        <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
+        <DialogContent
+          className="bg-[#1a1d27] border-[#2d3148] text-slate-200"
+          onEscapeKeyDown={() => closeDeleteDialog()}
+          onInteractOutside={() => closeDeleteDialog()}
+        >
           <DialogDescription className="sr-only">
             Confirme a exclusão desta categoria e a transferência de suas transações.
           </DialogDescription>

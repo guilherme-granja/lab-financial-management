@@ -147,7 +147,11 @@ export default function Tags() {
 
       {/* Delete Confirm Dialog */}
       <Dialog open={!!tagToDelete} onOpenChange={() => setTagToDelete(null)}>
-        <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
+        <DialogContent
+          className="bg-[#1a1d27] border-[#2d3148] text-slate-200"
+          onEscapeKeyDown={() => setTagToDelete(null)}
+          onInteractOutside={() => setTagToDelete(null)}
+        >
           <DialogHeader>
             <DialogTitle>Excluir tag</DialogTitle>
             <DialogDescription className="sr-only">

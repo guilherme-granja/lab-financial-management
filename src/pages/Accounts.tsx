@@ -340,7 +340,11 @@ export default function Accounts() {
 
       {/* Delete Confirm Dialog */}
       <Dialog open={!!deleteId} onOpenChange={closeDelete}>
-        <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200">
+        <DialogContent
+          className="bg-[#1a1d27] border-[#2d3148] text-slate-200"
+          onEscapeKeyDown={() => closeDelete()}
+          onInteractOutside={() => closeDelete()}
+        >
           <DialogHeader>
             <DialogTitle>Excluir conta</DialogTitle>
             <DialogDescription className="sr-only">
