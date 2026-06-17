@@ -71,6 +71,12 @@ Se a task tocar dois arquivos inseparáveis (ex: hook + página que dependem um 
 <!--
 GUIA DE USO — remover antes de salvar a spec real
 
+NOME DO ARQUIVO:
+- Formato obrigatório: `YYYY-MM-DD-o-que-a-spec-faz.md`
+- Exemplos: `2026-06-17-filtro-conta-chips-transacoes.md`, `2026-06-17-dashboard-graficos.md`
+- Usar kebab-case, sem acentos, sem maiúsculas
+- Salvar em: `docs/superpowers/specs/`
+
 QUANDO CRIAR SPEC:
 - Feature que toca mais de 2 arquivos
 - Qualquer mudança que envolva migration de banco
