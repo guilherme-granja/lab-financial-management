@@ -6,6 +6,8 @@ interface AuthState {
   user: User | null
   loading: boolean
   signInWithGithub: () => Promise<void>
+  signInWithEmail: (email: string, password: string) => Promise<void>
+  verifyEmailOtp: (email: string, token: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -46,13 +48,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  const signInWithEmail = async (email: string, password: string): Promise<void> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) throw new Error(error.message)
+  }
+
+  const verifyEmailOtp = async (email: string, token: string): Promise<void> => {
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' })
+    if (error) throw new Error(error.message)
+  }
+
   const signOut = async () => {
     await supabase.auth.signOut()
     setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGithub, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signInWithGithub, signInWithEmail, verifyEmailOtp, signOut }}>
       {children}
     </AuthContext.Provider>
   )
