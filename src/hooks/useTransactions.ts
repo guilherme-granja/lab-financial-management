@@ -45,6 +45,7 @@ export function useTransactions(filters: TransactionFilters) {
   const fetch = useCallback(async () => {
     setLoading(true)
     setError(null)
+    setFilteredTotal(null)
 
     const from = (page - 1) * PAGE_SIZE
     const to = from + PAGE_SIZE - 1
