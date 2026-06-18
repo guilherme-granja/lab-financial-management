@@ -26,3 +26,4 @@ coverage
 *.sw?
 
 docs/superpowers/task-*-report.md
+docs/superpowers/specs

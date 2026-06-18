@@ -23,12 +23,26 @@
 
 ---
 
+## Arquitetura — leitura obrigatória antes de qualquer implementação
+
+Antes de criar ou modificar qualquer arquivo em `src/`, ler:
+
+```
+docs/superpowers/architecture.md
+```
+
+Este documento define as camadas da aplicação, a regra de isolamento do Supabase, a estrutura obrigatória de hooks e as convenções de tipos.
+
+**Regra inviolável:** `supabase` nunca é importado em `src/pages/` nem em `src/components/`. Toda query vai em `src/hooks/`. Violações bloqueiam o commit.
+
+---
+
 ## Convenções do projeto
 
 - Componentes em PascalCase, arquivos em kebab-case
 - Componentes novos: consultar `.claude/skills/frontend-design/SKILL.md` para tokens de cor, padrões de Card/Dialog/Grid e checklist de entrega
 - Estados obrigatórios em toda operação Supabase: `loading`, `error`, `empty` em queries; `saving`, `formError` em mutações
-- Chamadas ao Supabase centralizadas em hooks ou services — nunca diretamente em componentes de UI
+- Chamadas ao Supabase centralizadas em hooks — nunca diretamente em páginas ou componentes de UI
 - Sem `any` em TypeScript — use tipos específicos ou `unknown`
 - Imports organizados: externos → internos → tipos
 
@@ -50,6 +64,7 @@ Executar apenas quando o usuário disser "review" ou "faz o review".
 
 ## Referências internas
 
+- **Arquitetura (leitura obrigatória):** `docs/superpowers/architecture.md`
 - Critérios de review: `.claude/code-review-spec.md`
 - Padrões de UI/design: `.claude/skills/frontend-design/`
 - Documentação do projeto: `docs/superpowers/`
