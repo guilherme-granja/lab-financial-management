@@ -244,10 +244,11 @@ export function useTransactions(filters: TransactionFilters) {
   }
 
   async function updateTransaction(id: string, payload: Partial<TransactionPayload>) {
-    const { error: err } = await supabase.from('transactions').update(payload).eq('id', id)
+    const { tag_ids, ...dbPayload } = payload
+    const { error: err } = await supabase.from('transactions').update(dbPayload).eq('id', id)
     if (err) throw new Error(err.message)
-    if (payload.tag_ids && payload.tag_ids.length > 0) {
-      await setTransactionTagsStandalone(id, payload.tag_ids)
+    if ((tag_ids ?? []).length > 0) {
+      await setTransactionTagsStandalone(id, tag_ids ?? [])
     }
     await fetch()
   }
