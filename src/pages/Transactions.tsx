@@ -871,7 +871,7 @@ export default function Transactions() {
                       <span>{tx.accounts.icon} {tx.accounts.name}</span>
                     </>
                   )}
-                  {!tx.paid && tx.type !== 'transfer' && (
+                  {!(tx.payment || tx.paid) && tx.type !== 'transfer' && (
                     <>
                       <span>·</span>
                       <span className="text-yellow-500">Pendente</span>
@@ -887,7 +887,7 @@ export default function Transactions() {
 
               {/* Ações */}
               <div className="flex gap-0.5 shrink-0">
-                {!tx.paid && tx.type !== 'transfer' && (
+                {!(tx.payment || tx.paid) && tx.type !== 'transfer' && (
                   <Button variant="ghost" size="icon" className="h-7 w-7 text-yellow-400 hover:text-yellow-300"
                     onClick={() => openPay(tx)}>
                     <CreditCard size={14} />
@@ -1037,7 +1037,7 @@ export default function Transactions() {
                         )}
                         <TableCell>
                           <div className="flex gap-1 justify-end">
-                            {!tx.paid && (
+                            {!(tx.payment || tx.paid) && (
                               <Button
                                 variant="ghost"
                                 size="icon"
