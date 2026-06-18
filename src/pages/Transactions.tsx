@@ -280,8 +280,8 @@ export default function Transactions() {
   function openPay(tx: Transaction) {
     setPayingTx(tx)
     setPayForm({
-      paid_at: format(new Date(), 'yyyy-MM-dd'),
-      paid_amount: String(tx.amount),
+      paid_at: tx.payment?.paid_at ?? format(new Date(), 'yyyy-MM-dd'),
+      paid_amount: String(tx.payment?.paid_amount ?? tx.amount),
     })
   }
 
@@ -1019,7 +1019,7 @@ export default function Transactions() {
                         )}
                         {columnVisibility.status && (
                           <TableCell>
-                            {tx.paid ? (
+                            {(tx.payment || tx.paid) ? (
                               <Badge variant="outline" className="bg-green-950 text-green-400 border-green-800 text-xs">
                                 Pago
                               </Badge>
