@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { format, addMonths, parseISO, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns'
 import { supabase } from '@/lib/supabase'
+import { setTransactionTagsStandalone } from '@/hooks/useTags'
 import type { Transaction, TransactionType, RecurrenceType } from '@/types'
 
 export interface TransactionFilters {
@@ -27,12 +28,13 @@ export interface TransactionPayload {
   paid_at: string | null
   paid_amount: number | null
   tag_id: string | null
+  tag_ids: string[]
 }
 
 const PAGE_SIZE = 20
 
 const SELECT_FIELDS =
-  '*, categories(*), accounts!account_id(*), to_accounts:accounts!to_account_id(*), tags(*)'
+  '*, categories(*), accounts!account_id(*), to_accounts:accounts!to_account_id(*), tags(*), transaction_tags(*, tags(*))'
 
 export function useTransactions(filters: TransactionFilters) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -217,7 +219,7 @@ export function useTransactions(filters: TransactionFilters) {
       return
     }
 
-    const { error: err } = await supabase.from('transactions').insert({
+    const { data: inserted, error: err } = await supabase.from('transactions').insert({
       amount: payload.amount,
       type: payload.type,
       category_id: payload.category_id,
@@ -233,14 +235,20 @@ export function useTransactions(filters: TransactionFilters) {
       paid_at: payload.paid_at,
       paid_amount: payload.paid_amount,
       tag_id: payload.tag_id,
-    })
+    }).select('id').single()
     if (err) throw new Error(err.message)
+    if (payload.tag_ids.length > 0) {
+      await setTransactionTagsStandalone(inserted.id, payload.tag_ids)
+    }
     await fetch()
   }
 
   async function updateTransaction(id: string, payload: Partial<TransactionPayload>) {
     const { error: err } = await supabase.from('transactions').update(payload).eq('id', id)
     if (err) throw new Error(err.message)
+    if (payload.tag_ids && payload.tag_ids.length > 0) {
+      await setTransactionTagsStandalone(id, payload.tag_ids)
+    }
     await fetch()
   }
 

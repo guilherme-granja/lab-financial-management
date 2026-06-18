@@ -2,6 +2,15 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Tag } from '@/types'
 
+export async function setTransactionTagsStandalone(transactionId: string, tagIds: string[]): Promise<void> {
+  // Deleta todos os vínculos existentes e reinsere os novos (upsert completo)
+  await supabase.from('transaction_tags').delete().eq('transaction_id', transactionId)
+  if (tagIds.length === 0) return
+  const rows = tagIds.map((tag_id) => ({ transaction_id: transactionId, tag_id }))
+  const { error: err } = await supabase.from('transaction_tags').insert(rows)
+  if (err) throw new Error(err.message)
+}
+
 export function useTags() {
   const [tags, setTags] = useState<Tag[]>([])
   const [loading, setLoading] = useState(true)
@@ -78,12 +87,7 @@ export function useTags() {
   }
 
   async function setTransactionTags(transactionId: string, tagIds: string[]): Promise<void> {
-    // Deleta todos os vínculos existentes e reinsere os novos (upsert completo)
-    await supabase.from('transaction_tags').delete().eq('transaction_id', transactionId)
-    if (tagIds.length === 0) return
-    const rows = tagIds.map((tag_id) => ({ transaction_id: transactionId, tag_id }))
-    const { error: err } = await supabase.from('transaction_tags').insert(rows)
-    if (err) throw new Error(err.message)
+    return setTransactionTagsStandalone(transactionId, tagIds)
   }
 
   return { tags, loading, error, createTag, deleteTag, addTagToTransaction, removeTagFromTransaction, setTransactionTags }
