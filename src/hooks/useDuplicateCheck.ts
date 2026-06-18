@@ -28,7 +28,7 @@ export async function checkDuplicate(params: {
   }
 
   const { data, error } = await query
-  if (error) console.error('[checkDuplicate]', error.message)
+  if (error && import.meta.env.DEV) console.error('[checkDuplicate]', error.message)
   return data?.[0] ?? null
 }
 

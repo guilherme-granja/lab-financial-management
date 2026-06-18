@@ -46,7 +46,7 @@ export default function Login() {
       } else if (msg === 'Email not confirmed') {
         setError('Email não confirmado. Verifique sua caixa de entrada.')
       } else {
-        console.error('[Login] signInWithEmail error:', msg)
+        if (import.meta.env.DEV) console.error('[Login] signInWithEmail error:', msg)
         setError('Ocorreu um erro inesperado. Tente novamente.')
       }
     } finally {
@@ -66,7 +66,7 @@ export default function Login() {
         setStep('credentials')
         setOtpDigits(Array(8).fill(''))
       } else {
-        console.error('[Login] verifyEmailOtp error:', msg)
+        if (import.meta.env.DEV) console.error('[Login] verifyEmailOtp error:', msg)
         setError('Ocorreu um erro inesperado. Tente novamente.')
       }
     } finally {
