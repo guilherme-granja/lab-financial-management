@@ -32,6 +32,15 @@ export interface Tag {
   created_at: string
 }
 
+export interface RecurrenceGroup {
+  id: string
+  recurrence_type: RecurrenceType
+  total_installments: number
+  description_template: string | null
+  starts_at: string
+  created_at: string
+}
+
 export interface Transaction {
   id: string
   amount: number
@@ -46,6 +55,7 @@ export interface Transaction {
   installments: number | null
   installment_index: number | null
   recurrence_group_id: string | null
+  recurrence_group?: RecurrenceGroup
   paid: boolean
   paid_at: string | null
   paid_amount: number | null
