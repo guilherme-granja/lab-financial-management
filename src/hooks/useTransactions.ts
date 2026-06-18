@@ -302,7 +302,8 @@ export function useTransactions(filters: TransactionFilters) {
 
   async function deleteTransactionGroup(groupId: string): Promise<void> {
     // CASCADE apaga as transactions automaticamente
-    await supabase.from('recurrence_groups').delete().eq('id', groupId)
+    const { error } = await supabase.from('recurrence_groups').delete().eq('id', groupId)
+    if (error) throw new Error(error.message)
     await fetch()
   }
 
