@@ -959,14 +959,11 @@ export default function Transactions() {
                         {columnVisibility.description && (
                           <TableCell className="text-slate-300">
                             <span>{tx.description ?? '—'}</span>
-                            {(() => {
-                              const badge = recurrenceBadge(tx)
-                              return badge ? (
-                                <Badge variant="outline" className="text-xs border-slate-600 text-slate-400 ml-1">
-                                  {badge}
-                                </Badge>
-                              ) : null
-                            })()}
+                            {recurrenceBadge(tx) && (
+                              <Badge variant="outline" className="text-xs border-slate-600 text-slate-400 ml-1">
+                                {recurrenceBadge(tx)}
+                              </Badge>
+                            )}
                           </TableCell>
                         )}
                         {columnVisibility.account && (
