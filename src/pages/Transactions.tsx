@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { format, addMonths, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useSearchParams } from 'react-router-dom'
@@ -18,13 +18,99 @@ import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CreditCard, X, AlertTriangle, Columns } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CreditCard, X, AlertTriangle, Columns, Check, ChevronDown } from 'lucide-react'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import type { SearchableSelectOption } from '@/components/ui/searchable-select'
+import { Popover, PopoverTrigger } from '@/components/ui/popover'
+import * as PopoverPrimitive from '@radix-ui/react-popover'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { MoneyInput } from '@/components/ui/money-input'
 import { checkDuplicate } from '@/hooks/useDuplicateCheck'
 
 const CURRENT_MONTH = format(new Date(), 'yyyy-MM')
+
+// Inline multi-select for tags using Popover + Command pattern
+interface TagMultiSelectProps {
+  selectedIds: string[]
+  onChange: (ids: string[]) => void
+  tags: { id: string; name: string; created_at: string }[]
+}
+
+function TagMultiSelect({ selectedIds, onChange, tags }: TagMultiSelectProps) {
+  const [open, setOpen] = React.useState(false)
+  const [search, setSearch] = React.useState('')
+
+  const filtered = search
+    ? tags.filter((t) => t.name.toLowerCase().includes(search.toLowerCase()))
+    : tags
+
+  function toggle(id: string) {
+    if (selectedIds.includes(id)) {
+      onChange(selectedIds.filter((tid) => tid !== id))
+    } else {
+      onChange([...selectedIds, id])
+    }
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          role="combobox"
+          aria-expanded={open}
+          className="flex h-10 w-full items-center justify-between rounded-md border border-[#2d3148] bg-[#0f1117] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        >
+          <span className={selectedIds.length === 0 ? 'text-muted-foreground' : 'text-slate-200'}>
+            {selectedIds.length === 0
+              ? 'Sem tags'
+              : selectedIds.length === 1
+              ? (tags.find((t) => t.id === selectedIds[0])?.name ?? '1 tag')
+              : `${selectedIds.length} tags`}
+          </span>
+          <span className="flex items-center gap-1.5">
+            {selectedIds.length > 0 && (
+              <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-indigo-600 text-white text-[10px] font-bold">
+                {selectedIds.length}
+              </span>
+            )}
+            <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+          </span>
+        </button>
+      </PopoverTrigger>
+      <PopoverPrimitive.Content
+        align="start"
+        sideOffset={4}
+        className="z-50 w-[var(--radix-popover-trigger-width)] p-0 rounded-md border border-[#2d3148] bg-[#0f1117] shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2"
+      >
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder="Buscar tag..."
+            value={search}
+            onValueChange={setSearch}
+          />
+          <CommandList>
+            <CommandEmpty>Nenhuma tag encontrada.</CommandEmpty>
+            <CommandGroup>
+              {filtered.map((tag) => (
+                <CommandItem
+                  key={tag.id}
+                  value={tag.id}
+                  onSelect={() => toggle(tag.id)}
+                >
+                  <span className="flex-1">{tag.name}</span>
+                  {selectedIds.includes(tag.id) && (
+                    <Check className="h-4 w-4 shrink-0 text-indigo-400" />
+                  )}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverPrimitive.Content>
+    </Popover>
+  )
+}
 
 type ColumnKey = 'date' | 'account' | 'category' | 'type' | 'amount' | 'description' | 'tag' | 'status'
 
@@ -62,7 +148,7 @@ interface FormState {
   recurrence: RecurrenceType
   installments: string
   paid: boolean
-  tag_id: string
+  tag_ids: string[]
 }
 
 const EMPTY_FORM: FormState = {
@@ -76,7 +162,7 @@ const EMPTY_FORM: FormState = {
   recurrence: 'none',
   installments: '',
   paid: true,
-  tag_id: '',
+  tag_ids: [],
 }
 
 interface PayFormState {
@@ -184,7 +270,7 @@ export default function Transactions() {
       recurrence: tx.recurrence ?? 'none',
       installments: tx.installments ? String(tx.installments) : '',
       paid: tx.paid ?? true,
-      tag_id: tx.tag_id ?? '',
+      tag_ids: tx.transaction_tags?.map((tt) => tt.tag_id) ?? [],
     })
     setEditingId(tx.id)
     setFormError(null)
@@ -263,7 +349,7 @@ export default function Transactions() {
       paid: form.paid,
       paid_at,
       paid_amount: paid_amount_val,
-      tag_id: form.tag_id || null,
+      tag_ids: form.tag_ids,
     }
 
     try {
@@ -901,10 +987,19 @@ export default function Transactions() {
                         )}
                         {columnVisibility.tag && (
                           <TableCell className="text-slate-300">
-                            {tx.tags ? (
-                              <Badge variant="outline" className="bg-[#2d3148] text-slate-300 border-[#2d3148]">
-                                {tx.tags.name}
-                              </Badge>
+                            {tx.transaction_tags && tx.transaction_tags.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {tx.transaction_tags.slice(0, 2).map((tt) => (
+                                  <Badge key={tt.tag_id} variant="outline" className="bg-[#2d3148] text-slate-300 border-[#2d3148]">
+                                    {tt.tags?.name ?? tt.tag_id}
+                                  </Badge>
+                                ))}
+                                {tx.transaction_tags.length > 2 && (
+                                  <Badge variant="outline" className="bg-[#2d3148] text-slate-400 border-[#2d3148]">
+                                    +{tx.transaction_tags.length - 2}
+                                  </Badge>
+                                )}
+                              </div>
                             ) : '—'}
                           </TableCell>
                         )}
@@ -1049,7 +1144,7 @@ export default function Transactions() {
                       type: v as TransactionType,
                       category_id: '',
                       to_account_id: '',
-                      tag_id: '',
+                      tag_ids: [],
                     }))
                   }
                 >
@@ -1162,23 +1257,35 @@ export default function Transactions() {
 
             {form.type !== 'transfer' && (
               <div className="space-y-1">
-                <Label className="text-slate-400 text-xs">Tag</Label>
-                <Select
-                  value={form.tag_id || 'none'}
-                  onValueChange={(v) => setForm((f) => ({ ...f, tag_id: v === 'none' ? '' : v }))}
-                >
-                  <SelectTrigger className="bg-[#0f1117] border-[#2d3148]">
-                    <SelectValue placeholder="Sem tag" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
-                    <SelectItem value="none">Sem tag</SelectItem>
-                    {tags.map((tag) => (
-                      <SelectItem key={tag.id} value={tag.id}>
-                        {tag.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label className="text-slate-400 text-xs">Tags</Label>
+                <TagMultiSelect
+                  selectedIds={form.tag_ids}
+                  onChange={(ids) => setForm((f) => ({ ...f, tag_ids: ids }))}
+                  tags={tags}
+                />
+                {form.tag_ids.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {form.tag_ids.map((id) => {
+                      const tag = tags.find((t) => t.id === id)
+                      if (!tag) return null
+                      return (
+                        <span
+                          key={id}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-indigo-950 border border-indigo-800 text-indigo-300"
+                        >
+                          {tag.name}
+                          <button
+                            type="button"
+                            onClick={() => setForm((f) => ({ ...f, tag_ids: f.tag_ids.filter((tid) => tid !== id) }))}
+                            className="text-indigo-400 hover:text-indigo-200 leading-none"
+                          >
+                            <X size={10} />
+                          </button>
+                        </span>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
