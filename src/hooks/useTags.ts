@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Tag } from '@/types'
 
+// Internal coordination utility: called by useTransactions to sync pivot after insert/update.
+// Not a general-purpose hook bypass — must not be extended with arbitrary Supabase calls.
 export async function setTransactionTagsStandalone(transactionId: string, tagIds: string[]): Promise<void> {
   // Deleta todos os vínculos existentes e reinsere os novos (upsert completo)
   await supabase.from('transaction_tags').delete().eq('transaction_id', transactionId)
