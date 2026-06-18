@@ -34,7 +34,7 @@ export interface TransactionPayload {
 const PAGE_SIZE = 20
 
 const SELECT_FIELDS =
-  '*, categories(*), accounts!account_id(*), to_accounts:accounts!to_account_id(*), tags(*), transaction_tags(*, tags(*)), recurrence_groups(*)'
+  '*, categories(*), accounts!account_id(*), to_accounts:accounts!to_account_id(*), tags(*), transaction_tags(*, tags(*)), recurrence_groups(*), transaction_payments(*)'
 
 export function useTransactions(filters: TransactionFilters) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -194,10 +194,26 @@ export function useTransactions(filters: TransactionFilters) {
           tag_id: (payload.tag_ids ?? [])[0] ?? null,
         }
       })
-      const { error: err } = await supabase.from('transactions').insert(records)
+      const { data: insertedRows, error: err } = await supabase
+        .from('transactions')
+        .insert(records)
+        .select('id')
       if (err) {
         await supabase.from('recurrence_groups').delete().eq('id', groupId)
         throw new Error(err.message)
+      }
+      const insertedIds = (insertedRows ?? []).map((r) => r.id as string)
+      const paidInstallments = records
+        .map((r, i) => ({ r, id: insertedIds[i] }))
+        .filter(({ r }) => r.paid && r.paid_at != null && r.paid_amount != null)
+      if (paidInstallments.length > 0) {
+        await supabase.from('transaction_payments').insert(
+          paidInstallments.map(({ r, id }) => ({
+            transaction_id: id,
+            paid_at: r.paid_at,
+            paid_amount: r.paid_amount,
+          }))
+        )
       }
       await fetch()
       return
@@ -238,10 +254,26 @@ export function useTransactions(filters: TransactionFilters) {
           tag_id: (payload.tag_ids ?? [])[0] ?? null,
         }
       })
-      const { error: err } = await supabase.from('transactions').insert(records)
+      const { data: insertedRows, error: err } = await supabase
+        .from('transactions')
+        .insert(records)
+        .select('id')
       if (err) {
         await supabase.from('recurrence_groups').delete().eq('id', groupId)
         throw new Error(err.message)
+      }
+      const insertedIds = (insertedRows ?? []).map((r) => r.id as string)
+      const paidFixed = records
+        .map((r, i) => ({ r, id: insertedIds[i] }))
+        .filter(({ r }) => r.paid && r.paid_at != null && r.paid_amount != null)
+      if (paidFixed.length > 0) {
+        await supabase.from('transaction_payments').insert(
+          paidFixed.map(({ r, id }) => ({
+            transaction_id: id,
+            paid_at: r.paid_at,
+            paid_amount: r.paid_amount,
+          }))
+        )
       }
       await fetch()
       return
@@ -265,6 +297,13 @@ export function useTransactions(filters: TransactionFilters) {
       tag_id: (payload.tag_ids ?? [])[0] ?? null,
     }).select('id').single()
     if (err) throw new Error(err.message)
+    if (payload.paid && payload.paid_at != null && payload.paid_amount != null) {
+      await supabase.from('transaction_payments').insert({
+        transaction_id: inserted.id,
+        paid_at: payload.paid_at,
+        paid_amount: payload.paid_amount,
+      })
+    }
     if ((payload.tag_ids ?? []).length > 0) {
       await setTransactionTagsStandalone(inserted.id, payload.tag_ids ?? [])
     }
@@ -280,12 +319,23 @@ export function useTransactions(filters: TransactionFilters) {
     await fetch()
   }
 
-  async function updateTransactionPayment(id: string, paid_at: string, paid_amount: number) {
+  async function updateTransactionPayment(id: string, paid_at: string, paid_amount: number): Promise<void> {
     const { error: err } = await supabase
-      .from('transactions')
-      .update({ paid: true, paid_at, paid_amount })
-      .eq('id', id)
+      .from('transaction_payments')
+      .upsert({ transaction_id: id, paid_at, paid_amount }, { onConflict: 'transaction_id' })
     if (err) throw new Error(err.message)
+    // Update legacy columns for rollback compatibility
+    await supabase.from('transactions').update({ paid_at, paid_amount }).eq('id', id)
+    await fetch()
+  }
+
+  async function unefetivateTransaction(id: string): Promise<void> {
+    await supabase.from('transaction_payments').delete().eq('transaction_id', id)
+    // Clear legacy columns
+    await supabase
+      .from('transactions')
+      .update({ paid_at: null, paid_amount: null })
+      .eq('id', id)
     await fetch()
   }
 
@@ -328,6 +378,7 @@ export function useTransactions(filters: TransactionFilters) {
     createTransaction,
     updateTransaction,
     updateTransactionPayment,
+    unefetivateTransaction,
     deleteTransaction,
     deleteTransactionGroupUnpaid,
     deleteTransactionGroup,
