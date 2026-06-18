@@ -21,10 +21,11 @@ beforeEach(() => {
 })
 
 describe('useTransactions', () => {
-  it('inicia com loading=true', () => {
+  it('inicia com loading=true', async () => {
     mockSupabaseResult({ data: [], count: 0 })
     const { result } = renderHook(() => useTransactions(DEFAULT_FILTERS))
     expect(result.current.loading).toBe(true)
+    await waitFor(() => expect(result.current.loading).toBe(false))
   })
 
   it('retorna transações após fetch', async () => {
