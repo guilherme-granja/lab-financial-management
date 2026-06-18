@@ -54,6 +54,8 @@ export interface Transaction {
   to_accounts?: Account
   tag_id: string | null
   tags?: Tag
+  type_id: string | null
+  transaction_tags?: TransactionTag[]
 }
 
 export interface Goal {
@@ -69,4 +71,20 @@ export interface Goal {
 export interface GoalWithProgress extends Goal {
   actual: number
   progress: number
+}
+
+export interface TransactionType {
+  id: string
+  slug: string
+  label: string
+  icon: string
+  affects_balance: boolean
+  created_at: string
+}
+
+export interface TransactionTag {
+  transaction_id: string
+  tag_id: string
+  created_at: string
+  tags?: Tag
 }
