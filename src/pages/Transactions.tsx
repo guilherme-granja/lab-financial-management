@@ -742,7 +742,88 @@ export default function Transactions() {
         </div>
       )}
 
+      {/* Mobile cards */}
+      <div className="flex flex-col gap-2 md:hidden">
+        {loading && (
+          <div className="text-center text-slate-500 py-8 text-sm">Carregando...</div>
+        )}
+        {!loading && transactions.length === 0 && (
+          <div className="text-center text-slate-500 py-8 text-sm">Nenhuma transação encontrada</div>
+        )}
+        {transactions.map((tx) => {
+          const toAccount = tx.type === 'transfer' && tx.to_account_id
+            ? (accounts.find((a) => a.id === tx.to_account_id) ?? null)
+            : null
+          return (
+            <div
+              key={tx.id}
+              className="bg-[#1a1d27] border border-[#2d3148] rounded-xl px-4 py-3 flex items-center gap-3"
+            >
+              {/* Ícone da categoria */}
+              <div className="text-xl w-8 text-center shrink-0">
+                {tx.type === 'transfer' ? '↔' : tx.categories?.icon ?? '•'}
+              </div>
+
+              {/* Info principal */}
+              <div className="flex-1 min-w-0">
+                <div className="text-slate-200 text-sm font-medium truncate">
+                  {tx.type === 'transfer'
+                    ? `${tx.accounts?.name ?? '—'} → ${toAccount?.name ?? '—'}`
+                    : tx.categories?.name ?? tx.description ?? '—'}
+                </div>
+                <div className="text-slate-500 text-xs mt-0.5 flex items-center gap-1.5">
+                  <span>{formatDate(tx.date)}</span>
+                  {tx.accounts && (
+                    <>
+                      <span>·</span>
+                      <span>{tx.accounts.icon} {tx.accounts.name}</span>
+                    </>
+                  )}
+                  {!tx.paid && tx.type !== 'transfer' && (
+                    <>
+                      <span>·</span>
+                      <span className="text-yellow-500">Pendente</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Valor */}
+              <div className={`text-sm font-semibold tabular-nums shrink-0 ${amountColor(tx.type)}`}>
+                {amountPrefix(tx.type)}{formatCurrency(tx.amount)}
+              </div>
+
+              {/* Ações */}
+              <div className="flex gap-0.5 shrink-0">
+                {!tx.paid && tx.type !== 'transfer' && (
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-yellow-400 hover:text-yellow-300"
+                    onClick={() => openPay(tx)}>
+                    <CreditCard size={14} />
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-slate-200"
+                  onClick={() => openEdit(tx)}>
+                  <Pencil size={14} />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-400"
+                  onClick={() => {
+                    if (tx.recurrence_group_id) {
+                      setDeleteTx(tx)
+                      setDeleteScope('only')
+                    } else {
+                      setDeleteId(tx.id)
+                    }
+                  }}>
+                  <Trash2 size={14} />
+                </Button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
       {/* Table */}
+      <div className="hidden md:block">
       {(() => {
         const visibleCount = Object.values(columnVisibility).filter(Boolean).length + 1
         return (
@@ -894,6 +975,7 @@ export default function Transactions() {
           </div>
         )
       })()}
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
