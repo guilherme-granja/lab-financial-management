@@ -426,18 +426,21 @@ export default function Transactions() {
   }
 
   function recurrenceBadge(tx: Transaction) {
-    if (!tx.recurrence || tx.recurrence === 'none') return null
-    const label =
-      tx.recurrence === 'fixed'
+    const group = tx.recurrence_group
+    if (group) {
+      return group.recurrence_type === 'fixed'
         ? 'Fixo'
-        : tx.installment_index && tx.installments
-        ? `${tx.installment_index}/${tx.installments}`
-        : 'Parcelado'
-    return (
-      <Badge variant="outline" className="text-xs border-slate-600 text-slate-400 ml-1">
-        {label}
-      </Badge>
-    )
+        : tx.installment_index && group.total_installments
+        ? `${tx.installment_index}/${group.total_installments}`
+        : null
+    }
+    // fallback legado
+    if (!tx.recurrence || tx.recurrence === 'none') return null
+    return tx.recurrence === 'fixed'
+      ? 'Fixo'
+      : tx.installment_index && tx.installments
+      ? `${tx.installment_index}/${tx.installments}`
+      : null
   }
 
   function navigatePeriod(delta: number) {
@@ -956,7 +959,14 @@ export default function Transactions() {
                         {columnVisibility.description && (
                           <TableCell className="text-slate-300">
                             <span>{tx.description ?? '—'}</span>
-                            {recurrenceBadge(tx)}
+                            {(() => {
+                              const badge = recurrenceBadge(tx)
+                              return badge ? (
+                                <Badge variant="outline" className="text-xs border-slate-600 text-slate-400 ml-1">
+                                  {badge}
+                                </Badge>
+                              ) : null
+                            })()}
                           </TableCell>
                         )}
                         {columnVisibility.account && (
