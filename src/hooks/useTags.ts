@@ -61,5 +61,30 @@ export function useTags() {
     await fetch()
   }
 
-  return { tags, loading, error, createTag, deleteTag }
+  async function addTagToTransaction(transactionId: string, tagId: string): Promise<void> {
+    const { error: err } = await supabase
+      .from('transaction_tags')
+      .insert({ transaction_id: transactionId, tag_id: tagId })
+    if (err) throw new Error(err.message)
+  }
+
+  async function removeTagFromTransaction(transactionId: string, tagId: string): Promise<void> {
+    const { error: err } = await supabase
+      .from('transaction_tags')
+      .delete()
+      .eq('transaction_id', transactionId)
+      .eq('tag_id', tagId)
+    if (err) throw new Error(err.message)
+  }
+
+  async function setTransactionTags(transactionId: string, tagIds: string[]): Promise<void> {
+    // Deleta todos os vínculos existentes e reinsere os novos (upsert completo)
+    await supabase.from('transaction_tags').delete().eq('transaction_id', transactionId)
+    if (tagIds.length === 0) return
+    const rows = tagIds.map((tag_id) => ({ transaction_id: transactionId, tag_id }))
+    const { error: err } = await supabase.from('transaction_tags').insert(rows)
+    if (err) throw new Error(err.message)
+  }
+
+  return { tags, loading, error, createTag, deleteTag, addTagToTransaction, removeTagFromTransaction, setTransactionTags }
 }
