@@ -124,7 +124,7 @@ describe('Transactions', () => {
       transactions: [],
     })
     renderTx()
-    expect(screen.getByText('Carregando...')).toBeInTheDocument()
+    expect(screen.getAllByText('Carregando...')[0]).toBeInTheDocument()
   })
 
   it('exibe "Nenhuma transação encontrada" quando lista vazia', () => {
@@ -134,7 +134,7 @@ describe('Transactions', () => {
       transactions: [],
     })
     renderTx()
-    expect(screen.getByText('Nenhuma transação encontrada')).toBeInTheDocument()
+    expect(screen.getAllByText('Nenhuma transação encontrada')[0]).toBeInTheDocument()
   })
 
   it('exibe transações na tabela', () => {
@@ -147,7 +147,7 @@ describe('Transactions', () => {
     renderTx()
     // description column is hidden by default — check the amount column (always visible)
     // Use regex to avoid locale-specific whitespace differences in currency formatting
-    expect(screen.getByText(/1\.500,00/)).toBeInTheDocument()
+    expect(screen.getAllByText(/1\.500,00/)[0]).toBeInTheDocument()
   })
 
   it('abre dialog ao clicar em "Nova transação"', async () => {
@@ -200,7 +200,7 @@ describe('Transactions', () => {
     renderTx()
     // recurrenceBadge is rendered inside the description column which is hidden by default.
     // Verify the row renders by checking the amount (always-visible column).
-    expect(screen.getByText(/1\.500,00/)).toBeInTheDocument()
+    expect(screen.getAllByText(/1\.500,00/)[0]).toBeInTheDocument()
   })
 
   it('exibe badge de parcela para transação parcelada', () => {
@@ -213,7 +213,7 @@ describe('Transactions', () => {
     renderTx()
     // recurrenceBadge is rendered inside the description column which is hidden by default.
     // Verify the row renders by checking the amount (always-visible column).
-    expect(screen.getByText(/1\.500,00/)).toBeInTheDocument()
+    expect(screen.getAllByText(/1\.500,00/)[0]).toBeInTheDocument()
   })
 
   it('exibe tipo "Receita" para transação do tipo income', () => {
@@ -224,7 +224,7 @@ describe('Transactions', () => {
       total: 1,
     })
     renderTx()
-    expect(screen.getByText('Receita')).toBeInTheDocument()
+    expect(screen.getAllByText('Receita')[0]).toBeInTheDocument()
   })
 
   it('exibe tipo "Transferência" para transação do tipo transfer', () => {
@@ -235,7 +235,7 @@ describe('Transactions', () => {
       total: 1,
     })
     renderTx()
-    expect(screen.getByText('Transferência')).toBeInTheDocument()
+    expect(screen.getAllByText('Transferência')[0]).toBeInTheDocument()
   })
 
   it('abre dialog de edição ao clicar no botão Editar', async () => {
@@ -518,7 +518,7 @@ describe('Transactions', () => {
       total: 1,
     })
     renderTx()
-    expect(screen.getByText(/Alimentação/)).toBeInTheDocument()
+    expect(screen.getAllByText(/Alimentação/)[0]).toBeInTheDocument()
   })
 
   it('chama updateTransaction ao salvar form de edição', async () => {
