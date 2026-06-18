@@ -34,7 +34,7 @@ export interface TransactionPayload {
 const PAGE_SIZE = 20
 
 const SELECT_FIELDS =
-  '*, categories(*), accounts!account_id(*), to_accounts:accounts!to_account_id(*), tags(*), transaction_tags(*, tags(*)), recurrence_groups(*), transaction_payments(*)'
+  '*, categories(*), accounts!account_id(*), to_accounts:accounts!to_account_id(*), transaction_tags(*, tags(*)), recurrence_groups(*), transaction_payments(*)'
 
 export function useTransactions(filters: TransactionFilters) {
   const [transactions, setTransactions] = useState<Transaction[]>([])

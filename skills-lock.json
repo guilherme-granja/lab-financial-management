@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "database-architect": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/database-architect/SKILL.md",
+      "computedHash": "f4540da3010d7322e83766266306bf617e6aba0ba226c588504f19245be9a0f3"
+    }
+  }
+}
