@@ -14,9 +14,11 @@ export default function ErrorPage() {
         <h1 className="text-slate-100 text-2xl font-semibold">Algo deu errado</h1>
         <p className="text-slate-400">Ocorreu um erro inesperado na aplicação.</p>
       </div>
-      <pre className="text-xs text-slate-500 bg-[#1a1d27] rounded p-3 max-h-32 overflow-y-auto w-full max-w-md">
-        {message}
-      </pre>
+      {import.meta.env.DEV && message && (
+        <pre className="text-xs text-slate-500 bg-[#1a1d27] rounded p-3 max-h-32 overflow-y-auto w-full max-w-md">
+          {message}
+        </pre>
+      )}
       <div className="flex gap-3">
         <Button variant="ghost" className="text-slate-400" onClick={() => navigate(-1)}>
           Voltar
