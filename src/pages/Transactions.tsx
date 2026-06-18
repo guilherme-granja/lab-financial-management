@@ -134,6 +134,7 @@ export default function Transactions() {
 
   const [columnVisibility, setColumnVisibility] = useState<Record<ColumnKey, boolean>>(loadColumnVisibility)
   const [columnPickerOpen, setColumnPickerOpen] = useState(false)
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false)
 
   function toggleColumn(key: ColumnKey) {
     const FIXED: ColumnKey[] = ['date', 'account', 'category', 'type', 'amount']
@@ -375,6 +376,12 @@ export default function Transactions() {
     filters.account_id !== null ||
     filters.tagId !== 'all'
 
+  const secondaryFilterCount =
+    (filters.status !== 'all' ? 1 : 0) +
+    (filters.categoryId !== 'all' ? 1 : 0) +
+    (filters.account_id !== null ? 1 : 0) +
+    (filters.tagId !== 'all' ? 1 : 0)
+
   interface ActiveChip {
     key: string
     label: string
@@ -435,9 +442,10 @@ export default function Transactions() {
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-end">
-        <div className="space-y-1">
-          <Label className="text-slate-400 text-xs">Período</Label>
+      <div>
+        {/* Level 1 — always visible */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Period selector */}
           <div className="flex items-center gap-0.5 bg-[#1a1d27] border border-[#2d3148] rounded-lg h-9 px-1">
             <Button
               variant="ghost"
@@ -459,188 +467,228 @@ export default function Transactions() {
               <ChevronRight size={14} />
             </Button>
           </div>
+
+          {/* Visual separator */}
+          <div className="w-px h-5 bg-[#2d3148]" />
+
+          {/* Type pill buttons */}
+          {(
+            [
+              { value: 'all',      label: 'Todos' },
+              { value: 'income',   label: 'Receita' },
+              { value: 'expense',  label: 'Despesa' },
+              { value: 'transfer', label: 'Transferência' },
+            ] as { value: string; label: string }[]
+          ).map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setFilters((f) => ({ ...f, type: value as TransactionType | 'all' }))}
+              className={`h-9 px-3 rounded-lg text-sm font-medium border transition-colors ${
+                filters.type === value
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'text-slate-400 border-[#2d3148] hover:text-slate-200 hover:border-slate-500 bg-transparent'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+
+          {/* Filtros button with badge */}
+          <button
+            onClick={() => setFilterPanelOpen((v) => !v)}
+            className={`relative h-9 px-3 rounded-lg text-sm font-medium border transition-colors gap-1.5 inline-flex items-center ${
+              filterPanelOpen
+                ? 'bg-[#2d3148] text-slate-200 border-slate-500'
+                : 'text-slate-400 border-[#2d3148] hover:text-slate-200 hover:border-slate-500 bg-transparent'
+            }`}
+          >
+            Filtros
+            {secondaryFilterCount > 0 && (
+              <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-indigo-600 text-white text-[10px] font-bold">
+                {secondaryFilterCount}
+              </span>
+            )}
+          </button>
+
+          {/* Column picker */}
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setColumnPickerOpen((v) => !v)}
+              className="text-slate-400 hover:text-slate-200 gap-1.5 h-9 border border-[#2d3148]"
+            >
+              <Columns size={14} />
+              Colunas
+            </Button>
+
+            {columnPickerOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setColumnPickerOpen(false)}
+                />
+                <div className="absolute right-0 top-10 z-20 bg-[#1a1d27] border border-[#2d3148] rounded-lg shadow-xl p-3 w-52 space-y-1">
+                  <p className="text-slate-500 text-xs pb-1 border-b border-[#2d3148]">Exibir colunas</p>
+                  {(
+                    [
+                      { key: 'date',        label: 'Data',      fixed: true  },
+                      { key: 'description', label: 'Descrição', fixed: false },
+                      { key: 'account',     label: 'Conta',     fixed: true  },
+                      { key: 'category',    label: 'Categoria', fixed: true  },
+                      { key: 'tag',         label: 'Tag',       fixed: false },
+                      { key: 'type',        label: 'Tipo',      fixed: true  },
+                      { key: 'status',      label: 'Status',    fixed: false },
+                      { key: 'amount',      label: 'Valor',     fixed: true  },
+                    ] as { key: ColumnKey; label: string; fixed: boolean }[]
+                  ).map(({ key, label, fixed }) => (
+                    <label
+                      key={key}
+                      className={`flex items-center gap-2.5 px-1 py-1 rounded cursor-pointer hover:bg-[#2d3148] transition-colors ${fixed ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={columnVisibility[key]}
+                        disabled={fixed}
+                        onChange={() => toggleColumn(key)}
+                        className="accent-indigo-500 w-3.5 h-3.5"
+                      />
+                      <span className="text-slate-300 text-sm">{label}</span>
+                      {fixed && <span className="ml-auto text-slate-600 text-xs">padrão</span>}
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Nova transação */}
+          <Button onClick={openCreate} className="ml-auto bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
+            <Plus size={16} />
+            Nova transação
+          </Button>
         </div>
 
-        <div className="space-y-1">
-          <Label className="text-slate-400 text-xs">Tipo</Label>
-          <Select
-            value={filters.type}
-            onValueChange={(v) => setFilters((f) => ({ ...f, type: v as TransactionType | 'all' }))}
-          >
-            <SelectTrigger className="bg-[#1a1d27] border-[#2d3148] text-slate-200 w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="income">Receita</SelectItem>
-              <SelectItem value="expense">Despesa</SelectItem>
-              <SelectItem value="transfer">Transferência</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Level 2 — secondary filter panel */}
+        {filterPanelOpen && (
+          <>
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setFilterPanelOpen(false)}
+            />
+            <div className="relative z-20 mt-2 bg-[#1a1d27] border border-[#2d3148] rounded-xl p-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-slate-400 text-xs">Status</Label>
+                  <Select
+                    value={filters.status}
+                    onValueChange={(v) => setFilters((f) => ({ ...f, status: v as 'all' | 'paid' | 'unpaid' }))}
+                  >
+                    <SelectTrigger className="bg-[#0f1117] border-[#2d3148] text-slate-200 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="paid">Pagos</SelectItem>
+                      <SelectItem value="unpaid">Pendentes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-        <div className="space-y-1">
-          <Label className="text-slate-400 text-xs">Status</Label>
-          <Select
-            value={filters.status}
-            onValueChange={(v) => setFilters((f) => ({ ...f, status: v as 'all' | 'paid' | 'unpaid' }))}
-          >
-            <SelectTrigger className="bg-[#1a1d27] border-[#2d3148] text-slate-200 w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="paid">Pagos</SelectItem>
-              <SelectItem value="unpaid">Pendentes</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+                <div className="space-y-1">
+                  <Label className="text-slate-400 text-xs">Categoria</Label>
+                  <Select
+                    value={filters.categoryId}
+                    onValueChange={(v) => setFilters((f) => ({ ...f, categoryId: v }))}
+                  >
+                    <SelectTrigger className="bg-[#0f1117] border-[#2d3148] text-slate-200 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1d27] border-[#2d3148] max-h-72 overflow-y-auto">
+                      <SelectItem value="all">Todas</SelectItem>
+                      {categoryTree.map((parent) => (
+                        <SelectGroup key={parent.id}>
+                          {(parent.subcategories?.length ?? 0) > 0 ? (
+                            <>
+                              <SelectLabel className="text-slate-500 text-xs px-2 py-1">
+                                {parent.icon} {parent.name}
+                              </SelectLabel>
+                              {parent.subcategories!.map((sub) => (
+                                <SelectItem key={sub.id} value={sub.id} className="pl-6">
+                                  {sub.icon} {sub.name}
+                                </SelectItem>
+                              ))}
+                            </>
+                          ) : (
+                            <SelectItem key={parent.id} value={parent.id}>
+                              {parent.icon} {parent.name}
+                            </SelectItem>
+                          )}
+                        </SelectGroup>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-        <div className="space-y-1">
-          <Label className="text-slate-400 text-xs">Categoria</Label>
-          <Select
-            value={filters.categoryId}
-            onValueChange={(v) => setFilters((f) => ({ ...f, categoryId: v }))}
-          >
-            <SelectTrigger className="bg-[#1a1d27] border-[#2d3148] text-slate-200 w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#1a1d27] border-[#2d3148] max-h-72 overflow-y-auto">
-              <SelectItem value="all">Todas</SelectItem>
-              {categoryTree.map((parent) => (
-                <SelectGroup key={parent.id}>
-                  {(parent.subcategories?.length ?? 0) > 0 ? (
-                    <>
-                      <SelectLabel className="text-slate-500 text-xs px-2 py-1">
-                        {parent.icon} {parent.name}
-                      </SelectLabel>
-                      {parent.subcategories!.map((sub) => (
-                        <SelectItem key={sub.id} value={sub.id} className="pl-6">
-                          {sub.icon} {sub.name}
+                <div className="space-y-1">
+                  <Label className="text-slate-400 text-xs">Tag</Label>
+                  <Select
+                    value={filters.tagId}
+                    onValueChange={(v) => setFilters((f) => ({ ...f, tagId: v }))}
+                  >
+                    <SelectTrigger className="bg-[#0f1117] border-[#2d3148] text-slate-200 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
+                      <SelectItem value="all">Todas as tags</SelectItem>
+                      {tags.map((tag) => (
+                        <SelectItem key={tag.id} value={tag.id}>
+                          {tag.name}
                         </SelectItem>
                       ))}
-                    </>
-                  ) : (
-                    <SelectItem key={parent.id} value={parent.id}>
-                      {parent.icon} {parent.name}
-                    </SelectItem>
-                  )}
-                </SelectGroup>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-        <div className="space-y-1">
-          <Label className="text-slate-400 text-xs">Tag</Label>
-          <Select
-            value={filters.tagId}
-            onValueChange={(v) => setFilters((f) => ({ ...f, tagId: v }))}
-          >
-            <SelectTrigger className="bg-[#1a1d27] border-[#2d3148] text-slate-200 w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
-              <SelectItem value="all">Todas as tags</SelectItem>
-              {tags.map((tag) => (
-                <SelectItem key={tag.id} value={tag.id}>
-                  {tag.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-slate-400 text-xs">Conta</Label>
-          <Select
-            value={filters.account_id ?? 'all'}
-            onValueChange={(v) =>
-              setFilters((f) => ({ ...f, account_id: v === 'all' ? null : v }))
-            }
-          >
-            <SelectTrigger className="bg-[#1a1d27] border-[#2d3148] text-slate-200 w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
-              <SelectItem value="all">Todas as contas</SelectItem>
-              {accounts.map((a) => (
-                <SelectItem key={a.id} value={a.id}>
-                  {a.icon} {a.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearFilters}
-            className="text-slate-400 hover:text-slate-200 gap-1.5 h-9"
-          >
-            <X size={14} />
-            Limpar filtros
-          </Button>
-        )}
-
-        {/* Column picker */}
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setColumnPickerOpen((v) => !v)}
-            className="text-slate-400 hover:text-slate-200 gap-1.5 h-9 border border-[#2d3148]"
-          >
-            <Columns size={14} />
-            Colunas
-          </Button>
-
-          {columnPickerOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setColumnPickerOpen(false)}
-              />
-              <div className="absolute right-0 top-10 z-20 bg-[#1a1d27] border border-[#2d3148] rounded-lg shadow-xl p-3 w-52 space-y-1">
-                <p className="text-slate-500 text-xs pb-1 border-b border-[#2d3148]">Exibir colunas</p>
-                {(
-                  [
-                    { key: 'date',        label: 'Data',      fixed: true  },
-                    { key: 'description', label: 'Descrição', fixed: false },
-                    { key: 'account',     label: 'Conta',     fixed: true  },
-                    { key: 'category',    label: 'Categoria', fixed: true  },
-                    { key: 'tag',         label: 'Tag',       fixed: false },
-                    { key: 'type',        label: 'Tipo',      fixed: true  },
-                    { key: 'status',      label: 'Status',    fixed: false },
-                    { key: 'amount',      label: 'Valor',     fixed: true  },
-                  ] as { key: ColumnKey; label: string; fixed: boolean }[]
-                ).map(({ key, label, fixed }) => (
-                  <label
-                    key={key}
-                    className={`flex items-center gap-2.5 px-1 py-1 rounded cursor-pointer hover:bg-[#2d3148] transition-colors ${fixed ? 'opacity-50 cursor-not-allowed' : ''}`}
+                <div className="space-y-1">
+                  <Label className="text-slate-400 text-xs">Conta</Label>
+                  <Select
+                    value={filters.account_id ?? 'all'}
+                    onValueChange={(v) =>
+                      setFilters((f) => ({ ...f, account_id: v === 'all' ? null : v }))
+                    }
                   >
-                    <input
-                      type="checkbox"
-                      checked={columnVisibility[key]}
-                      disabled={fixed}
-                      onChange={() => toggleColumn(key)}
-                      className="accent-indigo-500 w-3.5 h-3.5"
-                    />
-                    <span className="text-slate-300 text-sm">{label}</span>
-                    {fixed && <span className="ml-auto text-slate-600 text-xs">padrão</span>}
-                  </label>
-                ))}
+                    <SelectTrigger className="bg-[#0f1117] border-[#2d3148] text-slate-200 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
+                      <SelectItem value="all">Todas as contas</SelectItem>
+                      {accounts.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.icon} {a.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </>
-          )}
-        </div>
 
-        <Button onClick={openCreate} className="ml-auto bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
-          <Plus size={16} />
-          Nova transação
-        </Button>
+              {secondaryFilterCount > 0 && (
+                <div className="mt-3 pt-3 border-t border-[#2d3148]">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="text-slate-400 hover:text-slate-200 gap-1.5 h-8 text-xs"
+                  >
+                    <X size={12} />
+                    Limpar filtros
+                  </Button>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Active Filter Chips */}
