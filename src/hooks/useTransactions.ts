@@ -34,7 +34,7 @@ export interface TransactionPayload {
 const PAGE_SIZE = 20
 
 const SELECT_FIELDS =
-  '*, categories(*), accounts!account_id(*), to_accounts:accounts!to_account_id(*), tags(*), transaction_tags(*, tags(*))'
+  '*, categories(*), accounts!account_id(*), to_accounts:accounts!to_account_id(*), tags(*), transaction_tags(*, tags(*)), recurrence_groups(*)'
 
 export function useTransactions(filters: TransactionFilters) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -157,8 +157,19 @@ export function useTransactions(filters: TransactionFilters) {
     const currentMonth = format(new Date(), 'yyyy-MM')
 
     if (payload.recurrence === 'installment' && payload.installments && payload.installments > 1) {
-      const groupId = crypto.randomUUID()
       const n = payload.installments
+      const { data: groupData, error: groupErr } = await supabase
+        .from('recurrence_groups')
+        .insert({
+          recurrence_type: 'installment',
+          total_installments: n,
+          description_template: payload.description,
+          starts_at: payload.date,
+        })
+        .select('id')
+        .single()
+      if (groupErr) throw new Error(groupErr.message)
+      const groupId = groupData.id
       const records = Array.from({ length: n }, (_, i) => {
         const date = format(addMonths(parseISO(payload.date), i), 'yyyy-MM-dd')
         const desc = payload.description
@@ -190,8 +201,19 @@ export function useTransactions(filters: TransactionFilters) {
     }
 
     if (payload.recurrence === 'fixed') {
-      const groupId = crypto.randomUUID()
       const n = 24
+      const { data: groupData, error: groupErr } = await supabase
+        .from('recurrence_groups')
+        .insert({
+          recurrence_type: 'fixed',
+          total_installments: n,
+          description_template: payload.description,
+          starts_at: payload.date,
+        })
+        .select('id')
+        .single()
+      if (groupErr) throw new Error(groupErr.message)
+      const groupId = groupData.id
       const records = Array.from({ length: n }, (_, i) => {
         const date = format(addMonths(parseISO(payload.date), i), 'yyyy-MM-dd')
         const isPaid = date.startsWith(currentMonth) ? payload.paid : false
@@ -279,7 +301,8 @@ export function useTransactions(filters: TransactionFilters) {
   }
 
   async function deleteTransactionGroup(groupId: string): Promise<void> {
-    await supabase.from('transactions').delete().eq('recurrence_group_id', groupId)
+    // CASCADE apaga as transactions automaticamente
+    await supabase.from('recurrence_groups').delete().eq('id', groupId)
     await fetch()
   }
 
