@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "deploy": "tsc && vite build && cp dist/index.html dist/404.html && gh-pages -d dist",
+    "deploy": "echo 'Deploy automatizado via GitHub Actions no push para main'",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage"
