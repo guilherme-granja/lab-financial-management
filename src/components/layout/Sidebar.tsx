@@ -11,9 +11,11 @@ import {
   Wallet,
   Menu,
   X,
+  LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/useAuth'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -58,6 +60,7 @@ function NavItems({ onClose }: SidebarProps) {
 
 export function Sidebar() {
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const { signOut } = useAuth()
 
   return (
     <>
@@ -98,6 +101,15 @@ export function Sidebar() {
           </Button>
         </div>
         <NavItems onClose={() => setDrawerOpen(false)} />
+        <div className="border-t border-[#2d3148] p-4 mt-auto">
+          <button
+            onClick={() => { signOut(); setDrawerOpen(false) }}
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-300 hover:bg-[#2d3148] transition-colors"
+          >
+            <LogOut size={18} />
+            Sair
+          </button>
+        </div>
       </aside>
 
       {/* Desktop sidebar */}
@@ -106,6 +118,15 @@ export function Sidebar() {
           <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Lab Finanças Pessoal" className="w-full max-w-[180px] h-auto" />
         </div>
         <NavItems />
+        <div className="border-t border-[#2d3148] p-4 mt-auto">
+          <button
+            onClick={signOut}
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-300 hover:bg-[#2d3148] transition-colors"
+          >
+            <LogOut size={18} />
+            Sair
+          </button>
+        </div>
       </aside>
     </>
   )
