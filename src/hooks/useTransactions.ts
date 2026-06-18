@@ -28,7 +28,7 @@ export interface TransactionPayload {
   paid_at: string | null
   paid_amount: number | null
   tag_id: string | null
-  tag_ids: string[]
+  tag_ids?: string[]
 }
 
 const PAGE_SIZE = 20
@@ -237,8 +237,8 @@ export function useTransactions(filters: TransactionFilters) {
       tag_id: payload.tag_id,
     }).select('id').single()
     if (err) throw new Error(err.message)
-    if (payload.tag_ids.length > 0) {
-      await setTransactionTagsStandalone(inserted.id, payload.tag_ids)
+    if ((payload.tag_ids ?? []).length > 0) {
+      await setTransactionTagsStandalone(inserted.id, payload.tag_ids ?? [])
     }
     await fetch()
   }
