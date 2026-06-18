@@ -86,8 +86,8 @@ export function Sidebar() {
           drawerOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex items-center justify-between p-4 border-b border-[#2d3148]">
-          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Lab Finanças Pessoal" className="h-10 w-auto" />
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#2d3148]">
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Lab Finanças Pessoal" className="w-auto max-w-[160px] h-auto" />
           <Button
             variant="ghost"
             size="icon"
@@ -102,8 +102,8 @@ export function Sidebar() {
 
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-64 min-h-screen bg-[#1a1d27] border-r border-[#2d3148] fixed top-0 left-0 h-full">
-        <div className="p-4 border-b border-[#2d3148]">
-          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Lab Finanças Pessoal" className="h-12 w-auto" />
+        <div className="px-4 py-3 border-b border-[#2d3148]">
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Lab Finanças Pessoal" className="w-full max-w-[180px] h-auto" />
         </div>
         <NavItems />
       </aside>
