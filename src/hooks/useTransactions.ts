@@ -195,7 +195,10 @@ export function useTransactions(filters: TransactionFilters) {
         }
       })
       const { error: err } = await supabase.from('transactions').insert(records)
-      if (err) throw new Error(err.message)
+      if (err) {
+        await supabase.from('recurrence_groups').delete().eq('id', groupId)
+        throw new Error(err.message)
+      }
       await fetch()
       return
     }
@@ -236,7 +239,10 @@ export function useTransactions(filters: TransactionFilters) {
         }
       })
       const { error: err } = await supabase.from('transactions').insert(records)
-      if (err) throw new Error(err.message)
+      if (err) {
+        await supabase.from('recurrence_groups').delete().eq('id', groupId)
+        throw new Error(err.message)
+      }
       await fetch()
       return
     }

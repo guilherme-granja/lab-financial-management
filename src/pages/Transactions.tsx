@@ -953,15 +953,16 @@ export default function Transactions() {
                     const toAccount = tx.type === 'transfer' && tx.to_account_id
                       ? (accounts.find((a) => a.id === tx.to_account_id) ?? null)
                       : null
+                    const badge = recurrenceBadge(tx)
                     return (
                       <TableRow key={tx.id} className="border-[#2d3148] hover:bg-[#2d3148]/30">
                         {columnVisibility.date        && <TableCell className="text-slate-300">{formatDate(tx.date)}</TableCell>}
                         {columnVisibility.description && (
                           <TableCell className="text-slate-300">
                             <span>{tx.description ?? '—'}</span>
-                            {recurrenceBadge(tx) && (
+                            {badge && (
                               <Badge variant="outline" className="text-xs border-slate-600 text-slate-400 ml-1">
-                                {recurrenceBadge(tx)}
+                                {badge}
                               </Badge>
                             )}
                           </TableCell>
