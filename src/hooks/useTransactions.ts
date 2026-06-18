@@ -330,7 +330,8 @@ export function useTransactions(filters: TransactionFilters) {
   }
 
   async function unefetivateTransaction(id: string): Promise<void> {
-    await supabase.from('transaction_payments').delete().eq('transaction_id', id)
+    const { error: err } = await supabase.from('transaction_payments').delete().eq('transaction_id', id)
+    if (err) throw new Error(err.message)
     // Clear legacy columns
     await supabase
       .from('transactions')
