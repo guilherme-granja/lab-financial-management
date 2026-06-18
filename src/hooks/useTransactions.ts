@@ -207,13 +207,14 @@ export function useTransactions(filters: TransactionFilters) {
         .map((r, i) => ({ r, id: insertedIds[i] }))
         .filter(({ r }) => r.paid && r.paid_at != null && r.paid_amount != null)
       if (paidInstallments.length > 0) {
-        await supabase.from('transaction_payments').insert(
+        const { error: payErr1 } = await supabase.from('transaction_payments').insert(
           paidInstallments.map(({ r, id }) => ({
             transaction_id: id,
             paid_at: r.paid_at,
             paid_amount: r.paid_amount,
           }))
         )
+        if (payErr1) throw new Error(payErr1.message)
       }
       await fetch()
       return
@@ -267,13 +268,14 @@ export function useTransactions(filters: TransactionFilters) {
         .map((r, i) => ({ r, id: insertedIds[i] }))
         .filter(({ r }) => r.paid && r.paid_at != null && r.paid_amount != null)
       if (paidFixed.length > 0) {
-        await supabase.from('transaction_payments').insert(
+        const { error: payErr2 } = await supabase.from('transaction_payments').insert(
           paidFixed.map(({ r, id }) => ({
             transaction_id: id,
             paid_at: r.paid_at,
             paid_amount: r.paid_amount,
           }))
         )
+        if (payErr2) throw new Error(payErr2.message)
       }
       await fetch()
       return
@@ -298,11 +300,12 @@ export function useTransactions(filters: TransactionFilters) {
     }).select('id').single()
     if (err) throw new Error(err.message)
     if (payload.paid && payload.paid_at != null && payload.paid_amount != null) {
-      await supabase.from('transaction_payments').insert({
+      const { error: payErr3 } = await supabase.from('transaction_payments').insert({
         transaction_id: inserted.id,
         paid_at: payload.paid_at,
         paid_amount: payload.paid_amount,
       })
+      if (payErr3) throw new Error(payErr3.message)
     }
     if ((payload.tag_ids ?? []).length > 0) {
       await setTransactionTagsStandalone(inserted.id, payload.tag_ids ?? [])
