@@ -73,7 +73,7 @@ export interface GoalWithProgress extends Goal {
   progress: number
 }
 
-export interface TransactionType {
+export interface TransactionTypeRow {
   id: string
   slug: string
   label: string

@@ -27,7 +27,7 @@ export interface TransactionPayload {
   paid: boolean
   paid_at: string | null
   paid_amount: number | null
-  tag_id: string | null
+  tag_id?: string | null
   tag_ids?: string[]
 }
 
@@ -180,7 +180,7 @@ export function useTransactions(filters: TransactionFilters) {
           paid: isPaid,
           paid_at: isPaid ? payload.paid_at : null,
           paid_amount: isPaid ? payload.paid_amount : null,
-          tag_id: payload.tag_id,
+          tag_id: (payload.tag_ids ?? [])[0] ?? null,
         }
       })
       const { error: err } = await supabase.from('transactions').insert(records)
@@ -210,7 +210,7 @@ export function useTransactions(filters: TransactionFilters) {
           paid: isPaid,
           paid_at: isPaid ? payload.paid_at : null,
           paid_amount: isPaid ? payload.paid_amount : null,
-          tag_id: payload.tag_id,
+          tag_id: (payload.tag_ids ?? [])[0] ?? null,
         }
       })
       const { error: err } = await supabase.from('transactions').insert(records)
@@ -234,7 +234,7 @@ export function useTransactions(filters: TransactionFilters) {
       paid: payload.paid,
       paid_at: payload.paid_at,
       paid_amount: payload.paid_amount,
-      tag_id: payload.tag_id,
+      tag_id: (payload.tag_ids ?? [])[0] ?? null,
     }).select('id').single()
     if (err) throw new Error(err.message)
     if ((payload.tag_ids ?? []).length > 0) {
@@ -245,11 +245,10 @@ export function useTransactions(filters: TransactionFilters) {
 
   async function updateTransaction(id: string, payload: Partial<TransactionPayload>) {
     const { tag_ids, ...dbPayload } = payload
+    dbPayload.tag_id = (tag_ids ?? [])[0] ?? null
     const { error: err } = await supabase.from('transactions').update(dbPayload).eq('id', id)
     if (err) throw new Error(err.message)
-    if ((tag_ids ?? []).length > 0) {
-      await setTransactionTagsStandalone(id, tag_ids ?? [])
-    }
+    await setTransactionTagsStandalone(id, tag_ids ?? [])
     await fetch()
   }
 
