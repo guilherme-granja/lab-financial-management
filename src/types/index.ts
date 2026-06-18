@@ -41,6 +41,15 @@ export interface RecurrenceGroup {
   created_at: string
 }
 
+export interface TransactionPayment {
+  id: string
+  transaction_id: string
+  paid_at: string
+  paid_amount: number
+  notes: string | null
+  created_at: string
+}
+
 export interface Transaction {
   id: string
   amount: number
@@ -59,6 +68,7 @@ export interface Transaction {
   paid: boolean
   paid_at: string | null
   paid_amount: number | null
+  payment?: TransactionPayment
   categories?: Category
   accounts?: Account
   to_accounts?: Account
