@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { BalanceLineChart } from '@/components/charts/BalanceLineChart'
 import { TopCategoriesDonutChart } from '@/components/charts/TopCategoriesDonutChart'
-import { TrendingUp, TrendingDown, Wallet, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, Clock, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react'
 import { useDashboard } from '@/hooks/useDashboard'
 
 export default function Dashboard() {
@@ -25,7 +25,7 @@ export default function Dashboard() {
     })
   }
 
-  const { summary, lineData, donutData, recentTx, loading } = useDashboard(period)
+  const { summary, lineData, donutData, recentTx, loading, unlinkedCount } = useDashboard(period)
 
   if (loading) {
     return <div className="text-slate-400 text-sm">Carregando...</div>
@@ -109,6 +109,24 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Unlinked transactions warning */}
+      {unlinkedCount > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-400">
+          <AlertTriangle size={16} className="shrink-0" />
+          <span>
+            {unlinkedCount === 1
+              ? '1 transação deste mês não está vinculada a nenhuma conta e está sendo contabilizada no saldo acima.'
+              : `${unlinkedCount} transações deste mês não estão vinculadas a nenhuma conta e estão sendo contabilizadas no saldo acima.`}
+          </span>
+          <button
+            onClick={() => navigate('/transactions?account=none')}
+            className="ml-auto shrink-0 underline underline-offset-2 hover:text-yellow-300"
+          >
+            Ver transações
+          </button>
+        </div>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

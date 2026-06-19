@@ -12,6 +12,7 @@ interface DashboardData {
   donutData: DonutDataPoint[]
   recentTx: Transaction[]
   loading: boolean
+  unlinkedCount: number
 }
 
 const DONUT_COLORS = ['#6366f1', '#22c55e', '#ef4444', '#f59e0b', '#06b6d4']
@@ -22,6 +23,7 @@ export function useDashboard(period: string): DashboardData {
   const [donutData, setDonutData] = useState<DonutDataPoint[]>([])
   const [recentTx, setRecentTx] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
+  const [unlinkedCount, setUnlinkedCount] = useState(0)
 
   useEffect(() => {
     async function load() {
@@ -42,7 +44,7 @@ export function useDashboard(period: string): DashboardData {
         return `account_id.is.null,account_id.in.(${dashboardIds.join(',')})`
       }
 
-      const [summaryRes, pieRes, recentRes, historyData, pendingRes] = await Promise.all([
+      const [summaryRes, pieRes, recentRes, historyData, pendingRes, unlinkedRes] = await Promise.all([
         supabase
           .from('transactions')
           .select('amount, type')
@@ -97,6 +99,14 @@ export function useDashboard(period: string): DashboardData {
           .eq('paid', false)
           .eq('type', 'expense')
           .or(accountFilter()),
+
+        supabase
+          .from('transactions')
+          .select('id', { count: 'exact', head: true })
+          .gte('date', monthStart)
+          .lte('date', monthEnd)
+          .neq('type', 'transfer')
+          .is('account_id', null),
       ])
 
       const txs = summaryRes.data ?? []
@@ -133,11 +143,13 @@ export function useDashboard(period: string): DashboardData {
         })
       )
 
+      setUnlinkedCount(unlinkedRes.count ?? 0)
+
       setLoading(false)
     }
 
     load()
   }, [period])
 
-  return { summary, lineData, donutData, recentTx, loading }
+  return { summary, lineData, donutData, recentTx, loading, unlinkedCount }
 }
