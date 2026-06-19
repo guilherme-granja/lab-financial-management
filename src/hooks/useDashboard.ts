@@ -106,6 +106,7 @@ export function useDashboard(period: string): DashboardData {
           .gte('date', monthStart)
           .lte('date', monthEnd)
           .neq('type', 'transfer')
+          .eq('paid', true)
           .is('account_id', null),
       ])
 
