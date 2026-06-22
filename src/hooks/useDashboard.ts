@@ -27,7 +27,6 @@ export function useDashboard(period: string): DashboardData {
 
   useEffect(() => {
     async function load() {
-      const now = new Date()
       const periodDate = parseISO(`${period}-01`)
       const monthStart = format(startOfMonth(periodDate), 'yyyy-MM-dd')
       const monthEnd   = format(endOfMonth(periodDate), 'yyyy-MM-dd')
@@ -73,7 +72,7 @@ export function useDashboard(period: string): DashboardData {
 
         Promise.all(
           Array.from({ length: 6 }, (_, i) => {
-            const d = subMonths(now, 5 - i)
+            const d = subMonths(periodDate, 5 - i)
             const start = format(startOfMonth(d), 'yyyy-MM-dd')
             const end = format(endOfMonth(d), 'yyyy-MM-dd')
             return supabase

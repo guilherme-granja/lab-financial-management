@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/hooks/useAuth'
 
 const navItems = [
@@ -30,6 +31,28 @@ const navItems = [
 
 interface SidebarProps {
   onClose?: () => void
+}
+
+function LogoBlock() {
+  return (
+    <div className="flex items-center gap-3 px-6 py-5 border-b border-[#2d3148]">
+      <div className="flex-shrink-0">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="#1e1b4b"/>
+          <rect x="6" y="18" width="4" height="8" rx="1" fill="#6366f1"/>
+          <rect x="12" y="12" width="4" height="14" rx="1" fill="#818cf8"/>
+          <rect x="18" y="8" width="4" height="18" rx="1" fill="#a5b4fc"/>
+          <rect x="24" y="14" width="4" height="12" rx="1" fill="#eab308"/>
+        </svg>
+      </div>
+      <div className="flex flex-col leading-tight">
+        <span className="text-white font-bold text-base tracking-tight">
+          Lab <span className="font-light">Financas</span>
+        </span>
+        <span className="text-slate-500 text-[10px] tracking-[0.15em] uppercase">Pessoal</span>
+      </div>
+    </div>
+  )
 }
 
 function NavItems({ onClose }: SidebarProps) {
@@ -55,6 +78,24 @@ function NavItems({ onClose }: SidebarProps) {
         </NavLink>
       ))}
     </nav>
+  )
+}
+
+function SidebarFooter({ onSignOut }: { onSignOut: () => void }) {
+  return (
+    <div className="mt-auto">
+      <Separator className="bg-[#2d3148]" />
+      <div className="p-4">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 text-slate-400 hover:text-red-400 hover:bg-red-950/30 px-3"
+          onClick={onSignOut}
+        >
+          <LogOut size={18} />
+          Sair
+        </Button>
+      </div>
+    </div>
   )
 }
 
@@ -85,48 +126,32 @@ export function Sidebar() {
       {/* Mobile drawer */}
       <aside
         className={cn(
-          'fixed top-0 left-0 h-full w-64 z-50 bg-[#1a1d27] border-r border-[#2d3148] transition-transform duration-200 md:hidden',
+          'fixed top-0 left-0 h-full w-64 z-50 bg-[#1a1d27] border-r border-[#2d3148] transition-transform duration-200 md:hidden flex flex-col',
           drawerOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#2d3148]">
-          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Lab Finanças Pessoal" className="w-auto max-w-[160px] h-auto" />
+        <div className="flex items-center justify-between border-b border-[#2d3148]">
+          <div className="flex-1">
+            <LogoBlock />
+          </div>
           <Button
             variant="ghost"
             size="icon"
-            className="text-slate-400"
+            className="text-slate-400 mr-2"
             onClick={() => setDrawerOpen(false)}
           >
             <X size={18} />
           </Button>
         </div>
         <NavItems onClose={() => setDrawerOpen(false)} />
-        <div className="border-t border-[#2d3148] p-4 mt-auto">
-          <button
-            onClick={() => { signOut(); setDrawerOpen(false) }}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-300 hover:bg-[#2d3148] transition-colors"
-          >
-            <LogOut size={18} />
-            Sair
-          </button>
-        </div>
+        <SidebarFooter onSignOut={() => { signOut(); setDrawerOpen(false) }} />
       </aside>
 
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-64 min-h-screen bg-[#1a1d27] border-r border-[#2d3148] fixed top-0 left-0 h-full">
-        <div className="px-4 py-3 border-b border-[#2d3148]">
-          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Lab Finanças Pessoal" className="w-full max-w-[180px] h-auto" />
-        </div>
+        <LogoBlock />
         <NavItems />
-        <div className="border-t border-[#2d3148] p-4 mt-auto">
-          <button
-            onClick={signOut}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-300 hover:bg-[#2d3148] transition-colors"
-          >
-            <LogOut size={18} />
-            Sair
-          </button>
-        </div>
+        <SidebarFooter onSignOut={signOut} />
       </aside>
     </>
   )
