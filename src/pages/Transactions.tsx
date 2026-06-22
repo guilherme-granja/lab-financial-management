@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { format, addMonths, parseISO } from 'date-fns'
+import { format, addMonths, parseISO, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useSearchParams } from 'react-router-dom'
 import { useTransactions } from '@/hooks/useTransactions'
@@ -188,6 +188,8 @@ export default function Transactions() {
     status: 'all',
     account_id: null,
     tagId: 'all',
+    dateFrom: null,
+    dateTo: null,
   })
 
   useEffect(() => {
@@ -499,7 +501,13 @@ export default function Transactions() {
   function navigatePeriod(delta: number) {
     const current = parseISO(`${filters.period}-01`)
     const next = addMonths(current, delta)
-    setFilters((f) => ({ ...f, period: format(next, 'yyyy-MM'), periodType: 'monthly' }))
+    setFilters((f) => ({
+      ...f,
+      period: format(next, 'yyyy-MM'),
+      periodType: 'monthly',
+      dateFrom: null,
+      dateTo: null,
+    }))
   }
 
   const DEFAULT_FILTERS: TransactionFilters = {
@@ -510,6 +518,8 @@ export default function Transactions() {
     status: 'all',
     account_id: null,
     tagId: 'all',
+    dateFrom: null,
+    dateTo: null,
   }
 
   function clearFilters() {
@@ -517,7 +527,7 @@ export default function Transactions() {
   }
 
   function clearSecondaryFilters() {
-    setFilters((f) => ({ ...f, status: 'all', categoryId: 'all', account_id: null, tagId: 'all' }))
+    setFilters((f) => ({ ...f, status: 'all', categoryId: 'all', account_id: null, tagId: 'all', dateFrom: null, dateTo: null }))
   }
 
   const hasActiveFilters =
@@ -525,13 +535,17 @@ export default function Transactions() {
     filters.categoryId !== 'all' ||
     filters.status !== 'all' ||
     filters.account_id !== null ||
-    filters.tagId !== 'all'
+    filters.tagId !== 'all' ||
+    filters.dateFrom !== null ||
+    filters.dateTo !== null
 
   const secondaryFilterCount =
     (filters.status !== 'all' ? 1 : 0) +
     (filters.categoryId !== 'all' ? 1 : 0) +
     (filters.account_id !== null ? 1 : 0) +
-    (filters.tagId !== 'all' ? 1 : 0)
+    (filters.tagId !== 'all' ? 1 : 0) +
+    (filters.dateFrom !== null ? 1 : 0) +
+    (filters.dateTo !== null ? 1 : 0)
 
   const activeChips: ActiveChip[] = []
 
@@ -583,6 +597,9 @@ export default function Transactions() {
       onRemove: () => setFilters((f) => ({ ...f, tagId: 'all' })),
     })
   }
+
+  const periodMin = format(startOfMonth(parseISO(`${filters.period}-01`)), 'yyyy-MM-dd')
+  const periodMax = format(endOfMonth(parseISO(`${filters.period}-01`)), 'yyyy-MM-dd')
 
   return (
     <div className="space-y-4">
@@ -815,6 +832,34 @@ export default function Transactions() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-slate-400 text-xs">Data início</Label>
+                  <Input
+                    type="date"
+                    value={filters.dateFrom ?? ''}
+                    min={periodMin}
+                    max={filters.dateTo ?? periodMax}
+                    onChange={(e) =>
+                      setFilters((f) => ({ ...f, dateFrom: e.target.value || null }))
+                    }
+                    className="bg-[#1a1d27] border-[#2d3148] text-slate-200 w-40"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-slate-400 text-xs">Data fim</Label>
+                  <Input
+                    type="date"
+                    value={filters.dateTo ?? ''}
+                    min={filters.dateFrom ?? periodMin}
+                    max={periodMax}
+                    onChange={(e) =>
+                      setFilters((f) => ({ ...f, dateTo: e.target.value || null }))
+                    }
+                    className="bg-[#1a1d27] border-[#2d3148] text-slate-200 w-40"
+                  />
                 </div>
               </div>
 
