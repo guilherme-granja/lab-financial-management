@@ -69,6 +69,40 @@ Executar apenas quando o usuário disser "review" ou "faz o review".
 - Padrões de UI/design: `.claude/skills/frontend-design/`
 - Documentação do projeto: `docs/superpowers/`
 
+## Versionamento
+
+A versão do projeto vive em `package.json` → campo `"version"`. Ela é a única fonte da verdade.
+
+### Quando atualizar
+
+| Tipo de mudança | Ação |
+|---|---|
+| Feature nova (nova tela, nova funcionalidade, novo campo visível) | Incrementar **minor**: `1.0.0 → 1.1.0` |
+| Bugfix (corrigir comportamento incorreto, ajuste de UI, refactor sem nova funcionalidade) | Incrementar **patch**: `1.0.0 → 1.0.1` |
+
+### Como atualizar
+
+Antes do `git commit` final de cada spec/bugfix, editar `package.json` e incrementar a versão conforme a tabela acima.
+
+### Fluxo de deploy com tag
+
+Após o commit e push de uma mudança, criar uma tag Git anotada com a versão e enviá-la ao GitHub:
+
+```bash
+git tag -a v<VERSÃO> -m "v<VERSÃO>"
+git push origin v<VERSÃO>
+```
+
+Exemplo para a versão `1.1.0`:
+```bash
+git tag -a v1.1.0 -m "v1.1.0"
+git push origin v1.1.0
+```
+
+As tags ficam visíveis em `https://github.com/guilherme-granja/lab-financial-management/tags` e permitem rollback via `git checkout v<VERSÃO>`.
+
+---
+
 ## MCP Superpowers
 - Nunca usar a skill writing-plans — specs em docs/superpowers/specs/ já definem o plano
 - Usar subagent-driven-development para execução das tasks
