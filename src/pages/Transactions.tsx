@@ -21,7 +21,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CreditCard, X, AlertTriangle, Columns, Check, ChevronDown } from 'lucide-react'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import type { SearchableSelectOption } from '@/components/ui/searchable-select'
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+import * as PopoverPrimitive from '@radix-ui/react-popover'
+import { Popover, PopoverTrigger } from '@/components/ui/popover'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { MoneyInput } from '@/components/ui/money-input'
 import { checkDuplicate } from '@/hooks/useDuplicateCheck'
@@ -52,7 +53,7 @@ function TagMultiSelect({ selectedIds, onChange, tags }: TagMultiSelectProps) {
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen} modal={false}>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           type="button"
@@ -77,9 +78,10 @@ function TagMultiSelect({ selectedIds, onChange, tags }: TagMultiSelectProps) {
           </span>
         </button>
       </PopoverTrigger>
-      <PopoverContent
+      <PopoverPrimitive.Content
         align="start"
         sideOffset={4}
+        onOpenAutoFocus={(e) => e.preventDefault()}
         className="z-50 w-[var(--radix-popover-trigger-width)] p-0 rounded-md border border-[#2d3148] bg-[#0f1117] shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2"
       >
         <Command shouldFilter={false}>
@@ -106,7 +108,7 @@ function TagMultiSelect({ selectedIds, onChange, tags }: TagMultiSelectProps) {
             </CommandGroup>
           </CommandList>
         </Command>
-      </PopoverContent>
+      </PopoverPrimitive.Content>
     </Popover>
   )
 }
