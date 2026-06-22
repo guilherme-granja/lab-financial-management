@@ -137,9 +137,9 @@ export function useDashboard(period: string): DashboardData {
 
       setLineData(
         historyData.map(({ month, data }) => {
-          const income  = data.filter((t) => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
-          const expense = data.filter((t) => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
-          return { month, income, expense }
+          const receitas = data.filter((t) => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
+          const despesas = data.filter((t) => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
+          return { month, receitas, despesas }
         })
       )
 

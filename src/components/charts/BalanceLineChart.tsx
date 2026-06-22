@@ -2,9 +2,9 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { formatCurrency } from '@/lib/formatters'
 
 export interface BalanceDataPoint {
-  month: string    // mantém o mesmo nome para não quebrar o Dashboard
-  income: number   // receita do mês
-  expense: number  // despesa do mês
+  month: string
+  receitas: number
+  despesas: number
 }
 
 export function BalanceLineChart({ data }: { data: BalanceDataPoint[] }) {
@@ -22,18 +22,18 @@ export function BalanceLineChart({ data }: { data: BalanceDataPoint[] }) {
           labelStyle={{ color: '#e2e8f0' }}
           formatter={(value: number, name: string) => [
             formatCurrency(value),
-            name === 'income' ? 'Receitas' : 'Despesas',
+            name === 'receitas' ? 'Receitas' : 'Despesas',
           ]}
         />
         <Legend
           formatter={(value) => (
             <span style={{ color: '#94a3b8', fontSize: 12 }}>
-              {value === 'income' ? 'Receitas' : 'Despesas'}
+              {value === 'receitas' ? 'Receitas' : 'Despesas'}
             </span>
           )}
         />
-        <Line type="monotone" dataKey="income"  stroke="#22c55e" strokeWidth={2} dot={{ fill: '#22c55e', r: 3 }} />
-        <Line type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={2} dot={{ fill: '#ef4444', r: 3 }} />
+        <Line type="monotone" dataKey="receitas" stroke="#22c55e" strokeWidth={2} dot={{ fill: '#22c55e', r: 3 }} />
+        <Line type="monotone" dataKey="despesas" stroke="#ef4444" strokeWidth={2} dot={{ fill: '#ef4444', r: 3 }} />
       </LineChart>
     </ResponsiveContainer>
   )
