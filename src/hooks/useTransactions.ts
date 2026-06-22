@@ -12,6 +12,8 @@ export interface TransactionFilters {
   status: 'all' | 'paid' | 'unpaid'
   account_id: string | null
   tagId: string
+  dateFrom: string | null
+  dateTo: string | null
 }
 
 export interface TransactionPayload {
@@ -53,20 +55,20 @@ export function useTransactions(filters: TransactionFilters) {
     const to = from + PAGE_SIZE - 1
 
     const [dateStart, dateEnd]: [string, string] = (() => {
-      if (filters.periodType === 'monthly') {
-        const [year, month] = filters.period.split('-').map(Number)
-        const ref = new Date(year, month - 1, 1)
-        return [
-          format(startOfMonth(ref), 'yyyy-MM-dd'),
-          format(endOfMonth(ref), 'yyyy-MM-dd'),
-        ]
-      } else {
-        const ref = new Date(Number(filters.period), 0, 1)
-        return [
-          format(startOfYear(ref), 'yyyy-MM-dd'),
-          format(endOfYear(ref), 'yyyy-MM-dd'),
-        ]
-      }
+      const base: [string, string] = filters.periodType === 'monthly'
+        ? (() => {
+            const [year, month] = filters.period.split('-').map(Number)
+            const ref = new Date(year, month - 1, 1)
+            return [format(startOfMonth(ref), 'yyyy-MM-dd'), format(endOfMonth(ref), 'yyyy-MM-dd')]
+          })()
+        : (() => {
+            const ref = new Date(Number(filters.period), 0, 1)
+            return [format(startOfYear(ref), 'yyyy-MM-dd'), format(endOfYear(ref), 'yyyy-MM-dd')]
+          })()
+
+      const start = filters.dateFrom ?? base[0]
+      const end = filters.dateTo ?? base[1]
+      return [start, end]
     })()
 
     let query = supabase
