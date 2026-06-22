@@ -12,6 +12,8 @@ const DEFAULT_FILTERS = {
   type: 'all' as const,
   categoryId: 'all',
   status: 'all' as const,
+  dateFrom: null,
+  dateTo: null,
   account_id: null,
   tagId: 'all',
 }
@@ -265,5 +267,27 @@ describe('useTransactions', () => {
     )
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.filteredTotal).toBeCloseTo(650.5)
+  })
+
+  it('usa dateFrom quando fornecido em vez do inicio do mes', async () => {
+    mockSupabaseResult({ data: [], count: 0 })
+    renderHook(() =>
+      useTransactions({ ...DEFAULT_FILTERS, dateFrom: '2026-06-10', dateTo: null })
+    )
+    await waitFor(() => {
+      expect(mockGte).toHaveBeenCalledWith('date', '2026-06-10')
+      expect(mockLte).toHaveBeenCalledWith('date', '2026-06-30')
+    })
+  })
+
+  it('usa dateTo quando fornecido em vez do fim do mes', async () => {
+    mockSupabaseResult({ data: [], count: 0 })
+    renderHook(() =>
+      useTransactions({ ...DEFAULT_FILTERS, dateFrom: null, dateTo: '2026-06-20' })
+    )
+    await waitFor(() => {
+      expect(mockGte).toHaveBeenCalledWith('date', '2026-06-01')
+      expect(mockLte).toHaveBeenCalledWith('date', '2026-06-20')
+    })
   })
 })
