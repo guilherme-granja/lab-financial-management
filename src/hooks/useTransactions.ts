@@ -322,6 +322,45 @@ export function useTransactions(filters: TransactionFilters) {
     await fetch()
   }
 
+  async function updateRecurrenceGroup(
+    groupId: string,
+    payload: Partial<TransactionPayload>
+  ) {
+    const { date: _date, ...rest } = payload as TransactionPayload & { date?: string }
+    const { error: err } = await supabase
+      .from('transactions')
+      .update(rest)
+      .eq('recurrence_group_id', groupId)
+    if (err) throw new Error(err.message)
+    await fetch()
+  }
+
+  async function updateRecurrenceFromHere(
+    id: string,
+    groupId: string,
+    fromDate: string,
+    payload: Partial<TransactionPayload>
+  ) {
+    const { date: _date, ...rest } = payload as TransactionPayload & { date?: string }
+
+    const { error: e1 } = await supabase
+      .from('transactions')
+      .update(rest)
+      .eq('id', id)
+    if (e1) throw new Error(e1.message)
+
+    const { error: e2 } = await supabase
+      .from('transactions')
+      .update(rest)
+      .eq('recurrence_group_id', groupId)
+      .gte('date', fromDate)
+      .eq('paid', false)
+      .neq('id', id)
+    if (e2) throw new Error(e2.message)
+
+    await fetch()
+  }
+
   async function updateTransactionPayment(id: string, paid_at: string, paid_amount: number): Promise<void> {
     const { error: err } = await supabase
       .from('transaction_payments')
@@ -381,6 +420,8 @@ export function useTransactions(filters: TransactionFilters) {
     refresh: fetch,
     createTransaction,
     updateTransaction,
+    updateRecurrenceGroup,
+    updateRecurrenceFromHere,
     updateTransactionPayment,
     unefetivateTransaction,
     deleteTransaction,

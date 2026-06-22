@@ -215,6 +215,8 @@ export default function Transactions() {
     loading,
     createTransaction,
     updateTransaction,
+    updateRecurrenceGroup,
+    updateRecurrenceFromHere,
     updateTransactionPayment,
     deleteTransaction,
     deleteTransactionGroupUnpaid,
@@ -250,6 +252,13 @@ export default function Transactions() {
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [duplicateWarning, setDuplicateWarning] = useState<Transaction | null>(null)
+
+  type RecurrenceScope = 'one' | 'future' | 'all'
+  const [scopeDialogOpen, setScopeDialogOpen] = useState(false)
+  const [pendingPayload, setPendingPayload] = useState<{
+    payload: TransactionPayload
+    tx: Transaction
+  } | null>(null)
 
   function openCreate() {
     setForm(EMPTY_FORM)
@@ -355,6 +364,20 @@ export default function Transactions() {
 
     try {
       if (editingId) {
+        const editingTx = transactions.find((t) => t.id === editingId)
+        const isRecurrent =
+          editingTx &&
+          editingTx.recurrence !== 'none' &&
+          editingTx.recurrence_group_id !== null
+
+        if (isRecurrent) {
+          setPendingPayload({ payload, tx: editingTx! })
+          setSaving(false)
+          setDialogOpen(false)
+          setScopeDialogOpen(true)
+          return
+        }
+
         await updateTransaction(editingId, payload)
       } else {
         await createTransaction(payload)
@@ -365,6 +388,34 @@ export default function Transactions() {
     } finally {
       setSaving(false)
     }
+  }
+
+  async function handleScopeConfirm(scope: RecurrenceScope) {
+    if (!pendingPayload || !editingId) return
+    const { payload, tx } = pendingPayload
+    setSaving(true)
+    try {
+      if (scope === 'one') {
+        await updateTransaction(editingId, payload)
+      } else if (scope === 'future') {
+        await updateRecurrenceFromHere(editingId, tx.recurrence_group_id!, tx.date, payload)
+      } else {
+        await updateRecurrenceGroup(tx.recurrence_group_id!, payload)
+      }
+      setScopeDialogOpen(false)
+      setPendingPayload(null)
+    } catch (e) {
+      setScopeDialogOpen(false)
+      setFormError((e as Error).message)
+      setDialogOpen(true)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  function handleScopeCancel() {
+    setScopeDialogOpen(false)
+    setDialogOpen(true)
   }
 
   async function handleDelete() {
@@ -1401,6 +1452,54 @@ export default function Transactions() {
             </Button>
             <Button onClick={handlePay} className="bg-indigo-600 hover:bg-indigo-700 text-white">
               Pagar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Recurrence Scope Dialog */}
+      <Dialog open={scopeDialogOpen} onOpenChange={(open) => { if (!open) handleScopeCancel() }}>
+        <DialogContent className="bg-[#1a1d27] border-[#2d3148] text-slate-200 sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Editar transação recorrente</DialogTitle>
+          </DialogHeader>
+          <p className="text-slate-400 text-sm">
+            Esta transação faz parte de uma recorrência. O que deseja editar?
+          </p>
+          <div className="flex flex-col gap-2 py-2">
+            <Button
+              variant="outline"
+              className="justify-start border-[#2d3148] text-slate-200 hover:bg-[#2d3148]"
+              disabled={saving}
+              onClick={() => handleScopeConfirm('one')}
+            >
+              Somente esta
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start border-[#2d3148] text-slate-200 hover:bg-[#2d3148]"
+              disabled={saving}
+              onClick={() => handleScopeConfirm('future')}
+            >
+              Esta e as futuras pendentes
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start border-[#2d3148] text-slate-200 hover:bg-[#2d3148]"
+              disabled={saving}
+              onClick={() => handleScopeConfirm('all')}
+            >
+              Todas
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              className="text-slate-400"
+              disabled={saving}
+              onClick={handleScopeCancel}
+            >
+              Cancelar
             </Button>
           </DialogFooter>
         </DialogContent>
