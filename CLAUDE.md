@@ -86,16 +86,43 @@ Antes do `git commit` final de cada spec/bugfix, editar `package.json` e increme
 
 ### Fluxo de deploy com tag
 
-Após o commit e push de uma mudança, criar uma tag Git anotada com a versão e enviá-la ao GitHub:
+Após o commit e push de uma mudança, criar uma tag Git anotada com a versão e enviá-la ao GitHub.
+
+A mensagem da tag **não é um commit message**. Ela deve descrever o que foi entregue nessa versão com detalhes suficientes para entender o estado do projeto sem precisar ler o histórico de commits. Use frases completas, liste as funcionalidades adicionadas, bugs corrigidos e mudanças de banco de dados relevantes.
 
 ```bash
-git tag -a v<VERSÃO> -m "v<VERSÃO>"
+git tag -a v<VERSÃO> -m "v<VERSÃO>
+
+<Descrição do que foi feito nessa versão>
+
+Funcionalidades:
+- <item 1>
+- <item 2>
+
+Bugfixes:
+- <item 1> (omitir seção se não houver)
+
+Banco de dados:
+- <migrations aplicadas, se houver> (omitir seção se não houver)"
+
 git push origin v<VERSÃO>
 ```
 
-Exemplo para a versão `1.1.0`:
+Exemplo para a versão `1.1.0` após implementar filtros na tela de transações:
 ```bash
-git tag -a v1.1.0 -m "v1.1.0"
+git tag -a v1.1.0 -m "v1.1.0
+
+Implementa filtros avançados na tela de Transações e banner de aviso no Dashboard.
+
+Funcionalidades:
+- Barra de filtros compacta em Transactions com pills de tipo e dropdown de categoria
+- Badge de filtros ativos mostrando quantidade de filtros aplicados
+- Banner de aviso no Dashboard para transações sem conta vinculada (account_id null)
+- Link do banner aponta para /transactions?account=none
+
+Banco de dados:
+- Nenhuma migration nessa versão"
+
 git push origin v1.1.0
 ```
 
