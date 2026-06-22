@@ -52,7 +52,7 @@ function TagMultiSelect({ selectedIds, onChange, tags }: TagMultiSelectProps) {
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={false}>
       <PopoverTrigger asChild>
         <button
           type="button"
