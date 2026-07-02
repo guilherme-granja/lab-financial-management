@@ -201,7 +201,7 @@ Botão durante saving: `disabled={saving}` com texto alternativo ou spinner.
 ## Supabase — regras
 
 - Nunca hardcodar URL ou anon key — usar `import.meta.env.VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`
-- Client Supabase já instanciado em `src/lib/supabase.ts` — importar de lá, nunca recriar
+- Client Supabase obtido via `useSupabaseClient()` dentro de hooks — nunca importado como singleton estático
 - Queries em hooks customizados (`src/hooks/`), não inline nas páginas
 - Formatos de moeda via `formatCurrency` de `@/lib/formatters`
 
