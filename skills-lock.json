@@ -6,6 +6,12 @@
       "sourceType": "github",
       "skillPath": "skills/database-architect/SKILL.md",
       "computedHash": "f4540da3010d7322e83766266306bf617e6aba0ba226c588504f19245be9a0f3"
+    },
+    "task-observer": {
+      "source": "rebelytics/one-skill-to-rule-them-all",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "8dc251868b3c42556dedf4c0b6577af5b1d92b1875a6c1519a480985927d02d3"
     }
   }
 }
