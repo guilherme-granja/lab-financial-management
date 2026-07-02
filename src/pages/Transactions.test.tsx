@@ -8,6 +8,9 @@ import type { Transaction } from '@/types'
 vi.mock('@/hooks/useTransactions', () => ({
   useTransactions: vi.fn(),
 }))
+vi.mock('@/hooks/useDatabase', () => ({
+  useSupabaseClient: vi.fn(),
+}))
 vi.mock('@/hooks/useDuplicateCheck', () => ({
   checkDuplicate: vi.fn().mockResolvedValue(null),
   fetchAllDuplicateGroups: vi.fn().mockResolvedValue([]),

@@ -3,7 +3,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { useCategories } from './useCategories'
 import { mockSupabaseResult } from '@/test/mocks/supabase'
 
-vi.mock('@/lib/supabase', () => import('@/test/mocks/supabase'))
+vi.mock('@/hooks/useDatabase', () => import('@/test/mocks/supabase'))
 
 beforeEach(() => {
   vi.clearAllMocks()

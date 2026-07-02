@@ -4,7 +4,7 @@ import { useTransactions } from './useTransactions'
 import type { TransactionPayload } from './useTransactions'
 import { mockSupabaseResult, mockLike, mockGte, mockLte, mockFrom, mockNeq } from '@/test/mocks/supabase'
 
-vi.mock('@/lib/supabase', () => import('@/test/mocks/supabase'))
+vi.mock('@/hooks/useDatabase', () => import('@/test/mocks/supabase'))
 
 const DEFAULT_FILTERS = {
   period: '2026-06',

@@ -72,3 +72,7 @@ export const supabase = {
     onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
   },
 }
+
+export function useSupabaseClient() {
+  return supabase
+}
