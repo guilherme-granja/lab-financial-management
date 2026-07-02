@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-02T23:00:00Z",
+  "title": "Design System: Lab Financial Management",
+  "extensions": {
+    "colorMeta": {
+      "background": { "role": "neutral", "displayName": "Void Background", "canonical": "hsl(232 17% 8%)", "tonalRamp": ["#20212d", "#35384b", "#4a4e68", "#5f6486", "#797ea0", "#979bb5", "#b4b7ca", "#e1e2ea"] },
+      "card": { "role": "neutral", "displayName": "Ledger Card", "canonical": "hsl(230 20% 12%)", "tonalRamp": ["#20212d", "#35384b", "#4a4e68", "#5f6486", "#797ea0", "#979bb5", "#b4b7ca", "#e1e2ea"] },
+      "primary": { "role": "primary", "displayName": "Signal Indigo", "canonical": "hsl(239 84% 67%)", "tonalRamp": ["#060746", "#0a0c75", "#0e11a4", "#1216d3", "#2c2fed", "#5b5df1", "#8a8bf5", "#d0d1fb"] },
+      "secondary": { "role": "neutral", "displayName": "Quiet Steel", "canonical": "hsl(232 22% 23%)", "tonalRamp": ["#1e202f", "#32354e", "#464b6d", "#5a608c", "#737aa5", "#9297b9", "#b1b5cd", "#e0e1eb"] },
+      "muted-foreground": { "role": "neutral", "displayName": "Faded Ledger Ink", "canonical": "hsl(215 20% 65%)" },
+      "destructive": { "role": "error", "displayName": "Alert Red", "canonical": "hsl(0 84% 60%)", "tonalRamp": ["#460606", "#750a0a", "#a40e0e", "#d31212", "#ed2c2c", "#f15b5b", "#f58a8a", "#fbd0d0"] }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Headline", "purpose": "Balances, totals, page titles — the numbers that matter most." },
+      "title": { "displayName": "Title", "purpose": "Card headers, dialog titles, section labels." },
+      "body": { "displayName": "Body", "purpose": "Table cells, form values, descriptions." },
+      "label": { "displayName": "Label", "purpose": "Badges, table headers, small status tags." }
+    },
+    "shadows": [
+      { "name": "ambient", "value": "0 1px 2px 0 rgb(0 0 0 / 0.05)", "purpose": "Default resting elevation for cards." },
+      { "name": "floating", "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)", "purpose": "Dialogs, popovers, anything portaled above the page." }
+    ],
+    "motion": [
+      { "name": "dialog-transition", "value": "200ms fade + zoom-95-to-100", "purpose": "Dialog open/close, no bounce/elastic." }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Default call-to-action button (save, add, confirm).",
+      "html": "<button class=\"ds-btn-primary\">Salvar</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 8px 16px; background: #6467f2; color: #ffffff; font-size: 14px; font-weight: 500; border-radius: 6px; border: none; transition: background-color 0.15s; } .ds-btn-primary:hover { background: rgba(100, 103, 242, 0.9); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px #111218, 0 0 0 4px #6467f2; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Lower-emphasis action alongside a primary button.",
+      "html": "<button class=\"ds-btn-secondary\">Cancelar</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 8px 16px; background: #2e3148; color: #e1e7ef; font-size: 14px; font-weight: 500; border-radius: 6px; border: none; transition: background-color 0.15s; } .ds-btn-secondary:hover { background: rgba(46, 49, 72, 0.8); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Bordered button for tertiary actions.",
+      "html": "<button class=\"ds-btn-outline\">Filtrar</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 8px 16px; background: #111218; color: #e1e7ef; font-size: 14px; font-weight: 500; border-radius: 6px; border: 1px solid #2e3148; transition: background-color 0.15s; } .ds-btn-outline:hover { background: #2e3148; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Standard text/number field used across forms.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"0,00\" />",
+      "css": ".ds-input { display: flex; height: 40px; width: 100%; border-radius: 6px; border: 1px solid #2e3148; background: #111218; color: #e1e7ef; padding: 8px 12px; font-size: 14px; } .ds-input::placeholder { color: #94a3b8; } .ds-input:focus-visible { outline: none; box-shadow: 0 0 0 2px #111218, 0 0 0 4px #6467f2; }"
+    },
+    {
+      "name": "Default Badge",
+      "kind": "chip",
+      "refersTo": "badge-default",
+      "description": "Status/category tag, indigo fill.",
+      "html": "<span class=\"ds-badge\">Receita</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 2px 10px; font-size: 12px; font-weight: 600; background: #6467f2; color: #ffffff; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Base container for dashboard summaries, list panels, form sections.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">Saldo total</div><div class=\"ds-card-body\">R$ 12.480,00</div></div>",
+      "css": ".ds-card { background: #181b25; color: #e1e7ef; border: 1px solid #2e3148; border-radius: 8px; padding: 24px; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); } .ds-card-title { font-size: 14px; color: #94a3b8; margin-bottom: 8px; } .ds-card-body { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Night Statement",
+    "overview": "The interface reads like a bank statement checked at night: a dim, near-black surface where the only bright thing in the room is the number that matters. Signal Indigo is the single focal accent — it marks the primary action, the active focus ring, the one data point the eye should land on — and everything else recedes into quiet neutral tones. This is a shared household ledger, not a consumer growth app: there are no badges, no confetti, no mascots, and no cheerful SaaS-cream marketing gloss. It is also not a dense trading terminal; density stays casual, legible at a glance by any family member, not optimized for a power user staring at it all day.",
+    "keyCharacteristics": [
+      "Dark-only surface (no light theme); depth built from tone steps, not brightness jumps",
+      "One accent color (Signal Indigo) used sparingly, for action and focus only",
+      "Flat cards distinguished from the page by a single lightness step, not a border-heavy grid",
+      "Inter throughout, no display face — data is the hierarchy, not typographic flourish"
+    ],
+    "rules": [
+      { "name": "The One Signal Rule", "body": "Signal Indigo appears only on primary actions, focus/ring states, and active selection. If more than one element on a screen is indigo at rest, it's being used wrong.", "section": "colors" },
+      { "name": "The Numbers-First Rule", "body": "The largest, boldest type on any screen is always a balance, delta, or total — never a section heading or a piece of UI chrome.", "section": "typography" },
+      { "name": "The Two-Step Rule", "body": "There are exactly two elevation levels: resting (shadow-sm) and floating (shadow-lg). Nothing in between; don't invent a third shadow weight.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep Signal Indigo (#6467f2) to primary actions, focus rings, and active/selected state only.",
+      "Do separate cards from the page with the Ledger Card tone step (#181b25 on #111218) plus the ambient shadow, not a heavier border.",
+      "Do keep every loading/error/empty state explicit per project convention — never show ambiguous or stale numbers.",
+      "Do use the same component pattern (same button variant, same badge shape) for the same kind of action across Accounts, Transactions, Categories, Goals, and Tags."
+    ],
+    "donts": [
+      "Don't add playful/gamified fintech flourishes — badges-as-achievements, confetti, mascots, or celebratory animation.",
+      "Don't push toward a dense trading-terminal look (cramped multi-panel data grids, monospace-everything).",
+      "Don't drift toward a cheerful SaaS-cream marketing aesthetic (light warm-neutral hero sections, gradient text, eyebrow labels).",
+      "Don't introduce a second saturated accent color competing with Signal Indigo; Alert Red is destructive-only.",
+      "Don't render muted-foreground gray (#94a3b8) at a size/weight that drops body text below 4.5:1 contrast against the background."
+    ]
+  }
+}
