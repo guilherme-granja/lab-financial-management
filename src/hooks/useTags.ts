@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { useSupabaseClient } from '@/hooks/useDatabase'
 import type { Tag } from '@/types'
 
 // Internal coordination utility: called by useTransactions to sync pivot after insert/update.
 // Not a general-purpose hook bypass — must not be extended with arbitrary Supabase calls.
-export async function setTransactionTagsStandalone(transactionId: string, tagIds: string[]): Promise<void> {
+export async function setTransactionTagsStandalone(supabase: SupabaseClient, transactionId: string, tagIds: string[]): Promise<void> {
   // Deleta todos os vínculos existentes e reinsere os novos (upsert completo)
   await supabase.from('transaction_tags').delete().eq('transaction_id', transactionId)
   if (tagIds.length === 0) return
@@ -14,6 +15,7 @@ export async function setTransactionTagsStandalone(transactionId: string, tagIds
 }
 
 export function useTags() {
+  const supabase = useSupabaseClient()
   const [tags, setTags] = useState<Tag[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -31,7 +33,7 @@ export function useTags() {
       setTags((data as Tag[]) ?? [])
     }
     setLoading(false)
-  }, [])
+  }, [supabase])
 
   useEffect(() => {
     fetch()
@@ -89,7 +91,7 @@ export function useTags() {
   }
 
   async function setTransactionTags(transactionId: string, tagIds: string[]): Promise<void> {
-    return setTransactionTagsStandalone(transactionId, tagIds)
+    return setTransactionTagsStandalone(supabase, transactionId, tagIds)
   }
 
   return { tags, loading, error, createTag, deleteTag, addTagToTransaction, removeTagFromTransaction, setTransactionTags }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { CheckCircle2, RefreshCw, Trash2 } from 'lucide-react'
 import { fetchAllDuplicateGroups, deleteTransaction } from '@/hooks/useDuplicateCheck'
+import { useSupabaseClient } from '@/hooks/useDatabase'
 import type { Transaction, TransactionType } from '@/types'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import { Button } from '@/components/ui/button'
@@ -31,6 +32,7 @@ function groupKey(group: Transaction[]): string {
 }
 
 export default function Duplicates() {
+  const supabase = useSupabaseClient()
   const [groups, setGroups] = useState<Transaction[][]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -40,7 +42,7 @@ export default function Duplicates() {
     setLoading(true)
     setError(null)
     try {
-      const result = await fetchAllDuplicateGroups()
+      const result = await fetchAllDuplicateGroups(supabase)
       setGroups(result)
     } catch (e) {
       setError((e as Error).message)
@@ -51,13 +53,13 @@ export default function Duplicates() {
 
   useEffect(() => {
     load()
-  }, [])
+  }, [supabase])
 
   async function resolveDuplicate(_groupKey: string, removeId: string): Promise<boolean> {
     setResolving(removeId)
     try {
       setError(null)
-      await deleteTransaction(removeId)
+      await deleteTransaction(supabase, removeId)
       setGroups((prev) =>
         prev.map((g) => g.filter((tx) => tx.id !== removeId)).filter((g) => g.length >= 2)
       )

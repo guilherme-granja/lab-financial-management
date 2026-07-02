@@ -1,9 +1,9 @@
-import { supabase } from '@/lib/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Transaction } from '@/types'
 
 // Camada 1: verifica se já existe transação com os mesmos 4 campos no mesmo mês.
 // Retorna a transação duplicada encontrada ou null.
-export async function checkDuplicate(params: {
+export async function checkDuplicate(supabase: SupabaseClient, params: {
   type: string
   amount: number
   date: string        // 'yyyy-MM-dd'
@@ -32,7 +32,7 @@ export async function checkDuplicate(params: {
   return data?.[0] ?? null
 }
 
-export async function deleteTransaction(id: string): Promise<void> {
+export async function deleteTransaction(supabase: SupabaseClient, id: string): Promise<void> {
   const { error } = await supabase.from('transactions').delete().eq('id', id)
   if (error) throw new Error(error.message)
 }
@@ -40,7 +40,7 @@ export async function deleteTransaction(id: string): Promise<void> {
 // Camada 2: busca todos os grupos de duplicatas no banco.
 // Retorna grupos com 2+ transações idênticas (type+amount+date+description).
 // Agrupamento feito no client para evitar RPC/stored procedure.
-export async function fetchAllDuplicateGroups(): Promise<Transaction[][]> {
+export async function fetchAllDuplicateGroups(supabase: SupabaseClient): Promise<Transaction[][]> {
   // Busca apenas transações com descrição (sem descrição nunca são duplicatas)
   const { data, error } = await supabase
     .from('transactions')

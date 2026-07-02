@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { format, addMonths, parseISO, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns'
-import { supabase } from '@/lib/supabase'
+import { useSupabaseClient } from '@/hooks/useDatabase'
 import { setTransactionTagsStandalone } from '@/hooks/useTags'
 import type { Transaction, TransactionType, RecurrenceType } from '@/types'
 
@@ -39,6 +39,7 @@ const SELECT_FIELDS =
   '*, categories(*), accounts!account_id(*), to_accounts:accounts!to_account_id(*), transaction_tags(*, tags(*)), recurrence_groups(*), transaction_payments(*)'
 
 export function useTransactions(filters: TransactionFilters) {
+  const supabase = useSupabaseClient()
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [total, setTotal] = useState(0)
   const [filteredTotal, setFilteredTotal] = useState<number | null>(null)
@@ -145,7 +146,7 @@ export function useTransactions(filters: TransactionFilters) {
     }
 
     setLoading(false)
-  }, [filters, page])
+  }, [filters, page, supabase])
 
   useEffect(() => {
     fetch()
@@ -310,7 +311,7 @@ export function useTransactions(filters: TransactionFilters) {
       if (payErr3) throw new Error(payErr3.message)
     }
     if ((payload.tag_ids ?? []).length > 0) {
-      await setTransactionTagsStandalone(inserted.id, payload.tag_ids ?? [])
+      await setTransactionTagsStandalone(supabase, inserted.id, payload.tag_ids ?? [])
     }
     await fetch()
   }
@@ -320,7 +321,7 @@ export function useTransactions(filters: TransactionFilters) {
     dbPayload.tag_id = (tag_ids ?? [])[0] ?? null
     const { error: err } = await supabase.from('transactions').update(dbPayload).eq('id', id)
     if (err) throw new Error(err.message)
-    await setTransactionTagsStandalone(id, tag_ids ?? [])
+    await setTransactionTagsStandalone(supabase, id, tag_ids ?? [])
     await fetch()
   }
 

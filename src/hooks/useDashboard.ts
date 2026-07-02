@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { format, subMonths, startOfMonth, endOfMonth, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { supabase } from '@/lib/supabase'
+import { useSupabaseClient } from '@/hooks/useDatabase'
 import type { Transaction } from '@/types'
 import type { BalanceDataPoint } from '@/components/charts/BalanceLineChart'
 import type { DonutDataPoint } from '@/components/charts/TopCategoriesDonutChart'
@@ -18,6 +18,7 @@ interface DashboardData {
 const DONUT_COLORS = ['#6366f1', '#22c55e', '#ef4444', '#f59e0b', '#06b6d4']
 
 export function useDashboard(period: string): DashboardData {
+  const supabase = useSupabaseClient()
   const [summary, setSummary] = useState<DashboardData['summary']>({ income: 0, expenses: 0, balance: 0, pending: 0 })
   const [lineData, setLineData] = useState<BalanceDataPoint[]>([])
   const [donutData, setDonutData] = useState<DonutDataPoint[]>([])
@@ -149,7 +150,7 @@ export function useDashboard(period: string): DashboardData {
     }
 
     load()
-  }, [period])
+  }, [period, supabase])
 
   return { summary, lineData, donutData, recentTx, loading, unlinkedCount }
 }

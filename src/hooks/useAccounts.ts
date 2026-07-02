@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { format, endOfMonth, parseISO } from 'date-fns'
-import { supabase } from '@/lib/supabase'
+import { useSupabaseClient } from '@/hooks/useDatabase'
 import type { Account, AccountType } from '@/types'
 
 export interface AccountPayload {
@@ -13,6 +13,7 @@ export interface AccountPayload {
 }
 
 export function useAccounts() {
+  const supabase = useSupabaseClient()
   const [accounts, setAccounts] = useState<Account[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -26,7 +27,7 @@ export function useAccounts() {
     if (err) setError(err.message)
     else setAccounts((data as Account[]) ?? [])
     setLoading(false)
-  }, [])
+  }, [supabase])
 
   useEffect(() => {
     fetchAccounts()

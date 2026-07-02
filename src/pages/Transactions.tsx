@@ -26,6 +26,7 @@ import { Popover, PopoverTrigger } from '@/components/ui/popover'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { MoneyInput } from '@/components/ui/money-input'
 import { checkDuplicate } from '@/hooks/useDuplicateCheck'
+import { useSupabaseClient } from '@/hooks/useDatabase'
 
 const CURRENT_MONTH = format(new Date(), 'yyyy-MM')
 
@@ -178,6 +179,7 @@ interface ActiveChip {
 }
 
 export default function Transactions() {
+  const supabase = useSupabaseClient()
   const [searchParams] = useSearchParams()
 
   const [filters, setFilters] = useState<TransactionFilters>({
@@ -328,7 +330,7 @@ export default function Transactions() {
     }
 
     if (form.description?.trim()) {
-      const duplicate = await checkDuplicate({
+      const duplicate = await checkDuplicate(supabase, {
         type: form.type,
         amount,
         date: form.date,

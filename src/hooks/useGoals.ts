@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useSupabaseClient } from '@/hooks/useDatabase'
 import type { Goal, GoalWithProgress, PeriodType } from '@/types'
 
 export function useGoals() {
+  const supabase = useSupabaseClient()
   const [goals, setGoals] = useState<GoalWithProgress[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -46,7 +47,7 @@ export function useGoals() {
 
     setGoals(withProgress)
     setLoading(false)
-  }, [])
+  }, [supabase])
 
   useEffect(() => {
     fetch()

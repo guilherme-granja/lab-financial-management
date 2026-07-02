@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useSupabaseClient } from '@/hooks/useDatabase'
 import type { Category, CategoryType } from '@/types'
 
 export function useCategories() {
+  const supabase = useSupabaseClient()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -20,7 +21,7 @@ export function useCategories() {
       setCategories((data as Category[]) ?? [])
     }
     setLoading(false)
-  }, [])
+  }, [supabase])
 
   useEffect(() => {
     fetch()

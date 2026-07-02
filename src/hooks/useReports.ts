@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { supabase } from '@/lib/supabase'
+import { useSupabaseClient } from '@/hooks/useDatabase'
 import type { MonthlyDataPoint } from '@/components/charts/MonthlyBarChart'
 import type { Category } from '@/types'
 
@@ -21,6 +21,7 @@ interface ReportsData {
 }
 
 export function useReports(selectedMonth: string): ReportsData {
+  const supabase = useSupabaseClient()
   const [categoryRows, setCategoryRows] = useState<CategoryRow[]>([])
   const [barData, setBarData] = useState<MonthlyDataPoint[]>([])
   const [loading, setLoading] = useState(true)
@@ -96,7 +97,7 @@ export function useReports(selectedMonth: string): ReportsData {
     }
 
     load()
-  }, [selectedMonth])
+  }, [selectedMonth, supabase])
 
   return { categoryRows, barData, loading }
 }
