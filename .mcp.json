@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "supabase-chore": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=skfhscsbjeoogfeelirb"
+    },
+    "supabase-client-malena": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=upvkgppwkmijqmqrvcwl"
+    }
+  }
+}

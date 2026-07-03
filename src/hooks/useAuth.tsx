@@ -6,8 +6,7 @@ interface AuthState {
   user: User | null
   loading: boolean
   signInWithGithub: () => Promise<void>
-  signInWithEmail: (email: string, password: string) => Promise<void>
-  verifyEmailOtp: (email: string, token: string) => Promise<void>
+  signInWithPassword: (email: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
 }
 
@@ -58,14 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  const signInWithEmail = async (email: string, password: string): Promise<void> => {
+  const signInWithPassword = async (email: string, password: string): Promise<string | null> => {
     const { error } = await choreClient.auth.signInWithPassword({ email, password })
-    if (error) throw new Error(error.message)
-  }
-
-  const verifyEmailOtp = async (email: string, token: string): Promise<void> => {
-    const { error } = await choreClient.auth.verifyOtp({ email, token, type: 'email' })
-    if (error) throw new Error(error.message)
+    return error?.message ?? null
   }
 
   const signOut = async () => {
@@ -74,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGithub, signInWithEmail, verifyEmailOtp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signInWithGithub, signInWithPassword, signOut }}>
       {children}
     </AuthContext.Provider>
   )
