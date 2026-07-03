@@ -27,3 +27,4 @@ coverage
 
 docs/superpowers/task-*-report.md
 docs/superpowers/specs
+.mcp.json
