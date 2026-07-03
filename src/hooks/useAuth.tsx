@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { choreClient } from '@/lib/chore-client'
+import { logActivity } from '@/lib/activity-log'
 
 interface AuthState {
   user: User | null
@@ -49,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setAuthError(null)
+      logActivity(u.id, 'login')
     }
     setUser(u)
     setLoading(false)

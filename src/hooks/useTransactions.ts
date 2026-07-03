@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { format, addMonths, parseISO, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns'
 import { useSupabaseClient } from '@/hooks/useDatabase'
+import { useAuth } from '@/hooks/useAuth'
 import { setTransactionTagsStandalone } from '@/hooks/useTags'
+import { logActivity } from '@/lib/activity-log'
 import type { Transaction, TransactionType, RecurrenceType } from '@/types'
 
 export interface TransactionFilters {
@@ -40,6 +42,7 @@ const SELECT_FIELDS =
 
 export function useTransactions(filters: TransactionFilters) {
   const supabase = useSupabaseClient()
+  const { user } = useAuth()
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [total, setTotal] = useState(0)
   const [filteredTotal, setFilteredTotal] = useState<number | null>(null)
@@ -219,6 +222,7 @@ export function useTransactions(filters: TransactionFilters) {
         )
         if (payErr1) throw new Error(payErr1.message)
       }
+      if (user) logActivity(user.id, 'transaction_created', { recurrence_group_id: groupId })
       await fetch()
       return
     }
@@ -280,6 +284,7 @@ export function useTransactions(filters: TransactionFilters) {
         )
         if (payErr2) throw new Error(payErr2.message)
       }
+      if (user) logActivity(user.id, 'transaction_created', { recurrence_group_id: groupId })
       await fetch()
       return
     }
@@ -313,6 +318,7 @@ export function useTransactions(filters: TransactionFilters) {
     if ((payload.tag_ids ?? []).length > 0) {
       await setTransactionTagsStandalone(supabase, inserted.id, payload.tag_ids ?? [])
     }
+    if (user) logActivity(user.id, 'transaction_created', { transaction_id: inserted.id })
     await fetch()
   }
 
@@ -322,6 +328,7 @@ export function useTransactions(filters: TransactionFilters) {
     const { error: err } = await supabase.from('transactions').update(dbPayload).eq('id', id)
     if (err) throw new Error(err.message)
     await setTransactionTagsStandalone(supabase, id, tag_ids ?? [])
+    if (user) logActivity(user.id, 'transaction_updated', { transaction_id: id })
     await fetch()
   }
 
@@ -388,6 +395,7 @@ export function useTransactions(filters: TransactionFilters) {
   async function deleteTransaction(id: string) {
     const { error: err } = await supabase.from('transactions').delete().eq('id', id)
     if (err) throw new Error(err.message)
+    if (user) logActivity(user.id, 'transaction_deleted', { transaction_id: id })
     await fetch()
   }
 

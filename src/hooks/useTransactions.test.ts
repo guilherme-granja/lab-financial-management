@@ -5,6 +5,7 @@ import type { TransactionPayload } from './useTransactions'
 import { mockSupabaseResult, mockLike, mockGte, mockLte, mockFrom, mockNeq } from '@/test/mocks/supabase'
 
 vi.mock('@/hooks/useDatabase', () => import('@/test/mocks/supabase'))
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 'user-1' } }) }))
 
 const DEFAULT_FILTERS = {
   period: '2026-06',
