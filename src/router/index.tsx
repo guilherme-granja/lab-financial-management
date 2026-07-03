@@ -3,7 +3,6 @@ import { useAuth } from '@/hooks/useAuth'
 import { DatabaseProvider } from '@/hooks/useDatabase'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 import Login from '@/pages/Login'
-import AuthCallback from '@/pages/AuthCallback'
 import Dashboard from '@/pages/Dashboard'
 import Transactions from '@/pages/Transactions'
 import Duplicates from '@/pages/Duplicates'
@@ -42,7 +41,6 @@ function PrivateRoute() {
 export const router = createBrowserRouter(
   [
     { path: '/login', element: <Login />, errorElement: <ErrorPage /> },
-    { path: '/auth/callback', element: <AuthCallback />, errorElement: <ErrorPage /> },
     {
       element: <PrivateRoute />,
       errorElement: <ErrorPage />,

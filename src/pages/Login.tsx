@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,8 +8,6 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, ShoppingBag } from 'lucide-react'
 export default function Login() {
   const { user, loading: authLoading, signInWithPassword } = useAuth()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const urlError = searchParams.get('error')
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -47,12 +45,6 @@ export default function Login() {
         <ShoppingBag size={28} className="text-yellow-400" />
         <span className="text-white text-xl font-semibold">Lab Finanças</span>
       </div>
-
-      {urlError === 'unauthorized' && (
-        <div className="w-full max-w-lg mx-auto mb-4 bg-red-950 border border-red-800 text-red-400 text-sm rounded-xl px-4 py-3">
-          Acesso não autorizado. Use a conta correta.
-        </div>
-      )}
 
       <div className="bg-[#161824] rounded-2xl p-10 w-full max-w-lg">
         <h1 className="text-white text-3xl font-bold text-center mb-1">Bem-vindo de volta</h1>
@@ -108,10 +100,6 @@ export default function Login() {
             {error}
           </div>
         )}
-
-        {/* GitHub login — desabilitado temporariamente
-        <Button onClick={signInWithGithub} ...>Entrar com GitHub</Button>
-        */}
       </div>
 
       <p className="mt-8 text-slate-600 text-xs tracking-widest uppercase">

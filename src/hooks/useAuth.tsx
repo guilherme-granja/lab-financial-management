@@ -5,7 +5,6 @@ import { choreClient } from '@/lib/chore-client'
 interface AuthState {
   user: User | null
   loading: boolean
-  signInWithGithub: () => Promise<void>
   signInWithPassword: (email: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
 }
@@ -48,15 +47,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signInWithGithub = async () => {
-    await choreClient.auth.signInWithOAuth({
-      provider: 'github',
-      options: {
-        redirectTo: `${window.location.origin}/lab-financial-management/auth/callback`,
-      },
-    })
-  }
-
   const signInWithPassword = async (email: string, password: string): Promise<string | null> => {
     const { error } = await choreClient.auth.signInWithPassword({ email, password })
     return error?.message ?? null
@@ -68,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGithub, signInWithPassword, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signInWithPassword, signOut }}>
       {children}
     </AuthContext.Provider>
   )
