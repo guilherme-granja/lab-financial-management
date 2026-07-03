@@ -8,6 +8,7 @@
 - No sycophantic openers or closing fluff.
 - No emojis or em-dashes.
 - Do not guess APIs, versions, flags, commit SHAs, or package names. Verify by reading code or docs before asserting.
+- Todo commit criado nesse projeto usa guilherme-granja (git config local: guilherme-granja / guilhermegranja.dev@gmail.com) como único autor/contribuidor. Nunca incluir linha `Co-Authored-By: Claude` ou qualquer atribuição ao Claude nas mensagens de commit.
 
 ---
 

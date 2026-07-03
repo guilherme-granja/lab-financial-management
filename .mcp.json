@@ -7,6 +7,10 @@
     "supabase-client-malena": {
       "type": "http",
       "url": "https://mcp.supabase.com/mcp?project_ref=upvkgppwkmijqmqrvcwl"
+    },
+    "supabase-client-guilherme": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=cutjwwnwfyfidkxqgjdk"
     }
   }
 }
