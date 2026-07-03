@@ -17,6 +17,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleUser = async (u: User | null) => {
     if (u) {
+      const { data: profile } = await choreClient
+        .from('profiles')
+        .select('is_active')
+        .eq('id', u.id)
+        .maybeSingle()
+
+      if (!profile?.is_active) {
+        await choreClient.auth.signOut()
+        setUser(null)
+        setLoading(false)
+        return
+      }
+
       const { data } = await choreClient
         .from('user_databases')
         .select('id')
