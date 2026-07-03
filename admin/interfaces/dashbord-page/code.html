@@ -1,0 +1,280 @@
+<!DOCTYPE html><html class="dark" lang="pt-br" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Lab Finanças - Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b1326;
+        }
+        .glass-card {
+            background: rgba(23, 31, 51, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0b1326; }
+        ::-webkit-scrollbar-thumb { background: #2d3449; border-radius: 10px; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-fixed": "#40000d",
+                      "inverse-on-surface": "#283044",
+                      "primary": "#c0c1ff",
+                      "tertiary-fixed-dim": "#ffb2b7",
+                      "on-tertiary": "#67001b",
+                      "secondary-container": "#00a572",
+                      "surface-container-high": "#222a3d",
+                      "error-container": "#93000a",
+                      "on-secondary": "#003824",
+                      "on-background": "#dae2fd",
+                      "tertiary-container": "#ff516a",
+                      "on-surface-variant": "#c7c4d7",
+                      "background": "#0b1326",
+                      "tertiary": "#ffb2b7",
+                      "tertiary-fixed": "#ffdadb",
+                      "primary-fixed-dim": "#c0c1ff",
+                      "on-surface": "#dae2fd",
+                      "inverse-primary": "#494bd6",
+                      "outline": "#908fa0",
+                      "on-primary": "#1000a9",
+                      "on-secondary-fixed-variant": "#005236",
+                      "surface-container-low": "#131b2e",
+                      "surface-container-highest": "#2d3449",
+                      "on-secondary-container": "#00311f",
+                      "on-error-container": "#ffdad6",
+                      "on-secondary-fixed": "#002113",
+                      "on-tertiary-fixed-variant": "#92002a",
+                      "on-tertiary-container": "#5b0017",
+                      "on-primary-fixed": "#07006c",
+                      "on-primary-fixed-variant": "#2f2ebe",
+                      "secondary-fixed": "#6ffbbe",
+                      "secondary": "#4edea3",
+                      "surface-container": "#171f33",
+                      "surface-variant": "#2d3449",
+                      "on-primary-container": "#0d0096",
+                      "surface-tint": "#c0c1ff",
+                      "surface-bright": "#31394d",
+                      "surface-container-lowest": "#060e20",
+                      "surface-dim": "#0b1326",
+                      "on-error": "#690005",
+                      "surface": "#0b1326",
+                      "error": "#ffb4ab",
+                      "outline-variant": "#464554",
+                      "primary-container": "#8083ff",
+                      "inverse-surface": "#dae2fd",
+                      "primary-fixed": "#e1e0ff",
+                      "secondary-fixed-dim": "#4edea3"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "lg": "32px",
+                      "xs": "8px",
+                      "base": "4px",
+                      "md": "24px",
+                      "gutter": "20px",
+                      "xl": "48px",
+                      "sm": "16px",
+                      "sidebar-width": "240px"
+              },
+              "fontFamily": {
+                      "label-sm": ["Inter"],
+                      "currency-display": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "currency-display": ["18px", {"lineHeight": "24px", "fontWeight": "700"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface">
+<!-- SideNavBar (Authority: Shared Components JSON) -->
+<aside class="fixed left-0 top-0 h-full w-sidebar-width bg-surface-container-low border-r border-outline-variant/10 flex flex-col py-md z-50">
+
+<nav class="flex-1 space-y-xs">
+<!-- Active State: Dashboard -->
+<a class="flex items-center gap-xs bg-primary-container/20 text-primary font-bold border-r-4 border-primary px-sm py-xs transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-xs text-on-surface-variant px-sm py-xs hover:bg-surface-container-high transition-colors" href="#"><span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-body-md text-body-md">Gerenciamento de Usuários</span></a>
+<a class="flex items-center gap-xs text-on-surface-variant px-sm py-xs hover:bg-surface-container-high transition-colors" href="#"><span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-body-md text-body-md">Logs de Atividade</span></a>
+
+</nav>
+
+<div class="mx-sm my-xs border-t border-outline-variant/10"></div><a class="flex items-center gap-xs text-on-surface-variant px-sm py-xs hover:bg-surface-container-high transition-colors mt-auto" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-body-md text-body-md">Sair</span>
+</a></aside>
+<!-- TopAppBar (Authority: Shared Components JSON) -->
+<header class="flex justify-between items-center h-16 px-lg ml-sidebar-width sticky top-0 bg-background/80 backdrop-blur-md border-b border-outline-variant/10 z-40">
+<div class="flex items-center gap-md">
+<h2 class="font-headline-md text-headline-md font-bold text-primary">Overview</h2>
+<div class="flex gap-sm">
+<span class="font-body-md text-body-md text-primary font-bold pb-1">Overview</span>
+
+</div>
+</div>
+<div class="flex items-center gap-sm">
+
+
+
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-sidebar-width p-lg min-h-[calc(100vh-128px)]">
+<!-- Welcome Hero Section (Asymmetric / Modern Corporate) -->
+<section class="mb-lg grid grid-cols-12 gap-gutter">
+
+<!-- Quick Stats Bento -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-gutter">
+
+
+<div class="flex-1 glass-card rounded-xl p-md flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg" data-icon="group">group</span>
+<div class="flex items-center gap-xs text-secondary">
+<span class="material-symbols-outlined !text-sm" data-icon="trending_up">trending_up</span>
+<span class="font-label-sm">+12%</span>
+</div>
+</div>
+<div>
+<p class="font-label-sm text-on-surface-variant uppercase mb-xs">Total de Usuários</p>
+<h4 class="font-headline-md text-headline-md text-on-surface">1,240</h4>
+</div>
+</div></div>
+</section>
+<!-- Metric Grid -->
+<section class="grid grid-cols-12 gap-gutter mb-lg">
+<!-- User Metric Card (Primary Task) -->
+
+<!-- Recent Activity Card (Line Chart Placeholder) -->
+
+</section>
+<!-- Dynamic Data Table Section -->
+<section class="glass-card rounded-xl overflow-hidden">
+<div class="p-md border-b border-outline-variant/10 flex justify-between items-center bg-surface-container/30">
+<h3 class="font-headline-md text-headline-md">Logs de atividades recentes</h3>
+<button class="text-primary font-label-sm uppercase hover:underline flex items-center gap-xs">Ver Tudo <span class="material-symbols-outlined !text-sm" data-icon="open_in_new">open_in_new</span></button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-md text-body-md">
+<thead class="bg-surface-container-low text-on-surface-variant/60">
+<tr>
+<th class="px-md py-sm font-label-sm uppercase">Usuário</th>
+<th class="px-md py-sm font-label-sm uppercase">Ação</th>
+
+<th class="px-md py-sm font-label-sm uppercase">Data</th>
+
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<div class="w-8 h-8 rounded bg-surface-container-highest flex items-center justify-center font-bold text-xs text-primary">JD</div>
+<div>
+<p class="font-bold">João D. Silva</p>
+<p class="text-xs text-on-surface-variant/60">analista@labfinancas.com</p>
+</div>
+</div>
+</td>
+<td class="px-md py-sm text-on-surface-variant">Exportação de Relatório</td>
+
+<td class="px-md py-sm text-on-surface-variant">Hoje, 14:32</td>
+
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<div class="w-8 h-8 rounded bg-surface-container-highest flex items-center justify-center font-bold text-xs text-tertiary">MC</div>
+<div>
+<p class="font-bold">Maria Cavalcanti</p>
+<p class="text-xs text-on-surface-variant/60">maria.c@labfinancas.com</p>
+</div>
+</div>
+</td>
+<td class="px-md py-sm text-on-surface-variant">Login no Console</td>
+
+<td class="px-md py-sm text-on-surface-variant">Hoje, 12:15</td>
+
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<div class="w-8 h-8 rounded bg-surface-container-highest flex items-center justify-center font-bold text-xs text-error">RR</div>
+<div>
+<p class="font-bold">Ricardo Rocha</p>
+<p class="text-xs text-on-surface-variant/60">admin.rr@labfinancas.com</p>
+</div>
+</div>
+</td>
+<td class="px-md py-sm text-on-surface-variant">Alteração de Senha</td>
+
+<td class="px-md py-sm text-on-surface-variant">Hoje, 09:41</td>
+
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+<!-- Footer (Authority: Shared Components JSON) -->
+<footer class="w-full py-md mt-auto flex flex-col ml-sidebar-width bg-background border-t border-outline-variant/10 text-on-surface-variant items-end px-lg">
+
+
+<p class="font-label-sm text-label-sm tracking-widest uppercase opacity-60">v1.5.1</p></footer>
+<script>
+        // Micro-interactions for chart bars
+        document.querySelectorAll('.flex-1.bg-primary\\/20, .flex-1.bg-primary\\/30, .flex-1.bg-primary\\/40, .flex-1.bg-primary\\/50, .flex-1.bg-primary\\/60, .flex-1.bg-primary\\/70').forEach(bar => {
+            bar.addEventListener('mouseenter', () => {
+                bar.classList.add('scale-y-110');
+            });
+            bar.addEventListener('mouseleave', () => {
+                bar.classList.remove('scale-y-110');
+            });
+        });
+
+        // Search bar focus effect
+        const searchInput = document.querySelector('input[type="text"]');
+        const searchContainer = searchInput.parentElement;
+        searchInput.addEventListener('focus', () => {
+            searchContainer.classList.add('shadow-[0_0_15px_rgba(192,193,255,0.1)]');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchContainer.classList.remove('shadow-[0_0_15px_rgba(192,193,255,0.1)]');
+        });
+    </script>
+
+
+</body></html>
