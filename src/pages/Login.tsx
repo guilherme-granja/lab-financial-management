@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ShoppingBag } from 'lucide-react'
 
 export default function Login() {
-  const { user, loading: authLoading, signInWithPassword } = useAuth()
+  const { user, loading: authLoading, authError, signInWithPassword } = useAuth()
   const navigate = useNavigate()
 
   const [email, setEmail] = useState('')
@@ -95,9 +95,9 @@ export default function Login() {
           {loading ? 'Entrando...' : <><span>Entrar</span><ArrowRight size={18} /></>}
         </Button>
 
-        {error && (
+        {(error || authError) && (
           <div className="mt-4 bg-red-950 border border-red-800 text-red-400 text-sm rounded-xl px-4 py-3">
-            {error}
+            {error || authError}
           </div>
         )}
       </div>

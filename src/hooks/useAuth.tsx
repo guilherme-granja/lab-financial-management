@@ -5,6 +5,7 @@ import { choreClient } from '@/lib/chore-client'
 interface AuthState {
   user: User | null
   loading: boolean
+  authError: string | null
   signInWithPassword: (email: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
 }
@@ -14,6 +15,7 @@ const AuthContext = createContext<AuthState | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
 
   const handleUser = async (u: User | null) => {
     if (u) {
@@ -26,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!profile?.is_active) {
         await choreClient.auth.signOut()
         setUser(null)
+        setAuthError('Sua conta está inativa. Entre em contato com o administrador.')
         setLoading(false)
         return
       }
@@ -40,9 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!data) {
         await choreClient.auth.signOut()
         setUser(null)
+        setAuthError('Sua conta ainda não está configurada. Entre em contato com o administrador.')
         setLoading(false)
         return
       }
+
+      setAuthError(null)
     }
     setUser(u)
     setLoading(false)
@@ -61,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signInWithPassword = async (email: string, password: string): Promise<string | null> => {
+    setAuthError(null)
     const { error } = await choreClient.auth.signInWithPassword({ email, password })
     return error?.message ?? null
   }
@@ -71,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithPassword, signOut }}>
+    <AuthContext.Provider value={{ user, loading, authError, signInWithPassword, signOut }}>
       {children}
     </AuthContext.Provider>
   )
