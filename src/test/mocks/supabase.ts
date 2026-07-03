@@ -76,3 +76,5 @@ export const supabase = {
 export function useSupabaseClient() {
   return supabase
 }
+
+export const choreClient = supabase

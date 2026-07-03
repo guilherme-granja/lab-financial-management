@@ -12,6 +12,7 @@ vi.mock('react-router-dom', async () => {
 })
 
 vi.mock('@/hooks/useDatabase', () => import('@/test/mocks/supabase'))
+vi.mock('@/lib/chore-client', () => import('@/test/mocks/supabase'))
 vi.mock('@/components/charts/BalanceLineChart', () => ({
   BalanceLineChart: () => null,
 }))
