@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-import { EnvDatabaseConfigResolver } from '@/lib/database-config-resolver'
+import { useAuth } from '@/hooks/useAuth'
+import { ChoreDatabaseConfigResolver } from '@/lib/database-config-resolver'
 import { createSupabaseClient } from '@/lib/supabase'
 
 interface DatabaseState {
@@ -11,14 +12,15 @@ interface DatabaseState {
 const DatabaseContext = createContext<DatabaseState | undefined>(undefined)
 
 export function DatabaseProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth()
   const [client, setClient] = useState<SupabaseClient | null>(null)
 
   useEffect(() => {
-    const resolver = new EnvDatabaseConfigResolver()
+    const resolver = new ChoreDatabaseConfigResolver(user!.id)
     resolver.getConfig().then(config => {
       setClient(createSupabaseClient(config))
     })
-  }, [])
+  }, [user])
 
   if (!client) {
     return (

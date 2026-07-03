@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { DatabaseProvider } from '@/hooks/useDatabase'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 import Login from '@/pages/Login'
 import AuthCallback from '@/pages/AuthCallback'
@@ -30,9 +31,11 @@ function PrivateRoute() {
   }
 
   return (
-    <PageWrapper>
-      <Outlet />
-    </PageWrapper>
+    <DatabaseProvider>
+      <PageWrapper>
+        <Outlet />
+      </PageWrapper>
+    </DatabaseProvider>
   )
 }
 

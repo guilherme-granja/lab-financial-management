@@ -65,10 +65,10 @@ Restrição: não chamar `createClient` do `@supabase/supabase-js` diretamente a
 
 ## Checklist
 
-- [ ] Task 1 concluída
-- [ ] Task 2 concluída
-- [ ] Task 3 concluída
-- [ ] `tsc --noEmit` — zero erros
-- [ ] `npx vitest run` — zero falhas (nada muda de comportamento ainda, `choreClient` não é importado por ninguém nesta spec)
-- [ ] `git commit -m "feat: client fixo do banco chore (etapa 3.A)"`
-- [ ] `git push origin main` — seguro, nenhum comportamento existente muda até a Spec 3.B
+- [x] Task 1 concluída
+- [x] Task 2 concluída
+- [x] Task 3 concluída
+- [x] `tsc --noEmit` — zero erros
+- [x] `npx vitest run` — zero falhas (nada muda de comportamento ainda, `choreClient` não é importado por ninguém nesta spec)
+- [x] `git commit -m "feat: client fixo do banco chore (etapa 3.A)"`
+- [x] `git push origin main` — seguro, nenhum comportamento existente muda até a Spec 3.B
