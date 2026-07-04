@@ -23,6 +23,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/categories': 'Categorias',
   '/reports': 'Relatórios',
   '/goals': 'Metas',
+  '/admin/users': 'Usuários',
 }
 
 interface PageWrapperProps {

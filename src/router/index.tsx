@@ -12,6 +12,7 @@ import Goals from '@/pages/Goals'
 import Accounts from '@/pages/Accounts'
 import Tags from '@/pages/Tags'
 import ErrorPage from '@/pages/ErrorPage'
+import AdminUsers from '@/pages/AdminUsers'
 
 function PrivateRoute() {
   const { user, loading } = useAuth()
@@ -38,6 +39,28 @@ function PrivateRoute() {
   )
 }
 
+function AdminRoute() {
+  const { user, loading, isAdmin } = useAuth()
+  const location = useLocation()
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[#0f1117]">
+        <p className="text-slate-400">Carregando...</p>
+      </div>
+    )
+  }
+
+  if (!user) return <Navigate to="/login" state={{ from: location }} replace />
+  if (!isAdmin) return <Navigate to="/" replace />
+
+  return (
+    <PageWrapper>
+      <Outlet />
+    </PageWrapper>
+  )
+}
+
 export const router = createBrowserRouter(
   [
     { path: '/login', element: <Login />, errorElement: <ErrorPage /> },
@@ -53,6 +76,13 @@ export const router = createBrowserRouter(
         { path: '/goals', element: <Goals /> },
         { path: '/accounts', element: <Accounts /> },
         { path: '/tags', element: <Tags /> },
+      ],
+    },
+    {
+      element: <AdminRoute />,
+      errorElement: <ErrorPage />,
+      children: [
+        { path: '/admin/users', element: <AdminUsers /> },
       ],
     },
   ],

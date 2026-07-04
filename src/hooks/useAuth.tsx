@@ -7,6 +7,7 @@ interface AuthState {
   user: User | null
   loading: boolean
   authError: string | null
+  isAdmin: boolean
   signInWithPassword: (email: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
 }
@@ -17,36 +18,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   const handleUser = async (u: User | null) => {
     if (u) {
       const { data: profile } = await choreClient
         .from('profiles')
-        .select('is_active')
+        .select('is_active, is_admin')
         .eq('id', u.id)
         .maybeSingle()
 
       if (!profile?.is_active) {
         await choreClient.auth.signOut()
         setUser(null)
+        setIsAdmin(false)
         setAuthError('Sua conta está inativa. Entre em contato com o administrador.')
         setLoading(false)
         return
       }
 
-      const { data } = await choreClient
-        .from('user_databases')
-        .select('id')
-        .eq('user_id', u.id)
-        .eq('status', 'active')
-        .maybeSingle()
+      setIsAdmin(!!profile.is_admin)
 
-      if (!data) {
-        await choreClient.auth.signOut()
-        setUser(null)
-        setAuthError('Sua conta ainda não está configurada. Entre em contato com o administrador.')
-        setLoading(false)
-        return
+      if (!profile.is_admin) {
+        const { data } = await choreClient
+          .from('user_databases')
+          .select('id')
+          .eq('user_id', u.id)
+          .eq('status', 'active')
+          .maybeSingle()
+
+        if (!data) {
+          await choreClient.auth.signOut()
+          setUser(null)
+          setAuthError('Sua conta ainda não está configurada. Entre em contato com o administrador.')
+          setLoading(false)
+          return
+        }
       }
 
       setAuthError(null)
@@ -77,10 +84,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await choreClient.auth.signOut()
     setUser(null)
+    setIsAdmin(false)
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, authError, signInWithPassword, signOut }}>
+    <AuthContext.Provider value={{ user, loading, authError, isAdmin, signInWithPassword, signOut }}>
       {children}
     </AuthContext.Provider>
   )
