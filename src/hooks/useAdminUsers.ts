@@ -99,12 +99,25 @@ export function useAdminUsers() {
     fetchUsers()
   }, [fetchUsers])
 
-  // ponytail: sem service role key no client (VITE_ = bundle público, admin.createUser exigiria expor ela).
-  // Criação de usuário requer uma Edge Function no chore rodando com service role no servidor.
-  async function createUser(_payload: CreateUserPayload): Promise<void> {
-    throw new Error(
-      'Criação de usuário ainda não implementada: requer Edge Function no chore com service role key (não pode rodar no client).',
-    )
+  async function createUser(payload: CreateUserPayload): Promise<void> {
+    const { data, error } = await choreClient.functions.invoke('create-user', {
+      body: {
+        name: payload.name,
+        email: payload.email,
+        password: payload.password,
+        supabase_url: payload.supabase_url || undefined,
+        supabase_anon_key: payload.supabase_anon_key || undefined,
+        project_ref: payload.project_ref || undefined,
+        is_admin: payload.is_admin,
+      },
+    })
+
+    if (error) throw new Error(error.message)
+
+    const result = data as { user_id?: string; error?: string }
+    if (result.error) throw new Error(result.error)
+
+    await fetchUsers()
   }
 
   async function toggleActive(userId: string, is_active: boolean): Promise<void> {
