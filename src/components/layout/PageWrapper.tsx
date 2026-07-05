@@ -24,6 +24,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/reports': 'Relatórios',
   '/goals': 'Metas',
   '/admin/users': 'Usuários',
+  '/admin': 'Dashboard Admin',
+  '/admin/activity': 'Logs de Atividade',
 }
 
 interface PageWrapperProps {

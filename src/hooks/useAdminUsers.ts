@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { choreClient } from '@/lib/chore-client'
+import { useAuth } from '@/hooks/useAuth'
+import { logActivity } from '@/lib/activity-log'
 
 export interface AdminUser {
   id: string
@@ -47,6 +49,7 @@ interface ProfileRow {
 }
 
 export function useAdminUsers() {
+  const { user } = useAuth()
   const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -127,6 +130,7 @@ export function useAdminUsers() {
   async function toggleActive(userId: string, is_active: boolean): Promise<void> {
     const { error: err } = await choreClient.from('profiles').update({ is_active }).eq('id', userId)
     if (err) throw new Error(err.message)
+    if (user) logActivity(user.id, is_active ? 'user_activated' : 'user_deactivated', { target_user_id: userId })
     await fetchUsers()
   }
 
@@ -136,6 +140,7 @@ export function useAdminUsers() {
       .update({ migrated: true })
       .eq('id', dbId)
     if (err) throw new Error(err.message)
+    if (user) logActivity(user.id, 'user_migrated', { target_user_id: dbId })
     await fetchUsers()
   }
 

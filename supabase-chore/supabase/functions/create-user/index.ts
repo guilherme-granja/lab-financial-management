@@ -100,6 +100,12 @@ Deno.serve(async (req) => {
       if (dbErr) throw new Error(dbErr.message)
     }
 
+    await adminClient.from('activity_log').insert({
+      user_id: caller.id,
+      action: 'user_created',
+      metadata: { target_user_id: userId, email: body.email, is_admin: body.is_admin },
+    })
+
     return new Response(JSON.stringify({ user_id: userId }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

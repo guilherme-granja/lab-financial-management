@@ -13,6 +13,7 @@ import {
   X,
   LogOut,
   Users,
+  Activity,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -81,21 +82,54 @@ function NavItems({ onClose }: SidebarProps) {
         </NavLink>
       ))}
       {isAdmin && (
-        <NavLink
-          to="/admin/users"
-          onClick={onClose}
-          className={({ isActive }) =>
-            cn(
-              'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors',
-              isActive
-                ? 'bg-indigo-600 text-white'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-[#252838]'
-            )
-          }
-        >
-          <Users size={18} />
-          Usuários
-        </NavLink>
+        <>
+          <NavLink
+            to="/admin"
+            end
+            onClick={onClose}
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors',
+                isActive
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-[#252838]'
+              )
+            }
+          >
+            <LayoutDashboard size={18} />
+            Dashboard
+          </NavLink>
+          <NavLink
+            to="/admin/users"
+            onClick={onClose}
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors',
+                isActive
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-[#252838]'
+              )
+            }
+          >
+            <Users size={18} />
+            Usuários
+          </NavLink>
+          <NavLink
+            to="/admin/activity"
+            onClick={onClose}
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors',
+                isActive
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-[#252838]'
+              )
+            }
+          >
+            <Activity size={18} />
+            Atividade
+          </NavLink>
+        </>
       )}
     </nav>
   )

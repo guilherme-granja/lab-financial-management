@@ -13,6 +13,8 @@ import Accounts from '@/pages/Accounts'
 import Tags from '@/pages/Tags'
 import ErrorPage from '@/pages/ErrorPage'
 import AdminUsers from '@/pages/AdminUsers'
+import AdminDashboard from '@/pages/AdminDashboard'
+import AdminActivity from '@/pages/AdminActivity'
 
 function PrivateRoute() {
   const { user, loading } = useAuth()
@@ -82,7 +84,9 @@ export const router = createBrowserRouter(
       element: <AdminRoute />,
       errorElement: <ErrorPage />,
       children: [
+        { path: '/admin', element: <AdminDashboard /> },
         { path: '/admin/users', element: <AdminUsers /> },
+        { path: '/admin/activity', element: <AdminActivity /> },
       ],
     },
   ],
