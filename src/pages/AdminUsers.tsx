@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useAdminUsers } from '@/hooks/useAdminUsers'
 import type { CreateUserPayload } from '@/hooks/useAdminUsers'
+import { useAuth } from '@/hooks/useAuth'
+import { logActivity } from '@/lib/activity-log'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -30,6 +32,7 @@ const EMPTY_FORM: CreateUserPayload = {
 
 export default function AdminUsers() {
   const { users, loading, error, createUser, toggleActive, markMigrated } = useAdminUsers()
+  const { user } = useAuth()
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [form, setForm] = useState<CreateUserPayload>(EMPTY_FORM)
@@ -52,7 +55,11 @@ export default function AdminUsers() {
   }
 
   async function copyAnonKey() {
-    if (form.supabase_anon_key) await navigator.clipboard.writeText(form.supabase_anon_key)
+    if (!form.supabase_anon_key) return
+    await navigator.clipboard.writeText(form.supabase_anon_key)
+    if (user) {
+      logActivity(user.id, 'admin_viewed_credentials', { target_email: form.email || null })
+    }
   }
 
   async function handleSave() {
