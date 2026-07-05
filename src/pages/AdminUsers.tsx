@@ -129,13 +129,19 @@ export default function AdminUsers() {
                     )}
                   </TableCell>
                   <TableCell>
-                    {u.migrated === true && (
-                      <Badge className="bg-green-950 text-green-400 border-green-800">Migrado</Badge>
+                    {u.status === 'paused' ? (
+                      <Badge className="bg-yellow-950 text-yellow-400 border-yellow-800">Pausado</Badge>
+                    ) : (
+                      <>
+                        {u.migrated === true && (
+                          <Badge className="bg-green-950 text-green-400 border-green-800">Migrado</Badge>
+                        )}
+                        {u.migrated === false && (
+                          <Badge className="bg-yellow-950 text-yellow-400 border-yellow-800">Pendente</Badge>
+                        )}
+                        {u.migrated === null && <span className="text-slate-500">—</span>}
+                      </>
                     )}
-                    {u.migrated === false && (
-                      <Badge className="bg-yellow-950 text-yellow-400 border-yellow-800">Pendente</Badge>
-                    )}
-                    {u.migrated === null && <span className="text-slate-500">—</span>}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
@@ -148,7 +154,7 @@ export default function AdminUsers() {
                       >
                         {u.is_active ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
                       </Button>
-                      {u.migrated === false && u.db_id && (
+                      {u.migrated === false && u.db_id && u.status !== 'paused' && (
                         <Button
                           variant="ghost"
                           size="icon"

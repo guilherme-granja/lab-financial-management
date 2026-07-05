@@ -14,6 +14,7 @@ export interface AdminUser {
   supabase_anon_key: string | null
   project_ref: string | null
   migrated: boolean | null
+  status: string | null
 }
 
 export interface CreateUserPayload {
@@ -32,6 +33,7 @@ interface UserDatabaseRow {
   supabase_anon_key: string
   supabase_project_ref: string | null
   migrated: boolean
+  status: string
 }
 
 interface ProfileRow {
@@ -66,7 +68,8 @@ export function useAdminUsers() {
           supabase_url,
           supabase_anon_key,
           supabase_project_ref,
-          migrated
+          migrated,
+          status
         )
       `)
       .order('created_at', { ascending: true })
@@ -88,6 +91,7 @@ export function useAdminUsers() {
           supabase_anon_key: db?.supabase_anon_key ?? null,
           project_ref: db?.supabase_project_ref ?? null,
           migrated: db?.migrated ?? null,
+          status: db?.status ?? null,
         }
       })
       setUsers(mapped)
