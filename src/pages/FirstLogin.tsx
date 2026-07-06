@@ -46,15 +46,30 @@ export default function FirstLogin() {
     }
 
     setSaving(true)
-    const { error } = await choreClient.auth.updateUser({ password: newPassword })
-    if (error) {
-      setFormError('Não foi possível atualizar a senha. Tente novamente.')
-      setSaving(false)
-      return
-    }
+    try {
+      const session = (await choreClient.auth.getSession()).data.session
+      const res = await fetch(
+        `${import.meta.env.VITE_CHORE_SUPABASE_URL}/functions/v1/update-first-login-password`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({ password: newPassword }),
+        }
+      )
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.message ?? 'Erro ao atualizar senha')
+      }
 
-    await clearFirstLogin()
-    navigate('/', { replace: true })
+      await clearFirstLogin()
+      navigate('/', { replace: true })
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Não foi possível atualizar a senha. Tente novamente.')
+      setSaving(false)
+    }
   }
 
   return (
