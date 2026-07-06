@@ -36,6 +36,7 @@ export function PageWrapper({ children }: PageWrapperProps) {
   const { pathname } = useLocation()
   const title = PAGE_TITLES[pathname] ?? 'Dashboard'
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date())
+  const isAdminRoute = pathname.startsWith('/admin')
 
   return (
     <SelectedMonthContext.Provider value={{ selectedMonth, setSelectedMonth }}>
@@ -46,6 +47,7 @@ export function PageWrapper({ children }: PageWrapperProps) {
             title={title}
             selectedMonth={selectedMonth}
             onMonthChange={setSelectedMonth}
+            showMonthPicker={!isAdminRoute}
           />
           <main className="flex-1 p-6">{children}</main>
           <footer className="border-t border-[#2d3148] px-6 py-3 flex items-center justify-end">

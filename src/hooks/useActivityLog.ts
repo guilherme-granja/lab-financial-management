@@ -28,6 +28,9 @@ interface ActivityLogRow {
 
 const PAGE_SIZE = 20
 
+// Usuário de teste do Playwright E2E — excluído dos logs de atividade do admin
+const PLAYWRIGHT_USER_ID = '7658b1f2-badf-47f7-aaaa-a6db178f7eb5'
+
 export function useActivityLog(filters: ActivityLogFilters) {
   const [entries, setEntries] = useState<ActivityLogEntry[]>([])
   const [total, setTotal] = useState(0)
@@ -49,6 +52,7 @@ export function useActivityLog(filters: ActivityLogFilters) {
 
     if (filters.userId) query = query.eq('user_id', filters.userId)
     if (filters.action) query = query.eq('action', filters.action)
+    query = query.neq('user_id', PLAYWRIGHT_USER_ID)
 
     const { data, error: err, count } = await query
 

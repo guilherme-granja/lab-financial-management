@@ -60,6 +60,59 @@ function LogoBlock() {
 function NavItems({ onClose }: SidebarProps) {
   const { isAdmin } = useAuth()
 
+  if (isAdmin) {
+    return (
+      <nav className="flex flex-col gap-1 p-4">
+        <NavLink
+          to="/admin"
+          end
+          onClick={onClose}
+          className={({ isActive }) =>
+            cn(
+              'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors',
+              isActive
+                ? 'bg-indigo-600 text-white'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-[#252838]'
+            )
+          }
+        >
+          <LayoutDashboard size={18} />
+          Dashboard
+        </NavLink>
+        <NavLink
+          to="/admin/users"
+          onClick={onClose}
+          className={({ isActive }) =>
+            cn(
+              'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors',
+              isActive
+                ? 'bg-indigo-600 text-white'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-[#252838]'
+            )
+          }
+        >
+          <Users size={18} />
+          Usuários
+        </NavLink>
+        <NavLink
+          to="/admin/activity"
+          onClick={onClose}
+          className={({ isActive }) =>
+            cn(
+              'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors',
+              isActive
+                ? 'bg-indigo-600 text-white'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-[#252838]'
+            )
+          }
+        >
+          <Activity size={18} />
+          Atividade
+        </NavLink>
+      </nav>
+    )
+  }
+
   return (
     <nav className="flex flex-col gap-1 p-4">
       {navItems.map(({ to, label, icon: Icon }) => (
@@ -81,56 +134,6 @@ function NavItems({ onClose }: SidebarProps) {
           {label}
         </NavLink>
       ))}
-      {isAdmin && (
-        <>
-          <NavLink
-            to="/admin"
-            end
-            onClick={onClose}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors',
-                isActive
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-[#252838]'
-              )
-            }
-          >
-            <LayoutDashboard size={18} />
-            Dashboard
-          </NavLink>
-          <NavLink
-            to="/admin/users"
-            onClick={onClose}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors',
-                isActive
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-[#252838]'
-              )
-            }
-          >
-            <Users size={18} />
-            Usuários
-          </NavLink>
-          <NavLink
-            to="/admin/activity"
-            onClick={onClose}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors',
-                isActive
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-[#252838]'
-              )
-            }
-          >
-            <Activity size={18} />
-            Atividade
-          </NavLink>
-        </>
-      )}
     </nav>
   )
 }

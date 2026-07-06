@@ -1,4 +1,5 @@
-import { createBrowserRouter, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { createBrowserRouter, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { DatabaseProvider } from '@/hooks/useDatabase'
 import { PageWrapper } from '@/components/layout/PageWrapper'
@@ -17,8 +18,15 @@ import AdminDashboard from '@/pages/AdminDashboard'
 import AdminActivity from '@/pages/AdminActivity'
 
 function PrivateRoute() {
-  const { user, loading } = useAuth()
+  const { user, loading, isAdmin } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!loading && isAdmin && location.pathname === '/') {
+      navigate('/admin', { replace: true })
+    }
+  }, [loading, isAdmin, location.pathname, navigate])
 
   if (loading) {
     return (
@@ -30,6 +38,14 @@ function PrivateRoute() {
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />
+  }
+
+  if (isAdmin) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[#0f1117]">
+        <p className="text-slate-400">Redirecionando...</p>
+      </div>
+    )
   }
 
   return (

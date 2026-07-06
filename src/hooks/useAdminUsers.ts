@@ -90,6 +90,7 @@ export function useAdminUsers() {
           status
         )
       `)
+      .neq('email', 'playwright@lfm.local')
       .order('created_at', { ascending: true })
 
     if (err) {
