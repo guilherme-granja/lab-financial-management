@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { choreClient } from '@/lib/chore-client'
@@ -23,6 +23,20 @@ export default function FirstLogin() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const completedRef = useRef(false)
+
+  useEffect(() => {
+    const handleUnload = () => {
+      signOut()
+    }
+    window.addEventListener('beforeunload', handleUnload)
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload)
+      if (!completedRef.current) {
+        signOut()
+      }
+    }
+  }, [signOut])
 
   const metRequirements = REQUIREMENTS.reduce<Record<string, boolean>>((acc, req) => {
     acc[req.key] = req.regex.test(newPassword)
@@ -64,6 +78,7 @@ export default function FirstLogin() {
         throw new Error(err.message ?? 'Erro ao atualizar senha')
       }
 
+      completedRef.current = true
       await clearFirstLogin()
       navigate('/', { replace: true })
     } catch (err) {
