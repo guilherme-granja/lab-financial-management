@@ -58,6 +58,33 @@ git mv docs/superpowers/specs/to_implement/<nome-da-spec>.md docs/superpowers/sp
 
 Incluir esse `git mv` no mesmo commit da task final da spec (não criar um commit separado só pra isso). Se a spec instruir a não fazer push, o commit com a spec movida também fica local, aguardando o push autorizado por uma spec posterior da mesma etapa.
 
+## Passo 2.1 — RLS: proibido subquery recursiva
+
+Antes de aplicar qualquer migration que crie/altere policy de RLS: nunca fazer subquery em tabela X dentro de uma policy da própria tabela X (caso mais comum: checagem de admin em `profiles`). Causa recursão infinita no Postgres — a policy chama a subquery, que reavalia a policy, indefinidamente — retorna null/erro e quebra checagens tipo `profile?.is_active` para todo mundo, silenciosamente (não aparece em `tsc` nem testes unitários).
+
+❌ Errado:
+```sql
+CREATE POLICY "..." ON profiles FOR SELECT
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true));
+```
+
+✅ Correto — usar função `SECURITY DEFINER` (bypassa RLS, sem recursão):
+```sql
+CREATE OR REPLACE FUNCTION public.current_user_is_admin()
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
+$$;
+
+CREATE POLICY "..." ON profiles FOR SELECT USING (public.current_user_is_admin());
+```
+
+`public.current_user_is_admin()` já existe no chore (`skfhscsbjeoogfeelirb`) desde a migration `20260706120000_admin_read_all_policies.sql`. Em banco pessoal sem essa função, criar antes de usar. Regra geral vale pra qualquer tabela X, não só `profiles`.
+
+Checklist antes de commitar migration de RLS:
+- [ ] Nenhuma policy em tabela X faz subquery direta em X
+- [ ] Policies de admin usam `public.current_user_is_admin()` (ou criar equivalente se não existir no banco alvo)
+- [ ] Testar login de usuário normal E admin após aplicar — `tsc`/testes não pegam esse bug
+
 ## Convenção de nomenclatura do projeto
 
 - `docs/superpowers/plans/YYYY-MM-DD-nome.md` — visão ampla, roadmap, decisões de arquitetura, não executável diretamente.
