@@ -8,8 +8,6 @@ import Dashboard from '@/pages/Dashboard'
 import Transactions from '@/pages/Transactions'
 import Duplicates from '@/pages/Duplicates'
 import Categories from '@/pages/Categories'
-import Reports from '@/pages/Reports'
-import Goals from '@/pages/Goals'
 import Accounts from '@/pages/Accounts'
 import Tags from '@/pages/Tags'
 import ErrorPage from '@/pages/ErrorPage'
@@ -119,8 +117,6 @@ export const router = createBrowserRouter(
         { path: '/transactions', element: <Transactions /> },
         { path: '/duplicates', element: <Duplicates /> },
         { path: '/categories', element: <Categories /> },
-        { path: '/reports', element: <Reports /> },
-        { path: '/goals', element: <Goals /> },
         { path: '/accounts', element: <Accounts /> },
         { path: '/tags', element: <Tags /> },
       ],

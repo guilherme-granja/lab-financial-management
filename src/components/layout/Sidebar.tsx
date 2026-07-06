@@ -6,8 +6,6 @@ import {
   Copy,
   Tag,
   Tags,
-  BarChart2,
-  Target,
   Wallet,
   Menu,
   X,
@@ -27,8 +25,6 @@ const navItems = [
   { to: '/accounts', label: 'Contas', icon: Wallet },
   { to: '/categories', label: 'Categorias', icon: Tag },
   { to: '/tags', label: 'Tags', icon: Tags },
-  { to: '/reports', label: 'Relatórios', icon: BarChart2 },
-  { to: '/goals', label: 'Metas', icon: Target },
 ]
 
 interface SidebarProps {
