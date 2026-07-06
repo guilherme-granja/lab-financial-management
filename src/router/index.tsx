@@ -16,9 +16,10 @@ import ErrorPage from '@/pages/ErrorPage'
 import AdminUsers from '@/pages/AdminUsers'
 import AdminDashboard from '@/pages/AdminDashboard'
 import AdminActivity from '@/pages/AdminActivity'
+import FirstLogin from '@/pages/FirstLogin'
 
 function PrivateRoute() {
-  const { user, loading, isAdmin } = useAuth()
+  const { user, loading, isAdmin, firstLogin } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -40,6 +41,10 @@ function PrivateRoute() {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
+  if (firstLogin) {
+    return <Navigate to="/first-login" replace />
+  }
+
   if (isAdmin) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#0f1117]">
@@ -55,6 +60,29 @@ function PrivateRoute() {
       </PageWrapper>
     </DatabaseProvider>
   )
+}
+
+function FirstLoginRoute() {
+  const { user, loading, firstLogin } = useAuth()
+  const location = useLocation()
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[#0f1117]">
+        <p className="text-slate-400">Carregando...</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />
+  }
+
+  if (!firstLogin) {
+    return <Navigate to="/" replace />
+  }
+
+  return <FirstLogin />
 }
 
 function AdminRoute() {
@@ -82,6 +110,7 @@ function AdminRoute() {
 export const router = createBrowserRouter(
   [
     { path: '/login', element: <Login />, errorElement: <ErrorPage /> },
+    { path: '/first-login', element: <FirstLoginRoute />, errorElement: <ErrorPage /> },
     {
       element: <PrivateRoute />,
       errorElement: <ErrorPage />,

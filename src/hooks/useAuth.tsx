@@ -8,8 +8,10 @@ interface AuthState {
   loading: boolean
   authError: string | null
   isAdmin: boolean
+  firstLogin: boolean
   signInWithPassword: (email: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
+  clearFirstLogin: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined)
@@ -19,12 +21,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [firstLogin, setFirstLogin] = useState(false)
 
   const handleUser = async (u: User | null) => {
     if (u) {
       const { data: profile } = await choreClient
         .from('profiles')
-        .select('is_active, is_admin')
+        .select('is_active, is_admin, first_login')
         .eq('id', u.id)
         .maybeSingle()
 
@@ -38,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setIsAdmin(!!profile.is_admin)
+      setFirstLogin(!!profile.first_login)
 
       if (!profile.is_admin) {
         const { data } = await choreClient
@@ -87,8 +91,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAdmin(false)
   }
 
+  const clearFirstLogin = async () => {
+    await choreClient
+      .from('profiles')
+      .update({ first_login: false })
+      .eq('id', user!.id)
+    setFirstLogin(false)
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, authError, isAdmin, signInWithPassword, signOut }}>
+    <AuthContext.Provider
+      value={{ user, loading, authError, isAdmin, firstLogin, signInWithPassword, signOut, clearFirstLogin }}
+    >
       {children}
     </AuthContext.Provider>
   )
