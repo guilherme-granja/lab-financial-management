@@ -48,21 +48,6 @@ interface ProfileRow {
   user_databases: UserDatabaseRow[] | UserDatabaseRow | null
 }
 
-async function validateSupabaseCredentials(url: string, anonKey: string): Promise<string | null> {
-  try {
-    const res = await fetch(`${url}/rest/v1/`, {
-      headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
-      signal: AbortSignal.timeout(8000),
-    })
-    if (res.status === 401) return 'Anon Key inválida para este projeto.'
-    if (res.status === 503) return 'Este projeto Supabase está pausado. Reative-o antes de cadastrar o usuário.'
-    if (res.status >= 500) return 'Não foi possível conectar ao projeto Supabase. Verifique a URL.'
-    return null
-  } catch {
-    return 'Não foi possível conectar ao projeto Supabase. Verifique a URL e tente novamente.'
-  }
-}
-
 export function useAdminUsers() {
   const { user } = useAuth()
   const [users, setUsers] = useState<AdminUser[]>([])
@@ -123,11 +108,6 @@ export function useAdminUsers() {
   }, [fetchUsers])
 
   async function createUser(payload: CreateUserPayload): Promise<void> {
-    if (payload.supabase_url && payload.supabase_anon_key) {
-      const credError = await validateSupabaseCredentials(payload.supabase_url, payload.supabase_anon_key)
-      if (credError) throw new Error(credError)
-    }
-
     const { data, error } = await choreClient.functions.invoke('create-user', {
       body: {
         name: payload.name,
