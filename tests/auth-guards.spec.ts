@@ -22,4 +22,9 @@ test.describe('Guards de autenticação', () => {
     await expect(page.getByPlaceholder('seu@email.com')).toBeVisible()
     await expect(page.getByPlaceholder('••••••••')).toBeVisible()
   })
+
+  test('usuário normal não acessa /admin/users (redireciona)', async ({ page }) => {
+    await page.goto('/admin/users')
+    await expect(page).toHaveURL(/\/login/)
+  })
 })

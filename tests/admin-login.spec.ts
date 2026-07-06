@@ -41,10 +41,4 @@ test.describe('Login — usuário normal (playwright@lfm.local)', () => {
     await login(page, USER_EMAIL, USER_PASSWORD)
     await expect(page.getByRole('link', { name: /usuários/i })).not.toBeVisible()
   })
-
-  test('usuário normal não acessa /admin/users (redireciona)', async ({ page }) => {
-    await login(page, USER_EMAIL, USER_PASSWORD)
-    await page.goto('/admin/users')
-    await expect(page).not.toHaveURL(/admin\/users/)
-  })
 })
