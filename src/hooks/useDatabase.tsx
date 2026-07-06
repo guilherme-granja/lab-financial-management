@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { useAuth } from '@/hooks/useAuth'
@@ -13,8 +14,15 @@ const DatabaseContext = createContext<DatabaseState | undefined>(undefined)
 
 export function DatabaseProvider({ children }: { children: ReactNode }) {
   const { user, isAdmin } = useAuth()
+  const navigate = useNavigate()
   const [client, setClient] = useState<SupabaseClient | null>(null)
   const [pausedRef, setPausedRef] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (isAdmin) {
+      navigate('/admin/users', { replace: true })
+    }
+  }, [isAdmin, navigate])
 
   useEffect(() => {
     if (isAdmin) return
@@ -34,7 +42,10 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
   if (isAdmin) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#0f1117]">
-        <p className="text-slate-400">Administradores não possuem banco pessoal. Acesse /admin/users.</p>
+        <div className="text-center space-y-2">
+          <p className="text-slate-400 text-sm">Administradores não possuem banco pessoal.</p>
+          <p className="text-slate-500 text-xs">Redirecionando para o painel admin...</p>
+        </div>
       </div>
     )
   }
