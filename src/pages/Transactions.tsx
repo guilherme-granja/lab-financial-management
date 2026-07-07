@@ -310,6 +310,14 @@ export default function Transactions() {
       setFormError('Informe a data')
       return
     }
+    if (form.type !== 'transfer' && !form.account_id) {
+      setFormError('Selecione uma conta')
+      return
+    }
+    if (form.type !== 'transfer' && !form.category_id) {
+      setFormError('Selecione uma categoria')
+      return
+    }
     if (form.type === 'transfer') {
       if (!form.account_id) {
         setFormError('Selecione a conta de origem')

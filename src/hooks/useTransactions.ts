@@ -38,7 +38,7 @@ export interface TransactionPayload {
 const PAGE_SIZE = 20
 
 const SELECT_FIELDS =
-  '*, categories(*), accounts!account_id(*), to_accounts:accounts!to_account_id(*), transaction_tags(*, tags(*)), recurrence_groups(*), transaction_payments(*)'
+  '*, categories(*), accounts!account_id(*), to_accounts:accounts!to_account_id(*), transaction_tags(*, tags(*)), recurrence_groups(*), payment:transaction_payments(*)'
 
 export function useTransactions(filters: TransactionFilters) {
   const supabase = useSupabaseClient()
@@ -336,7 +336,7 @@ export function useTransactions(filters: TransactionFilters) {
     groupId: string,
     payload: Partial<TransactionPayload>
   ) {
-    const { date: _date, ...rest } = payload as TransactionPayload & { date?: string }
+    const { date: _date, tag_ids: _tag_ids, ...rest } = payload as TransactionPayload & { date?: string }
     const { error: err } = await supabase
       .from('transactions')
       .update(rest)
@@ -351,7 +351,7 @@ export function useTransactions(filters: TransactionFilters) {
     fromDate: string,
     payload: Partial<TransactionPayload>
   ) {
-    const { date: _date, ...rest } = payload as TransactionPayload & { date?: string }
+    const { date: _date, tag_ids: _tag_ids, ...rest } = payload as TransactionPayload & { date?: string }
 
     const { error: e1 } = await supabase
       .from('transactions')
@@ -377,7 +377,7 @@ export function useTransactions(filters: TransactionFilters) {
       .upsert({ transaction_id: id, paid_at, paid_amount }, { onConflict: 'transaction_id' })
     if (err) throw new Error(err.message)
     // Update legacy columns for rollback compatibility
-    await supabase.from('transactions').update({ paid_at, paid_amount }).eq('id', id)
+    await supabase.from('transactions').update({ paid: true, paid_at, paid_amount }).eq('id', id)
     await fetch()
   }
 
