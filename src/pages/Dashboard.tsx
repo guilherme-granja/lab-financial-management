@@ -1,4 +1,6 @@
-import { format, subMonths } from 'date-fns'
+import { useState } from 'react'
+import { format, subMonths, addMonths, parseISO } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import { useNavigate } from 'react-router-dom'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import { Button } from '@/components/ui/button'
@@ -7,9 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge'
 import { BalanceLineChart } from '@/components/charts/BalanceLineChart'
 import { TopCategoriesDonutChart } from '@/components/charts/TopCategoriesDonutChart'
-import { TrendingUp, TrendingDown, Wallet, Clock, AlertTriangle, ChevronRight } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, Clock, AlertTriangle, ChevronRight, ChevronLeft } from 'lucide-react'
 import { useDashboard } from '@/hooks/useDashboard'
-import { useSelectedMonth } from '@/components/layout/PageWrapper'
 
 interface MonthSummary {
   income: number
@@ -35,11 +36,14 @@ function Delta({ curr, prev }: { curr: number; prev: number }) {
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const { selectedMonth } = useSelectedMonth()
+  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'))
 
-  // período no formato 'yyyy-MM' derivado do mês selecionado no Header
-  const period = format(selectedMonth, 'yyyy-MM')
-  const prevPeriod = format(subMonths(selectedMonth, 1), 'yyyy-MM')
+  function navigatePeriod(delta: number) {
+    setSelectedMonth(format(addMonths(parseISO(`${selectedMonth}-01`), delta), 'yyyy-MM'))
+  }
+
+  const period = selectedMonth
+  const prevPeriod = format(subMonths(parseISO(`${selectedMonth}-01`), 1), 'yyyy-MM')
 
   const { summary: currSummary, lineData, donutData, recentTx, loading, unlinkedCount } = useDashboard(period)
   const { summary: prevSummary, loading: loadingPrev } = useDashboard(prevPeriod)
@@ -61,6 +65,29 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Month selector */}
+      <div className="flex items-center gap-0.5 bg-[#1a1d27] border border-[#2d3148] rounded-lg h-9 px-1 w-fit">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-[#2d3148]"
+          onClick={() => navigatePeriod(-1)}
+        >
+          <ChevronLeft size={14} />
+        </Button>
+        <span className="text-slate-200 text-sm w-32 text-center capitalize select-none">
+          {format(parseISO(`${selectedMonth}-01`), 'MMMM yyyy', { locale: ptBR })}
+        </span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-[#2d3148]"
+          onClick={() => navigatePeriod(1)}
+        >
+          <ChevronRight size={14} />
+        </Button>
+      </div>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card
