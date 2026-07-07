@@ -12,6 +12,7 @@ import {
   LogOut,
   Users,
   Activity,
+  PiggyBank,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,7 @@ const navItems = [
   { to: '/transactions', label: 'Transações', icon: ArrowLeftRight },
   { to: '/duplicates', label: 'Duplicidades', icon: Copy },
   { to: '/accounts', label: 'Contas', icon: Wallet },
+  { to: '/budgets', label: 'Orçamentos', icon: PiggyBank },
   { to: '/categories', label: 'Categorias', icon: Tag },
   { to: '/tags', label: 'Tags', icon: Tags },
 ]

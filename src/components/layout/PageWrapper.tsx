@@ -21,6 +21,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
   '/transactions': 'Transações',
   '/categories': 'Categorias',
+  '/budgets': 'Orçamentos',
   '/admin/users': 'Usuários',
   '/admin': 'Dashboard Admin',
   '/admin/activity': 'Logs de Atividade',

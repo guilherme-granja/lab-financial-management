@@ -13,6 +13,7 @@ export interface Category {
   parent_id: string | null
   created_at: string
   subcategories?: Category[]
+  budget_bucket?: BudgetBucket | null
 }
 
 export interface Account {
@@ -107,4 +108,17 @@ export interface TransactionTag {
   tag_id: string
   created_at: string
   tags?: Tag
+}
+
+export type BudgetBucket = 'needs' | 'leisure'
+export type BudgetPreset = '50_30_20' | '60_30_10' | '70_20_10' | 'custom'
+
+export interface MonthlyBudget {
+  id: string
+  month: string          // 'YYYY-MM'
+  preset: BudgetPreset | null
+  needs_pct: number
+  leisure_pct: number
+  savings_pct: number
+  created_at: string
 }

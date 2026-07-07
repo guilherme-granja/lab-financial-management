@@ -9,6 +9,7 @@ import Transactions from '@/pages/Transactions'
 import Duplicates from '@/pages/Duplicates'
 import Categories from '@/pages/Categories'
 import Accounts from '@/pages/Accounts'
+import Budgets from '@/pages/Budgets'
 import Tags from '@/pages/Tags'
 import ErrorPage from '@/pages/ErrorPage'
 import AdminUsers from '@/pages/AdminUsers'
@@ -118,6 +119,7 @@ export const router = createBrowserRouter(
         { path: '/duplicates', element: <Duplicates /> },
         { path: '/categories', element: <Categories /> },
         { path: '/accounts', element: <Accounts /> },
+        { path: '/budgets', element: <Budgets /> },
         { path: '/tags', element: <Tags /> },
       ],
     },
