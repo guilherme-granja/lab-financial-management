@@ -377,7 +377,10 @@ export function useTransactions(filters: TransactionFilters) {
       .upsert({ transaction_id: id, paid_at, paid_amount }, { onConflict: 'transaction_id' })
     if (err) throw new Error(err.message)
     // Update legacy columns for rollback compatibility
-    await supabase.from('transactions').update({ paid: true, paid_at, paid_amount }).eq('id', id)
+    await supabase
+      .from('transactions')
+      .update({ paid: true, paid_at, paid_amount, amount: paid_amount, date: paid_at })
+      .eq('id', id)
     await fetch()
   }
 

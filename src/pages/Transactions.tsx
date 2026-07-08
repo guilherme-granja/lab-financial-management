@@ -295,8 +295,8 @@ export default function Transactions() {
   function openPay(tx: Transaction) {
     setPayingTx(tx)
     setPayForm({
-      paid_at: tx.payment?.paid_at ?? format(new Date(), 'yyyy-MM-dd'),
-      paid_amount: String(tx.payment?.paid_amount ?? tx.amount),
+      paid_at: tx.date,
+      paid_amount: String(tx.amount),
     })
   }
 
