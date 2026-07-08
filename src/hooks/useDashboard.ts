@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react'
 import { format, subMonths, startOfMonth, endOfMonth, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useSupabaseClient } from '@/hooks/useDatabase'
+import { useAccounts } from '@/hooks/useAccounts'
 import type { Transaction } from '@/types'
 import type { BalanceDataPoint } from '@/components/charts/BalanceLineChart'
 import type { DonutDataPoint } from '@/components/charts/TopCategoriesDonutChart'
 
 interface DashboardData {
-  summary: { income: number; expenses: number; balance: number; pending: number }
+  summary: { income: number; expenses: number; balance: number; pending: number; investments: number; transfers: number }
   lineData: BalanceDataPoint[]
   donutData: DonutDataPoint[]
   recentTx: Transaction[]
@@ -19,7 +20,8 @@ const DONUT_COLORS = ['#6366f1', '#22c55e', '#ef4444', '#f59e0b', '#06b6d4']
 
 export function useDashboard(period: string): DashboardData {
   const supabase = useSupabaseClient()
-  const [summary, setSummary] = useState<DashboardData['summary']>({ income: 0, expenses: 0, balance: 0, pending: 0 })
+  const { getAccountBalance } = useAccounts()
+  const [summary, setSummary] = useState<DashboardData['summary']>({ income: 0, expenses: 0, balance: 0, pending: 0, investments: 0, transfers: 0 })
   const [lineData, setLineData] = useState<BalanceDataPoint[]>([])
   const [donutData, setDonutData] = useState<DonutDataPoint[]>([])
   const [recentTx, setRecentTx] = useState<Transaction[]>([])
@@ -44,7 +46,7 @@ export function useDashboard(period: string): DashboardData {
         return `account_id.is.null,account_id.in.(${dashboardIds.join(',')})`
       }
 
-      const [summaryRes, pieRes, recentRes, historyData, pendingRes, unlinkedRes] = await Promise.all([
+      const [summaryRes, pieRes, recentRes, historyData, pendingRes, unlinkedRes, transfersRes, investmentAccountsRes] = await Promise.all([
         supabase
           .from('transactions')
           .select('amount, type')
@@ -108,13 +110,33 @@ export function useDashboard(period: string): DashboardData {
           .neq('type', 'transfer')
           .eq('paid', true)
           .is('account_id', null),
+
+        supabase
+          .from('transactions')
+          .select('amount')
+          .gte('date', monthStart)
+          .lte('date', monthEnd)
+          .eq('type', 'transfer'),
+
+        supabase
+          .from('accounts')
+          .select('id, initial_balance')
+          .eq('type', 'investment'),
       ])
 
       const txs = summaryRes.data ?? []
       const income = txs.filter((t) => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
       const expenses = txs.filter((t) => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
       const pending = (pendingRes.data ?? []).reduce((s, t) => s + Number(t.amount), 0)
-      setSummary({ income, expenses, balance: income - expenses, pending })
+      const transfers = (transfersRes.data ?? []).reduce((s, t) => s + Number(t.amount), 0)
+
+      const investmentAccounts = (investmentAccountsRes.data ?? []) as Array<{ id: string; initial_balance: number }>
+      const investmentBalances = await Promise.all(
+        investmentAccounts.map((a) => getAccountBalance(a.id, a.initial_balance))
+      )
+      const investments = investmentBalances.reduce((s, b) => s + b, 0)
+
+      setSummary({ income, expenses, balance: income - expenses - investments, pending, investments, transfers })
 
       const catMap: Record<string, { name: string; total: number }> = {}
       for (const tx of pieRes.data ?? []) {

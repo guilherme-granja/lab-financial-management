@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge'
 import { BalanceLineChart } from '@/components/charts/BalanceLineChart'
 import { TopCategoriesDonutChart } from '@/components/charts/TopCategoriesDonutChart'
-import { TrendingUp, TrendingDown, Wallet, Clock, AlertTriangle, ChevronRight, ChevronLeft } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, Clock, AlertTriangle, ChevronRight, ChevronLeft, ArrowLeftRight } from 'lucide-react'
 import { useDashboard } from '@/hooks/useDashboard'
 
 interface MonthSummary {
@@ -17,6 +17,8 @@ interface MonthSummary {
   expenses: number
   balance: number
   pending: number
+  investments: number
+  transfers: number
   prevIncome: number
   prevExpenses: number
   prevBalance: number
@@ -53,6 +55,8 @@ export default function Dashboard() {
     expenses: currSummary.expenses,
     balance: currSummary.balance,
     pending: currSummary.pending,
+    investments: currSummary.investments,
+    transfers: currSummary.transfers,
     prevIncome: prevSummary.income,
     prevExpenses: prevSummary.expenses,
     prevBalance: prevSummary.balance,
@@ -89,7 +93,7 @@ export default function Dashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card
           className="bg-[#1a1d27] border-[#2d3148] cursor-pointer hover:border-indigo-600/50 transition-colors"
           onClick={() => navigate(`/transactions?type=income&month=${period}&status=paid`)}
@@ -130,7 +134,9 @@ export default function Dashboard() {
             <Delta curr={summary.balance} prev={summary.prevBalance} />
           </CardContent>
         </Card>
+      </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card
           className="bg-[#1a1d27] border-[#2d3148] cursor-pointer hover:border-indigo-600/50 transition-colors"
           onClick={() => navigate(`/transactions?status=unpaid&month=${period}`)}
@@ -142,6 +148,26 @@ export default function Dashboard() {
           <CardContent>
             <p className="text-2xl font-bold text-yellow-500">{formatCurrency(summary.pending)}</p>
             <Delta curr={summary.pending} prev={summary.prevPending} />
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#1a1d27] border-[#2d3148]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-slate-400 text-sm font-medium">Investimentos</CardTitle>
+            <TrendingUp size={16} className="text-blue-400" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-blue-400">{formatCurrency(summary.investments)}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#1a1d27] border-[#2d3148]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-slate-400 text-sm font-medium">Transferências do mês</CardTitle>
+            <ArrowLeftRight size={16} className="text-slate-400" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-slate-300">{formatCurrency(summary.transfers)}</p>
           </CardContent>
         </Card>
       </div>

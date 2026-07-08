@@ -42,6 +42,8 @@ describe('Dashboard', () => {
       expect(screen.getByText('Despesas do mês')).toBeInTheDocument()
       expect(screen.getByText('Saldo do mês')).toBeInTheDocument()
       expect(screen.getByText('A pagar este mês')).toBeInTheDocument()
+      expect(screen.getByText('Investimentos')).toBeInTheDocument()
+      expect(screen.getByText('Transferências do mês')).toBeInTheDocument()
     })
   })
 
