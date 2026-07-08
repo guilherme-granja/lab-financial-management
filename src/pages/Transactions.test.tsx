@@ -56,6 +56,8 @@ vi.mock('@/hooks/useTags', () => ({
 }))
 
 import { useTransactions } from '@/hooks/useTransactions'
+import { useCategories } from '@/hooks/useCategories'
+import { useAccounts } from '@/hooks/useAccounts'
 import Transactions from './Transactions'
 
 const baseTx: Transaction = {
@@ -336,6 +338,16 @@ describe('Transactions', () => {
       transactions: [],
       createTransaction,
     })
+    vi.mocked(useAccounts).mockReturnValue({
+      accounts: [{ id: 'acc1', name: 'Nubank', icon: '💜', type: 'checking', color: '#8B5CF6', include_in_dashboard: true, initial_balance: 0, created_at: '' }],
+      loading: false, error: null, refresh: vi.fn(), createAccount: vi.fn(), updateAccount: vi.fn(),
+      deleteAccount: vi.fn(), getAccountBalance: vi.fn(), getAccountTransactionCount: vi.fn(),
+    })
+    vi.mocked(useCategories).mockReturnValue({
+      categories: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', created_at: '' }],
+      categoryTree: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', created_at: '', subcategories: [] }],
+      loading: false, error: null, refresh: vi.fn(), createCategory: vi.fn(), updateCategory: vi.fn(), deleteCategory: vi.fn(),
+    })
     renderTx()
     await userEvent.click(screen.getByText('Nova transação'))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
@@ -343,6 +355,14 @@ describe('Transactions', () => {
     const amountInput = document.querySelector<HTMLInputElement>('[inputmode="numeric"]')!
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '500')
+    // Selecionar conta: combobox[1] = "Conta" (combobox[0] = Tipo)
+    const comboboxes = screen.getAllByRole('combobox')
+    await userEvent.click(comboboxes[1])
+    await userEvent.click(screen.getAllByRole('option')[0])
+    // Selecionar categoria: combobox[2] = SearchableSelect de Categoria
+    const comboboxes2 = screen.getAllByRole('combobox')
+    await userEvent.click(comboboxes2[2])
+    await userEvent.click(screen.getAllByRole('option')[0])
     await userEvent.click(screen.getByText('Salvar'))
     expect(createTransaction).toHaveBeenCalled()
   })
@@ -526,12 +546,24 @@ describe('Transactions', () => {
 
   it('chama updateTransaction ao salvar form de edição', async () => {
     const updateTransaction = vi.fn().mockResolvedValue(undefined)
+    // Transacao com account_id e category_id preenchidos para bypassar validacao
+    const txWithAccount = { ...baseTx, account_id: 'acc1', category_id: 'cat1' }
     vi.mocked(useTransactions).mockReturnValue({
       ...baseHookReturn,
       loading: false,
-      transactions: [baseTx],
+      transactions: [txWithAccount],
       total: 1,
       updateTransaction,
+    })
+    vi.mocked(useAccounts).mockReturnValue({
+      accounts: [{ id: 'acc1', name: 'Nubank', icon: '💜', type: 'checking', color: '#8B5CF6', include_in_dashboard: true, initial_balance: 0, created_at: '' }],
+      loading: false, error: null, refresh: vi.fn(), createAccount: vi.fn(), updateAccount: vi.fn(),
+      deleteAccount: vi.fn(), getAccountBalance: vi.fn(), getAccountTransactionCount: vi.fn(),
+    })
+    vi.mocked(useCategories).mockReturnValue({
+      categories: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', created_at: '' }],
+      categoryTree: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', created_at: '', subcategories: [] }],
+      loading: false, error: null, refresh: vi.fn(), createCategory: vi.fn(), updateCategory: vi.fn(), deleteCategory: vi.fn(),
     })
     renderTx()
     // Open edit dialog
@@ -541,6 +573,7 @@ describe('Transactions', () => {
     await userEvent.click(iconButtons[iconButtons.length - 2])
     expect(screen.getByText('Editar transação')).toBeInTheDocument()
     // Amount is pre-filled from baseTx.amount = 1500
+    // account_id e category_id ja vem preenchidos de txWithAccount — validacao passa sem nova selecao
     await userEvent.click(screen.getByText('Salvar'))
     expect(updateTransaction).toHaveBeenCalledWith('1', expect.objectContaining({ amount: 1500 }))
   })

@@ -24,3 +24,15 @@ vi.mock('@/lib/chore-client', () => ({
     },
   },
 }))
+
+// Polyfills para componentes Radix UI e cmdk no JSDOM
+window.HTMLElement.prototype.hasPointerCapture = vi.fn(() => false)
+window.HTMLElement.prototype.scrollIntoView = vi.fn()
+
+// Polyfill para ResizeObserver (exigido pelo cmdk/SearchableSelect)
+class MockResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+global.ResizeObserver = MockResizeObserver
