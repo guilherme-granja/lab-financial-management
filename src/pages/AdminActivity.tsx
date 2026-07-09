@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { formatDate } from '@/lib/formatters'
+import { formatDateTime } from '@/lib/formatters'
 
 const ACTION_BADGE: Record<string, string> = {
   login: 'bg-indigo-950 text-indigo-400 border-indigo-800',
@@ -40,9 +40,33 @@ function ActionBadge({ action }: { action: string }) {
   )
 }
 
+function parseUserAgent(ua: string): string {
+  if (ua.includes('Edg/')) return 'Edge'
+  if (ua.includes('OPR/') || ua.includes('Opera')) return 'Opera'
+  if (ua.includes('Chrome/') && !ua.includes('Chromium')) return 'Chrome'
+  if (ua.includes('Firefox/')) return 'Firefox'
+  if (ua.includes('Safari/') && !ua.includes('Chrome')) return 'Safari'
+  if (ua.includes('Chromium/')) return 'Chromium'
+  return 'Navegador desconhecido'
+}
+
 function renderDetails(action: string, metadata: Record<string, unknown> | null): string {
   if (!metadata) return '—'
   switch (action) {
+    case 'login': {
+      const parts: string[] = []
+      if (metadata.ip) parts.push(`IP: ${metadata.ip as string}`)
+      if (metadata.city || metadata.country) {
+        const geo = [metadata.city, metadata.country].filter(Boolean).join(', ')
+        parts.push(geo)
+      }
+      if (metadata.user_agent) {
+        const ua = metadata.user_agent as string
+        const browser = parseUserAgent(ua)
+        parts.push(browser)
+      }
+      return parts.length > 0 ? parts.join(' · ') : '—'
+    }
     case 'transaction_created':
     case 'transaction_updated':
     case 'transaction_deleted': {
@@ -146,7 +170,7 @@ export default function AdminActivity() {
                     {renderDetails(entry.action, entry.metadata)}
                   </TableCell>
                   <TableCell>
-                    <div className="text-slate-200">{formatDate(entry.created_at)}</div>
+                    <div className="text-slate-200">{formatDateTime(entry.created_at)}</div>
                   </TableCell>
                 </TableRow>
               ))}

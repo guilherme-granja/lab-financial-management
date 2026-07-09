@@ -61,7 +61,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setAuthError(null)
-      logActivity(u.id, 'login')
     }
     setUser(u)
     setLoading(false)
@@ -72,7 +71,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       handleUser(session?.user ?? null)
     })
 
-    const { data: { subscription } } = choreClient.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = choreClient.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        logActivity(session.user.id, 'login')
+      }
       handleUser(session?.user ?? null)
     })
 

@@ -13,6 +13,10 @@ export function formatDate(dateStr: string): string {
   return format(parseISO(dateStr), 'dd/MM/yyyy')
 }
 
+export function formatDateTime(dateStr: string): string {
+  return format(parseISO(dateStr), 'dd/MM/yyyy HH:mm')
+}
+
 export function formatMonth(dateStr: string): string {
   return format(parseISO(dateStr), 'MMMM yyyy', { locale: ptBR })
 }
