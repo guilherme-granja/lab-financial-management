@@ -46,7 +46,7 @@ export function useDashboard(period: string): DashboardData {
         return `account_id.is.null,account_id.in.(${dashboardIds.join(',')})`
       }
 
-      const [summaryRes, pieRes, recentRes, historyData, pendingRes, unlinkedRes, transfersRes, investmentAccountsRes] = await Promise.all([
+      const [summaryRes, pieRes, recentRes, historyData, pendingRes, unlinkedRes, transfersRes, investmentAccountsRes, checkingAccountsRes] = await Promise.all([
         supabase
           .from('transactions')
           .select('amount, type')
@@ -122,6 +122,11 @@ export function useDashboard(period: string): DashboardData {
           .from('accounts')
           .select('id, initial_balance')
           .eq('type', 'investment'),
+
+        supabase
+          .from('accounts')
+          .select('id, initial_balance')
+          .eq('type', 'checking'),
       ])
 
       const txs = summaryRes.data ?? []
@@ -136,7 +141,13 @@ export function useDashboard(period: string): DashboardData {
       )
       const investments = investmentBalances.reduce((s, b) => s + b, 0)
 
-      setSummary({ income, expenses, balance: income - expenses - investments, pending, investments, transfers })
+      const checkingAccounts = (checkingAccountsRes.data ?? []) as Array<{ id: string; initial_balance: number }>
+      const checkingBalances = await Promise.all(
+        checkingAccounts.map((a) => getAccountBalance(a.id, a.initial_balance))
+      )
+      const balance = checkingBalances.reduce((s, b) => s + b, 0)
+
+      setSummary({ income, expenses, balance, pending, investments, transfers })
 
       const catMap: Record<string, { name: string; total: number }> = {}
       for (const tx of pieRes.data ?? []) {
