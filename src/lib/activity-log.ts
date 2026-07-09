@@ -1,11 +1,13 @@
 import { choreClient } from './chore-client'
 
-interface GeoData {
+interface IpifyResponse {
+  ip: string
+}
+
+interface GeoJsResponse {
   city?: string
   region?: string
-  country_name?: string
-  ip?: string
-  error?: boolean
+  country?: string
 }
 
 async function collectLoginMetadata(): Promise<Record<string, unknown>> {
@@ -14,19 +16,33 @@ async function collectLoginMetadata(): Promise<Record<string, unknown>> {
   }
 
   try {
-    // ipapi.co retorna JSON com IP e geolocalização (sem chave de API)
-    const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(5000) })
-    if (res.ok) {
-      const geo = (await res.json()) as GeoData
-      if (!geo.error) {
-        metadata.ip = geo.ip ?? null
-        metadata.city = geo.city ?? null
-        metadata.region = geo.region ?? null
-        metadata.country = geo.country_name ?? null
+    // Etapa 1: obter IP público via ipify (CORS liberado, sem rate limit prático)
+    const ipRes = await fetch('https://api.ipify.org?format=json', {
+      signal: AbortSignal.timeout(4000),
+    })
+    if (ipRes.ok) {
+      const { ip } = (await ipRes.json()) as IpifyResponse
+      if (ip) {
+        metadata.ip = ip
+
+        // Etapa 2: geolocalização via geojs usando o IP obtido
+        try {
+          const geoRes = await fetch(`https://get.geojs.io/v1/ip/geo/${ip}.json`, {
+            signal: AbortSignal.timeout(4000),
+          })
+          if (geoRes.ok) {
+            const geo = (await geoRes.json()) as GeoJsResponse
+            metadata.city = geo.city ?? null
+            metadata.region = geo.region ?? null
+            metadata.country = geo.country ?? null
+          }
+        } catch {
+          // geo falhou — continua só com IP
+        }
       }
     }
   } catch {
-    // falhou ao obter geo — continua sem
+    // IP falhou — continua só com user_agent
   }
 
   return metadata

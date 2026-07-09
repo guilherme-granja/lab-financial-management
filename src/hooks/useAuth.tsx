@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { choreClient } from '@/lib/chore-client'
 import { logActivity } from '@/lib/activity-log'
@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [firstLogin, setFirstLogin] = useState(false)
+  const hasRestoredSession = useRef(false)
 
   const handleUser = async (u: User | null) => {
     if (u) {
@@ -68,12 +69,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     choreClient.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        hasRestoredSession.current = true
+      }
       handleUser(session?.user ?? null)
     })
 
     const { data: { subscription } } = choreClient.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        logActivity(session.user.id, 'login')
+        if (hasRestoredSession.current) {
+          hasRestoredSession.current = false
+        } else {
+          logActivity(session.user.id, 'login')
+        }
       }
       handleUser(session?.user ?? null)
     })
