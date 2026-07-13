@@ -9,7 +9,7 @@ export function PasswordRulesHint({ password }: PasswordRulesHintProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-4">
       {PASSWORD_REQUIREMENTS.map((req) => {
-        const met = req.regex.test(password)
+        const met = req.test(password)
         return (
           <div
             key={req.key}

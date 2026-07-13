@@ -1,22 +1,34 @@
-export const PASSWORD_REQUIREMENTS = [
-  { key: 'lower', label: 'Letras minúsculas', regex: /[a-z]/ },
-  { key: 'upper', label: 'Letras maiúsculas', regex: /[A-Z]/ },
-  { key: 'number', label: 'Números', regex: /[0-9]/ },
-  { key: 'special', label: 'Caracteres especiais', regex: /[^A-Za-z0-9]/ },
-] as const
+export interface PasswordRequirement {
+  key: string
+  label: string
+  test: (password: string) => boolean
+}
+
+export const PASSWORD_REQUIREMENTS: PasswordRequirement[] = [
+  { key: 'length', label: 'Mínimo de 8 caracteres', test: (p) => p.length >= 8 },
+  { key: 'lower', label: 'Letras minúsculas', test: (p) => /[a-z]/.test(p) },
+  { key: 'upper', label: 'Letras maiúsculas', test: (p) => /[A-Z]/.test(p) },
+  { key: 'number', label: 'Números', test: (p) => /[0-9]/.test(p) },
+  { key: 'special', label: 'Caracteres especiais', test: (p) => /[^A-Za-z0-9]/.test(p) },
+]
 
 export function validatePassword(password: string): string[] {
-  const errors: string[] = []
+  return PASSWORD_REQUIREMENTS.filter((req) => !req.test(password)).map((req) => req.label)
+}
 
-  if (password.length < 8) {
-    errors.push('A senha deve ter no mínimo 8 caracteres.')
-  }
+export type PasswordStrengthLabel = 'Muito fraca' | 'Fraca' | 'Razoável' | 'Forte' | 'Muito forte'
 
-  for (const req of PASSWORD_REQUIREMENTS) {
-    if (!req.regex.test(password)) {
-      errors.push(req.label)
-    }
-  }
+export interface PasswordStrength {
+  score: number
+  total: number
+  label: PasswordStrengthLabel
+}
 
-  return errors
+const STRENGTH_LABELS: PasswordStrengthLabel[] = ['Muito fraca', 'Fraca', 'Razoável', 'Forte', 'Muito forte']
+
+export function getPasswordStrength(password: string): PasswordStrength {
+  const total = PASSWORD_REQUIREMENTS.length
+  const score = password.length === 0 ? 0 : PASSWORD_REQUIREMENTS.filter((req) => req.test(password)).length
+  const labelIndex = password.length === 0 ? 0 : Math.max(0, score - 1)
+  return { score, total, label: STRENGTH_LABELS[labelIndex] }
 }

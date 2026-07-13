@@ -45,7 +45,7 @@ function buildChain(finalResult: { data?: unknown; error?: unknown; count?: numb
     'select', 'insert', 'update', 'delete', 'upsert',
     'eq', 'neq', 'gte', 'lte', 'lt', 'gt',
     'like', 'ilike', 'in', 'is', 'or', 'not',
-    'order', 'range', 'limit', 'single',
+    'order', 'range', 'limit', 'single', 'maybeSingle',
   ]
 
   for (const m of methods) {
@@ -66,7 +66,7 @@ export function mockSupabaseResult(result: { data?: unknown; error?: unknown; co
 export const supabase = {
   from: mockFrom,
   auth: {
-    getUser: vi.fn(),
+    getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
     signInWithOAuth: vi.fn(),
     signOut: vi.fn(),
     onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),

@@ -11,6 +11,8 @@ import { BalanceLineChart } from '@/components/charts/BalanceLineChart'
 import { TopCategoriesDonutChart } from '@/components/charts/TopCategoriesDonutChart'
 import { TrendingUp, TrendingDown, Wallet, Clock, AlertTriangle, ChevronRight, ChevronLeft, ArrowLeftRight } from 'lucide-react'
 import { useDashboard } from '@/hooks/useDashboard'
+import { useProfile } from '@/hooks/useProfile'
+import { WelcomeBanner } from '@/components/dashboard/welcome-banner'
 
 interface MonthSummary {
   income: number
@@ -49,6 +51,8 @@ export default function Dashboard() {
 
   const { summary: currSummary, lineData, donutData, recentTx, loading, unlinkedCount } = useDashboard(period)
   const { summary: prevSummary, loading: loadingPrev } = useDashboard(prevPeriod)
+  const { name: profileName } = useProfile()
+  const firstName = profileName.trim().split(' ')[0] || null
 
   const summary: MonthSummary = {
     income: currSummary.income,
@@ -69,6 +73,8 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {firstName && <WelcomeBanner name={firstName} />}
+
       {/* Month selector */}
       <div className="flex items-center gap-0.5 bg-[#1a1d27] border border-[#2d3148] rounded-lg h-9 px-1 w-fit">
         <Button
