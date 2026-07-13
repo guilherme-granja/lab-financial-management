@@ -168,7 +168,6 @@ const EMPTY_FORM: FormState = {
 }
 
 interface PayFormState {
-  paid_at: string
   paid_amount: string
 }
 
@@ -280,7 +279,7 @@ export default function Transactions() {
   const [deleteScope, setDeleteScope] = useState<'only' | 'unpaid' | 'all'>('only')
   const [deleteTx, setDeleteTx] = useState<Transaction | null>(null)
   const [payingTx, setPayingTx] = useState<Transaction | null>(null)
-  const [payForm, setPayForm] = useState<PayFormState>({ paid_at: '', paid_amount: '' })
+  const [payForm, setPayForm] = useState<PayFormState>({ paid_amount: '' })
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
@@ -324,7 +323,6 @@ export default function Transactions() {
   function openPay(tx: Transaction) {
     setPayingTx(tx)
     setPayForm({
-      paid_at: tx.date,
       paid_amount: String(tx.amount),
     })
   }
@@ -384,7 +382,6 @@ export default function Transactions() {
     setSaving(true)
     setFormError(null)
 
-    const paid_at = form.paid ? form.date : null
     const paid_amount_val = form.paid ? amount : null
 
     const payload: TransactionPayload = {
@@ -398,7 +395,6 @@ export default function Transactions() {
       recurrence: form.recurrence,
       installments: form.recurrence !== 'none' ? (form.recurrence === 'installment' ? parseInt(form.installments) : 24) : null,
       paid: form.paid,
-      paid_at,
       paid_amount: paid_amount_val,
       tag_ids: form.tag_ids,
     }
@@ -493,7 +489,7 @@ export default function Transactions() {
     const paid_amount = parseFloat(payForm.paid_amount)
     if (isNaN(paid_amount) || paid_amount <= 0) return
     try {
-      await updateTransactionPayment(payingTx.id, payForm.paid_at, paid_amount)
+      await updateTransactionPayment(payingTx.id, paid_amount)
       if (isIdSearchMode) await loadIdSearchResult()
     } finally {
       setPayingTx(null)
@@ -1543,15 +1539,6 @@ export default function Transactions() {
               <MoneyInput
                 value={parseFloat(payForm.paid_amount) || 0}
                 onChange={(v) => setPayForm((f) => ({ ...f, paid_amount: String(v) }))}
-                className="bg-[#0f1117] border-[#2d3148]"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-slate-400 text-xs">Data do pagamento</Label>
-              <Input
-                type="date"
-                value={payForm.paid_at}
-                onChange={(e) => setPayForm((f) => ({ ...f, paid_at: e.target.value }))}
                 className="bg-[#0f1117] border-[#2d3148]"
               />
             </div>

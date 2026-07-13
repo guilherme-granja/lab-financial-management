@@ -13,8 +13,10 @@ export function formatDate(dateStr: string): string {
   return format(parseISO(dateStr), 'dd/MM/yyyy')
 }
 
-export function formatDateTime(dateStr: string): string {
-  return format(parseISO(dateStr), 'dd/MM/yyyy HH:mm')
+export function formatDateTime(isoStr: string): string {
+  const d = parseISO(isoStr)
+  const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0 || d.getSeconds() !== 0
+  return hasTime ? format(d, 'dd/MM/yyyy HH:mm') : format(d, 'dd/MM/yyyy')
 }
 
 export function formatMonth(dateStr: string): string {

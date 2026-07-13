@@ -29,7 +29,6 @@ export interface TransactionPayload {
   recurrence: RecurrenceType
   installments: number | null
   paid: boolean
-  paid_at: string | null
   paid_amount: number | null
   tag_id?: string | null
   tag_ids?: string[]
@@ -175,6 +174,7 @@ export function useTransactions(filters: TransactionFilters) {
 
   async function createTransaction(payload: TransactionPayload) {
     const currentMonth = format(new Date(), 'yyyy-MM')
+    const nowIso = new Date().toISOString()
 
     if (payload.recurrence === 'installment' && payload.installments && payload.installments > 1) {
       const n = payload.installments
@@ -209,7 +209,7 @@ export function useTransactions(filters: TransactionFilters) {
           installment_index: i + 1,
           recurrence_group_id: groupId,
           paid: isPaid,
-          paid_at: isPaid ? payload.paid_at : null,
+          paid_at: isPaid ? nowIso : null,
           paid_amount: isPaid ? payload.paid_amount : null,
           tag_id: (payload.tag_ids ?? [])[0] ?? null,
         }
@@ -271,7 +271,7 @@ export function useTransactions(filters: TransactionFilters) {
           installment_index: i + 1,
           recurrence_group_id: groupId,
           paid: isPaid,
-          paid_at: isPaid ? payload.paid_at : null,
+          paid_at: isPaid ? nowIso : null,
           paid_amount: isPaid ? payload.paid_amount : null,
           tag_id: (payload.tag_ids ?? [])[0] ?? null,
         }
@@ -316,15 +316,15 @@ export function useTransactions(filters: TransactionFilters) {
       installment_index: null,
       recurrence_group_id: null,
       paid: payload.paid,
-      paid_at: payload.paid_at,
+      paid_at: payload.paid ? nowIso : null,
       paid_amount: payload.paid_amount,
       tag_id: (payload.tag_ids ?? [])[0] ?? null,
     }).select('id').single()
     if (err) throw new Error(err.message)
-    if (payload.paid && payload.paid_at != null && payload.paid_amount != null) {
+    if (payload.paid && payload.paid_amount != null) {
       const { error: payErr3 } = await supabase.from('transaction_payments').insert({
         transaction_id: inserted.id,
-        paid_at: payload.paid_at,
+        paid_at: nowIso,
         paid_amount: payload.paid_amount,
       })
       if (payErr3) throw new Error(payErr3.message)
@@ -337,8 +337,24 @@ export function useTransactions(filters: TransactionFilters) {
   }
 
   async function updateTransaction(id: string, payload: Partial<TransactionPayload>) {
-    const { tag_ids, ...dbPayload } = payload
-    dbPayload.tag_id = (tag_ids ?? [])[0] ?? null
+    const { tag_ids, ...rest } = payload
+    const dbPayload: Record<string, unknown> = { ...rest, tag_id: (tag_ids ?? [])[0] ?? null }
+
+    if ('paid' in dbPayload) {
+      const { data: current } = await supabase
+        .from('transactions')
+        .select('paid')
+        .eq('id', id)
+        .single()
+      if (dbPayload.paid && !current?.paid) {
+        dbPayload.paid_at = new Date().toISOString()
+      } else if (dbPayload.paid && current?.paid) {
+        delete dbPayload.paid_at
+      } else if (!dbPayload.paid) {
+        dbPayload.paid_at = null
+      }
+    }
+
     const { error: err } = await supabase.from('transactions').update(dbPayload).eq('id', id)
     if (err) throw new Error(err.message)
     await setTransactionTagsStandalone(supabase, id, tag_ids ?? [])
@@ -385,7 +401,8 @@ export function useTransactions(filters: TransactionFilters) {
     await fetch()
   }
 
-  async function updateTransactionPayment(id: string, paid_at: string, paid_amount: number): Promise<void> {
+  async function updateTransactionPayment(id: string, paid_amount: number): Promise<void> {
+    const paid_at = new Date().toISOString()
     const { error: err } = await supabase
       .from('transaction_payments')
       .upsert({ transaction_id: id, paid_at, paid_amount }, { onConflict: 'transaction_id' })
