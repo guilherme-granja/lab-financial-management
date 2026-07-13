@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { format, addMonths, parseISO, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { useSearchParams } from 'react-router-dom'
-import { useTransactions } from '@/hooks/useTransactions'
+import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useTransactions, fetchTransactionById } from '@/hooks/useTransactions'
 import type { TransactionFilters, TransactionPayload } from '@/hooks/useTransactions'
 import { useCategories } from '@/hooks/useCategories'
 import { useAccounts } from '@/hooks/useAccounts'
@@ -180,7 +180,8 @@ interface ActiveChip {
 
 export default function Transactions() {
   const supabase = useSupabaseClient()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const [filters, setFilters] = useState<TransactionFilters>({
     period: CURRENT_MONTH,
@@ -194,35 +195,53 @@ export default function Transactions() {
     dateTo: null,
   })
 
-  const [highlightId, setHighlightId] = useState<string | null>(null)
-  const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null)
+  const transactionIdParam = searchParams.get('transactionId')
+  const isIdSearchMode = !!transactionIdParam
+
+  const [idSearchResult, setIdSearchResult] = useState<Transaction | null>(null)
+  const [idSearchLoading, setIdSearchLoading] = useState(false)
+  const [idSearchError, setIdSearchError] = useState(false)
 
   useEffect(() => {
     const accountId = searchParams.get('account_id')
     const type = searchParams.get('type')
     const month = searchParams.get('month')
     const status = searchParams.get('status')
-    const highlight = searchParams.get('highlight')
 
-    if (accountId || type || month || status || highlight) {
+    if (accountId || type || month || status) {
       setFilters((f) => ({
         ...f,
         ...(accountId ? { account_id: accountId } : {}),
         ...(type ? { type: type as TransactionType | 'all' } : {}),
         ...(month ? { period: month } : {}),
         ...(status ? { status: status as 'all' | 'paid' | 'unpaid' } : {}),
-        ...(highlight ? { unpaginated: true } : {}),
       }))
     }
-    if (highlight) setHighlightId(highlight)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const loadIdSearchResult = useCallback(async () => {
+    if (!transactionIdParam) {
+      setIdSearchResult(null)
+      setIdSearchError(false)
+      return
+    }
+    setIdSearchLoading(true)
+    const { data, error } = await fetchTransactionById(supabase, transactionIdParam)
+    setIdSearchResult(data)
+    setIdSearchError(!!error)
+    setIdSearchLoading(false)
+  }, [transactionIdParam, supabase])
+
+  useEffect(() => {
+    loadIdSearchResult()
+  }, [loadIdSearchResult])
+
   const {
-    transactions,
+    transactions: rawTransactions,
     totalPages,
     page,
     setPage,
-    loading,
+    loading: rawLoading,
     createTransaction,
     updateTransaction,
     updateRecurrenceGroup,
@@ -234,27 +253,8 @@ export default function Transactions() {
     filteredTotal,
   } = useTransactions(filters)
 
-  useEffect(() => {
-    if (!highlightId || loading) return
-    const found = transactions.find((t) => t.id === highlightId)
-    if (!found) {
-      setHighlightId(null)
-      return
-    }
-    const candidates = document.querySelectorAll(`[data-tx-row="${highlightId}"]`)
-    const el = Array.from(candidates).find((e) => (e as HTMLElement).offsetParent !== null)
-    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    setHighlightedRowId(highlightId)
-    setHighlightId(null)
-
-    setFilters((f) => ({ ...f, unpaginated: false }))
-    const next = new URLSearchParams(searchParams)
-    next.delete('highlight')
-    setSearchParams(next, { replace: true })
-
-    const timer = setTimeout(() => setHighlightedRowId(null), 2500)
-    return () => clearTimeout(timer)
-  }, [transactions, loading, highlightId]) // eslint-disable-line react-hooks/exhaustive-deps
+  const transactions = isIdSearchMode ? (idSearchResult ? [idSearchResult] : []) : rawTransactions
+  const loading = isIdSearchMode ? idSearchLoading : rawLoading
 
   const { categories, categoryTree } = useCategories()
   const { accounts } = useAccounts()
@@ -424,6 +424,7 @@ export default function Transactions() {
         await createTransaction(payload)
       }
       setDialogOpen(false)
+      if (isIdSearchMode) await loadIdSearchResult()
     } catch (e) {
       setFormError((e as Error).message)
     } finally {
@@ -445,6 +446,7 @@ export default function Transactions() {
       }
       setScopeDialogOpen(false)
       setPendingPayload(null)
+      if (isIdSearchMode) await loadIdSearchResult()
     } catch (e) {
       setScopeDialogOpen(false)
       setFormError((e as Error).message)
@@ -463,6 +465,7 @@ export default function Transactions() {
     if (!deleteId) return
     try {
       await deleteTransaction(deleteId)
+      if (isIdSearchMode) await loadIdSearchResult()
     } finally {
       setDeleteId(null)
     }
@@ -478,6 +481,7 @@ export default function Transactions() {
       } else {
         await deleteTransactionGroup(deleteTx.recurrence_group_id!)
       }
+      if (isIdSearchMode) await loadIdSearchResult()
     } finally {
       setDeleteTx(null)
       setDeleteScope('only')
@@ -490,6 +494,7 @@ export default function Transactions() {
     if (isNaN(paid_amount) || paid_amount <= 0) return
     try {
       await updateTransactionPayment(payingTx.id, payForm.paid_at, paid_amount)
+      if (isIdSearchMode) await loadIdSearchResult()
     } finally {
       setPayingTx(null)
     }
@@ -651,7 +656,8 @@ export default function Transactions() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-[#2d3148]"
+              disabled={isIdSearchMode}
+              className="h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-[#2d3148] disabled:opacity-40 disabled:pointer-events-none"
               onClick={() => navigatePeriod(-1)}
             >
               <ChevronLeft size={14} />
@@ -662,7 +668,8 @@ export default function Transactions() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-[#2d3148]"
+              disabled={isIdSearchMode}
+              className="h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-[#2d3148] disabled:opacity-40 disabled:pointer-events-none"
               onClick={() => navigatePeriod(1)}
             >
               <ChevronRight size={14} />
@@ -683,9 +690,10 @@ export default function Transactions() {
           ).map(({ value, label }) => (
             <button
               key={value}
+              disabled={isIdSearchMode}
               onClick={() => setFilters((f) => ({ ...f, type: value as TransactionType | 'all' }))}
-              className={`h-9 px-3 rounded-lg text-sm font-medium border transition-colors ${
-                filters.type === value
+              className={`h-9 px-3 rounded-lg text-sm font-medium border transition-colors disabled:opacity-40 disabled:pointer-events-none ${
+                !isIdSearchMode && filters.type === value
                   ? 'bg-indigo-600 text-white border-indigo-600'
                   : 'text-slate-400 border-[#2d3148] hover:text-slate-200 hover:border-slate-500 bg-transparent'
               }`}
@@ -696,8 +704,9 @@ export default function Transactions() {
 
           {/* Filtros button with badge */}
           <button
+            disabled={isIdSearchMode}
             onClick={() => setFilterPanelOpen((v) => !v)}
-            className={`relative h-9 px-3 rounded-lg text-sm font-medium border transition-colors gap-1.5 inline-flex items-center ${
+            className={`relative h-9 px-3 rounded-lg text-sm font-medium border transition-colors gap-1.5 inline-flex items-center disabled:opacity-40 disabled:pointer-events-none ${
               filterPanelOpen
                 ? 'bg-[#2d3148] text-slate-200 border-slate-500'
                 : 'text-slate-400 border-[#2d3148] hover:text-slate-200 hover:border-slate-500 bg-transparent'
@@ -710,6 +719,16 @@ export default function Transactions() {
               </span>
             )}
           </button>
+
+          {/* Mostrar todos — sai do modo de busca por ID */}
+          {isIdSearchMode && (
+            <button
+              onClick={() => navigate('/transactions')}
+              className="h-9 px-3 rounded-lg text-sm font-medium border border-indigo-700 text-indigo-300 hover:bg-indigo-950 transition-colors"
+            >
+              Mostrar todos
+            </button>
+          )}
 
           {/* Column picker */}
           <div className="relative hidden md:block">
@@ -977,7 +996,9 @@ export default function Transactions() {
           <div className="text-center text-slate-500 py-8 text-sm">Carregando...</div>
         )}
         {!loading && transactions.length === 0 && (
-          <div className="text-center text-slate-500 py-8 text-sm">Nenhuma transação encontrada</div>
+          <div className="text-center text-slate-500 py-8 text-sm">
+            {isIdSearchMode && idSearchError ? 'Erro ao buscar transação' : 'Nenhuma transação encontrada'}
+          </div>
         )}
         {transactions.map((tx) => {
           const toAccount = tx.type === 'transfer' && tx.to_account_id
@@ -987,9 +1008,7 @@ export default function Transactions() {
             <div
               key={tx.id}
               data-tx-row={tx.id}
-              className={`bg-[#1a1d27] border border-[#2d3148] rounded-xl px-4 py-3 flex items-center gap-3 transition-colors duration-1000 ${
-                highlightedRowId === tx.id ? 'bg-indigo-950/60 border-indigo-600' : ''
-              }`}
+              className="bg-[#1a1d27] border border-[#2d3148] rounded-xl px-4 py-3 flex items-center gap-3"
             >
               {/* Ícone da categoria */}
               <div className="text-xl w-8 text-center shrink-0">
@@ -1085,7 +1104,7 @@ export default function Transactions() {
                   {!loading && transactions.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={visibleCount} className="text-center text-slate-500 py-8">
-                        Nenhuma transação encontrada
+                        {isIdSearchMode && idSearchError ? 'Erro ao buscar transação' : 'Nenhuma transação encontrada'}
                       </TableCell>
                     </TableRow>
                   )}
@@ -1098,9 +1117,7 @@ export default function Transactions() {
                       <TableRow
                         key={tx.id}
                         data-tx-row={tx.id}
-                        className={`border-[#2d3148] hover:bg-[#2d3148]/30 transition-colors duration-1000 ${
-                          highlightedRowId === tx.id ? 'bg-indigo-950/60' : ''
-                        }`}
+                        className="border-[#2d3148] hover:bg-[#2d3148]/30"
                       >
                         {columnVisibility.date        && <TableCell className="text-slate-300">{formatDate(tx.date)}</TableCell>}
                         {columnVisibility.description && (
@@ -1230,7 +1247,7 @@ export default function Transactions() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && !filters.unpaginated && (
+      {totalPages > 1 && !isIdSearchMode && (
         <div className="flex items-center justify-center gap-2">
           <Button
             variant="ghost"

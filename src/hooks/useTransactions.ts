@@ -16,7 +16,6 @@ export interface TransactionFilters {
   tagId: string
   dateFrom: string | null
   dateTo: string | null
-  unpaginated?: boolean
 }
 
 export interface TransactionPayload {
@@ -40,6 +39,19 @@ const PAGE_SIZE = 20
 
 const SELECT_FIELDS =
   '*, categories(*), accounts!account_id(*), to_accounts:accounts!to_account_id(*), transaction_tags(*, tags(*)), recurrence_groups(*), payment:transaction_payments(*)'
+
+export async function fetchTransactionById(
+  supabase: ReturnType<typeof useSupabaseClient>,
+  id: string
+): Promise<{ data: Transaction | null; error: string | null }> {
+  const { data, error } = await supabase
+    .from('transactions')
+    .select(SELECT_FIELDS)
+    .eq('id', id)
+    .maybeSingle()
+  if (error) return { data: null, error: error.message }
+  return { data: (data as unknown as Transaction) ?? null, error: null }
+}
 
 export function useTransactions(filters: TransactionFilters) {
   const supabase = useSupabaseClient()
@@ -83,9 +95,7 @@ export function useTransactions(filters: TransactionFilters) {
       .lte('date', dateEnd)
       .order('date', { ascending: false })
 
-    if (!filters.unpaginated) {
-      query = query.range(from, to)
-    }
+    query = query.range(from, to)
 
     if (filters.type !== 'all') {
       query = query.eq('type', filters.type)

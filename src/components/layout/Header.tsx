@@ -13,7 +13,7 @@ export function Header({ title }: HeaderProps) {
 
   const handleSelectResult = (result: TransactionSearchResult) => {
     const month = result.date.slice(0, 7)
-    navigate(`/transactions?month=${month}&highlight=${result.id}`)
+    navigate(`/transactions?transactionId=${result.id}&month=${month}`)
   }
 
   return (
