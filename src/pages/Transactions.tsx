@@ -180,7 +180,7 @@ interface ActiveChip {
 
 export default function Transactions() {
   const supabase = useSupabaseClient()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [filters, setFilters] = useState<TransactionFilters>({
     period: CURRENT_MONTH,
@@ -194,21 +194,27 @@ export default function Transactions() {
     dateTo: null,
   })
 
+  const [highlightId, setHighlightId] = useState<string | null>(null)
+  const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null)
+
   useEffect(() => {
     const accountId = searchParams.get('account_id')
     const type = searchParams.get('type')
     const month = searchParams.get('month')
     const status = searchParams.get('status')
+    const highlight = searchParams.get('highlight')
 
-    if (accountId || type || month || status) {
+    if (accountId || type || month || status || highlight) {
       setFilters((f) => ({
         ...f,
         ...(accountId ? { account_id: accountId } : {}),
         ...(type ? { type: type as TransactionType | 'all' } : {}),
         ...(month ? { period: month } : {}),
         ...(status ? { status: status as 'all' | 'paid' | 'unpaid' } : {}),
+        ...(highlight ? { unpaginated: true } : {}),
       }))
     }
+    if (highlight) setHighlightId(highlight)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const {
@@ -227,6 +233,29 @@ export default function Transactions() {
     deleteTransactionGroup,
     filteredTotal,
   } = useTransactions(filters)
+
+  useEffect(() => {
+    if (!highlightId || loading) return
+    const found = transactions.find((t) => t.id === highlightId)
+    if (!found) {
+      setHighlightId(null)
+      return
+    }
+    const candidates = document.querySelectorAll(`[data-tx-row="${highlightId}"]`)
+    const el = Array.from(candidates).find((e) => (e as HTMLElement).offsetParent !== null)
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    setHighlightedRowId(highlightId)
+    setHighlightId(null)
+
+    setFilters((f) => ({ ...f, unpaginated: false }))
+    const next = new URLSearchParams(searchParams)
+    next.delete('highlight')
+    setSearchParams(next, { replace: true })
+
+    const timer = setTimeout(() => setHighlightedRowId(null), 2500)
+    return () => clearTimeout(timer)
+  }, [transactions, loading, highlightId]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const { categories, categoryTree } = useCategories()
   const { accounts } = useAccounts()
   const { tags } = useTags()
@@ -957,7 +986,10 @@ export default function Transactions() {
           return (
             <div
               key={tx.id}
-              className="bg-[#1a1d27] border border-[#2d3148] rounded-xl px-4 py-3 flex items-center gap-3"
+              data-tx-row={tx.id}
+              className={`bg-[#1a1d27] border border-[#2d3148] rounded-xl px-4 py-3 flex items-center gap-3 transition-colors duration-1000 ${
+                highlightedRowId === tx.id ? 'bg-indigo-950/60 border-indigo-600' : ''
+              }`}
             >
               {/* Ícone da categoria */}
               <div className="text-xl w-8 text-center shrink-0">
@@ -1063,7 +1095,13 @@ export default function Transactions() {
                       : null
                     const badge = recurrenceBadge(tx)
                     return (
-                      <TableRow key={tx.id} className="border-[#2d3148] hover:bg-[#2d3148]/30">
+                      <TableRow
+                        key={tx.id}
+                        data-tx-row={tx.id}
+                        className={`border-[#2d3148] hover:bg-[#2d3148]/30 transition-colors duration-1000 ${
+                          highlightedRowId === tx.id ? 'bg-indigo-950/60' : ''
+                        }`}
+                      >
                         {columnVisibility.date        && <TableCell className="text-slate-300">{formatDate(tx.date)}</TableCell>}
                         {columnVisibility.description && (
                           <TableCell className="text-slate-300">
@@ -1192,7 +1230,7 @@ export default function Transactions() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {totalPages > 1 && !filters.unpaginated && (
         <div className="flex items-center justify-center gap-2">
           <Button
             variant="ghost"

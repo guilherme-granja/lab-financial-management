@@ -16,6 +16,7 @@ export interface TransactionFilters {
   tagId: string
   dateFrom: string | null
   dateTo: string | null
+  unpaginated?: boolean
 }
 
 export interface TransactionPayload {
@@ -81,7 +82,10 @@ export function useTransactions(filters: TransactionFilters) {
       .gte('date', dateStart)
       .lte('date', dateEnd)
       .order('date', { ascending: false })
-      .range(from, to)
+
+    if (!filters.unpaginated) {
+      query = query.range(from, to)
+    }
 
     if (filters.type !== 'all') {
       query = query.eq('type', filters.type)
