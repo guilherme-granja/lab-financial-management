@@ -4,14 +4,9 @@ import { useAuth } from '@/hooks/useAuth'
 import { choreClient } from '@/lib/chore-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Lock, LockKeyhole, Eye, EyeOff, ArrowRight, CheckCircle2 } from 'lucide-react'
-
-const REQUIREMENTS = [
-  { key: 'lower', label: 'Letras minúsculas', regex: /[a-z]/ },
-  { key: 'upper', label: 'Letras maiúsculas', regex: /[A-Z]/ },
-  { key: 'number', label: 'Números', regex: /[0-9]/ },
-  { key: 'special', label: 'Caracteres especiais', regex: /[^A-Za-z0-9]/ },
-] as const
+import { PasswordRulesHint } from '@/components/auth/password-rules-hint'
+import { validatePassword } from '@/lib/password-rules'
+import { Lock, LockKeyhole, Eye, EyeOff, ArrowRight } from 'lucide-react'
 
 export default function FirstLogin() {
   const { clearFirstLogin, signOut } = useAuth()
@@ -38,11 +33,6 @@ export default function FirstLogin() {
     }
   }, [signOut])
 
-  const metRequirements = REQUIREMENTS.reduce<Record<string, boolean>>((acc, req) => {
-    acc[req.key] = req.regex.test(newPassword)
-    return acc
-  }, {})
-
   const handleSubmit = async () => {
     setFormError(null)
 
@@ -50,7 +40,7 @@ export default function FirstLogin() {
       setFormError('A senha deve ter no mínimo 8 caracteres.')
       return
     }
-    if (!Object.values(metRequirements).every(Boolean)) {
+    if (validatePassword(newPassword).length > 0) {
       setFormError('A senha não atende a todos os requisitos.')
       return
     }
@@ -170,19 +160,7 @@ export default function FirstLogin() {
         </section>
 
         <section className="mt-6 px-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-4">
-            {REQUIREMENTS.map((req) => (
-              <div
-                key={req.key}
-                className={`flex items-center gap-2 text-xs transition-colors ${
-                  metRequirements[req.key] ? 'text-[#4edea3]' : 'text-slate-500'
-                }`}
-              >
-                <CheckCircle2 size={16} />
-                <span>{req.label}</span>
-              </div>
-            ))}
-          </div>
+          <PasswordRulesHint password={newPassword} />
         </section>
 
         <div className="mt-6 text-center">

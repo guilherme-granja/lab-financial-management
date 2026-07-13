@@ -13,6 +13,7 @@ import {
   Users,
   Activity,
   PiggyBank,
+  User,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -136,11 +137,26 @@ function NavItems({ onClose }: SidebarProps) {
   )
 }
 
-function SidebarFooter({ onSignOut }: { onSignOut: () => void }) {
+function SidebarFooter({ onSignOut, onClose }: { onSignOut: () => void; onClose?: () => void }) {
   return (
     <div className="mt-auto">
       <Separator className="bg-[#2d3148]" />
-      <div className="p-4">
+      <div className="p-4 space-y-1">
+        <NavLink
+          to="/perfil"
+          onClick={onClose}
+          className={({ isActive }) =>
+            cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+              isActive
+                ? 'bg-indigo-600 text-white'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-[#2d3148]'
+            )
+          }
+        >
+          <User size={18} />
+          Meu Perfil
+        </NavLink>
         <Button
           variant="ghost"
           className="w-full justify-start gap-3 text-slate-400 hover:text-red-400 hover:bg-red-950/30 px-3"
@@ -199,7 +215,7 @@ export function Sidebar() {
           </Button>
         </div>
         <NavItems onClose={() => setDrawerOpen(false)} />
-        <SidebarFooter onSignOut={() => { signOut(); setDrawerOpen(false) }} />
+        <SidebarFooter onSignOut={() => { signOut(); setDrawerOpen(false) }} onClose={() => setDrawerOpen(false)} />
       </aside>
 
       {/* Desktop sidebar */}
