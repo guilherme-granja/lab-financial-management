@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { createBrowserRouter, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { DatabaseProvider } from '@/hooks/useDatabase'
+import { SelectedMonthProvider } from '@/hooks/useSelectedMonth'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 import Login from '@/pages/Login'
 import Dashboard from '@/pages/Dashboard'
@@ -54,11 +55,13 @@ function PrivateRoute() {
   }
 
   return (
-    <DatabaseProvider>
-      <PageWrapper>
-        <Outlet />
-      </PageWrapper>
-    </DatabaseProvider>
+    <SelectedMonthProvider>
+      <DatabaseProvider>
+        <PageWrapper>
+          <Outlet />
+        </PageWrapper>
+      </DatabaseProvider>
+    </SelectedMonthProvider>
   )
 }
 

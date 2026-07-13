@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { startOfMonth, endOfMonth, parseISO, format } from 'date-fns'
 import { useSupabaseClient } from '@/hooks/useDatabase'
+import { useSelectedMonth } from '@/hooks/useSelectedMonth'
 
 export interface TransactionSearchResult {
   id: string
@@ -26,6 +28,7 @@ interface UseTransactionSearchResult {
 
 export function useTransactionSearch(): UseTransactionSearchResult {
   const supabase = useSupabaseClient()
+  const { month } = useSelectedMonth()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<TransactionSearchResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -46,9 +49,14 @@ export function useTransactionSearch(): UseTransactionSearchResult {
     setError(null)
     const currentRequest = ++requestId.current
 
+    const monthStart = startOfMonth(parseISO(`${month}-01`))
+    const monthEnd = endOfMonth(parseISO(`${month}-01`))
+
     const timer = setTimeout(async () => {
       const { data, error: rpcError } = await supabase.rpc('search_transactions', {
         p_query: trimmed,
+        p_start_date: format(monthStart, 'yyyy-MM-dd'),
+        p_end_date: format(monthEnd, 'yyyy-MM-dd'),
         p_limit: 8,
       })
 
@@ -66,7 +74,7 @@ export function useTransactionSearch(): UseTransactionSearchResult {
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [query, supabase])
+  }, [query, month, supabase])
 
   return { query, setQuery, results, loading, error }
 }

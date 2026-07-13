@@ -4,6 +4,17 @@ import { MemoryRouter } from 'react-router-dom'
 import { vi, describe, it, beforeEach } from 'vitest'
 import Dashboard from './Dashboard'
 import { mockSupabaseResult } from '@/test/mocks/supabase'
+import { SelectedMonthProvider } from '@/hooks/useSelectedMonth'
+
+function renderDashboard() {
+  return render(
+    <MemoryRouter>
+      <SelectedMonthProvider>
+        <Dashboard />
+      </SelectedMonthProvider>
+    </MemoryRouter>
+  )
+}
 
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {
@@ -27,7 +38,7 @@ beforeEach(() => {
 describe('Dashboard', () => {
   it('exibe "Carregando..." no estado inicial', () => {
     mockSupabaseResult({ data: [] })
-    render(<MemoryRouter><Dashboard /></MemoryRouter>)
+    renderDashboard()
     expect(screen.getByText('Carregando...')).toBeInTheDocument()
   })
 
@@ -36,7 +47,7 @@ describe('Dashboard', () => {
       { id: '1', amount: 3000, type: 'income', date: '2025-06-01', paid: true },
       { id: '2', amount: 1500, type: 'expense', date: '2025-06-02', paid: true },
     ] })
-    render(<MemoryRouter><Dashboard /></MemoryRouter>)
+    renderDashboard()
     await waitFor(() => {
       expect(screen.getByText('Receitas do mês')).toBeInTheDocument()
       expect(screen.getByText('Despesas do mês')).toBeInTheDocument()
@@ -54,7 +65,7 @@ describe('Dashboard', () => {
     mockSupabaseResult({ data: [
       { id: '1', amount: 1500, type: 'expense', date: '2025-06-01', paid: true },
     ] })
-    render(<MemoryRouter><Dashboard /></MemoryRouter>)
+    renderDashboard()
     await waitFor(() => {
       expect(screen.getByText('Despesas do mês')).toBeInTheDocument()
     })
@@ -62,7 +73,7 @@ describe('Dashboard', () => {
 
   it('click no card Despesas navega para /transactions com status=paid', async () => {
     mockSupabaseResult({ data: [] })
-    render(<MemoryRouter><Dashboard /></MemoryRouter>)
+    renderDashboard()
     await waitFor(() => expect(screen.queryByText('Carregando...')).not.toBeInTheDocument())
     const card = screen.getByText('Despesas do mês').closest('[class*="cursor-pointer"]') as HTMLElement
     await userEvent.click(card)
@@ -71,7 +82,7 @@ describe('Dashboard', () => {
 
   it('click no card Receitas navega para /transactions com status=paid', async () => {
     mockSupabaseResult({ data: [] })
-    render(<MemoryRouter><Dashboard /></MemoryRouter>)
+    renderDashboard()
     await waitFor(() => expect(screen.queryByText('Carregando...')).not.toBeInTheDocument())
     const card = screen.getByText('Receitas do mês').closest('[class*="cursor-pointer"]') as HTMLElement
     await userEvent.click(card)

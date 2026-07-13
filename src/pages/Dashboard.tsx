@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { format, subMonths, addMonths, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useNavigate } from 'react-router-dom'
@@ -12,6 +11,7 @@ import { TopCategoriesDonutChart } from '@/components/charts/TopCategoriesDonutC
 import { TrendingUp, TrendingDown, Wallet, Clock, AlertTriangle, ChevronRight, ChevronLeft, ArrowLeftRight } from 'lucide-react'
 import { useDashboard } from '@/hooks/useDashboard'
 import { useProfile } from '@/hooks/useProfile'
+import { useSelectedMonth } from '@/hooks/useSelectedMonth'
 import { WelcomeBanner } from '@/components/dashboard/welcome-banner'
 
 interface MonthSummary {
@@ -40,7 +40,7 @@ function Delta({ curr, prev }: { curr: number; prev: number }) {
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'))
+  const { month: selectedMonth, setMonth: setSelectedMonth } = useSelectedMonth()
 
   function navigatePeriod(delta: number) {
     setSelectedMonth(format(addMonths(parseISO(`${selectedMonth}-01`), delta), 'yyyy-MM'))
