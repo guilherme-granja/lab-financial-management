@@ -7,6 +7,7 @@ import { PageWrapper } from '@/components/layout/PageWrapper'
 import Login from '@/pages/Login'
 import Dashboard from '@/pages/Dashboard'
 import Transactions from '@/pages/Transactions'
+import TransactionDetail from '@/pages/TransactionDetail'
 import Duplicates from '@/pages/Duplicates'
 import Categories from '@/pages/Categories'
 import Accounts from '@/pages/Accounts'
@@ -120,6 +121,7 @@ export const router = createBrowserRouter(
       children: [
         { path: '/', element: <Dashboard /> },
         { path: '/transactions', element: <Transactions /> },
+        { path: '/transactions/:id', element: <TransactionDetail /> },
         { path: '/duplicates', element: <Duplicates /> },
         { path: '/categories', element: <Categories /> },
         { path: '/accounts', element: <Accounts /> },

@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CreditCard, X, AlertTriangle, Columns, Check, ChevronDown } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CreditCard, X, AlertTriangle, Columns, Check, ChevronDown, Eye } from 'lucide-react'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import type { SearchableSelectOption } from '@/components/ui/searchable-select'
 import * as PopoverPrimitive from '@radix-ui/react-popover'
@@ -180,7 +180,7 @@ interface ActiveChip {
 export default function Transactions() {
   const supabase = useSupabaseClient()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [filters, setFilters] = useState<TransactionFilters>({
     period: CURRENT_MONTH,
@@ -319,6 +319,18 @@ export default function Transactions() {
     setDuplicateWarning(null)
     setDialogOpen(true)
   }
+
+  useEffect(() => {
+    const editId = searchParams.get('edit')
+    if (!editId || loading) return
+    const tx = transactions.find((t) => t.id === editId)
+    if (tx) openEdit(tx)
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.delete('edit')
+      return next
+    }, { replace: true })
+  }, [searchParams, transactions, loading]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function openPay(tx: Transaction) {
     setPayingTx(tx)
@@ -1113,7 +1125,8 @@ export default function Transactions() {
                       <TableRow
                         key={tx.id}
                         data-tx-row={tx.id}
-                        className="border-[#2d3148] hover:bg-[#2d3148]/30"
+                        onClick={() => navigate(`/transactions/${tx.id}`)}
+                        className="border-[#2d3148] hover:bg-[#2d3148]/30 cursor-pointer"
                       >
                         {columnVisibility.date        && <TableCell className="text-slate-300">{formatDate(tx.date)}</TableCell>}
                         {columnVisibility.description && (
@@ -1202,7 +1215,7 @@ export default function Transactions() {
                                 size="icon"
                                 className="h-7 w-7 text-yellow-400 hover:text-yellow-300"
                                 title="Efetivar"
-                                onClick={() => openPay(tx)}
+                                onClick={(e) => { e.stopPropagation(); openPay(tx) }}
                               >
                                 <CreditCard size={14} />
                               </Button>
@@ -1210,8 +1223,17 @@ export default function Transactions() {
                             <Button
                               variant="ghost"
                               size="icon"
+                              className="h-7 w-7 text-slate-400 hover:text-indigo-400"
+                              title="Ver detalhes"
+                              onClick={(e) => { e.stopPropagation(); navigate(`/transactions/${tx.id}`) }}
+                            >
+                              <Eye size={14} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               className="h-7 w-7 text-slate-400 hover:text-slate-200"
-                              onClick={() => openEdit(tx)}
+                              onClick={(e) => { e.stopPropagation(); openEdit(tx) }}
                             >
                               <Pencil size={14} />
                             </Button>
@@ -1219,7 +1241,8 @@ export default function Transactions() {
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 text-slate-400 hover:text-red-400"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation()
                                 if (tx.recurrence_group_id) {
                                   setDeleteTx(tx)
                                   setDeleteScope('only')

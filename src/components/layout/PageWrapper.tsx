@@ -20,7 +20,9 @@ interface PageWrapperProps {
 
 export function PageWrapper({ children }: PageWrapperProps) {
   const { pathname } = useLocation()
-  const title = PAGE_TITLES[pathname] ?? 'Dashboard'
+  const title = pathname.startsWith('/transactions/')
+    ? 'Detalhes da Transação'
+    : PAGE_TITLES[pathname] ?? 'Dashboard'
 
   return (
     <div className="min-h-screen bg-[#0f1117]">
