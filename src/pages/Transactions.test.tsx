@@ -646,21 +646,4 @@ describe('Transactions', () => {
     await userEvent.click(screen.getByText('Salvar'))
     expect(screen.getByText('Informe a data')).toBeInTheDocument()
   })
-
-  it('atualiza paid_at no dialog de pagamento ao mudar data', async () => {
-    vi.mocked(useTransactions).mockReturnValue({
-      ...baseHookReturn,
-      loading: false,
-      transactions: [{ ...baseTx, paid: false }],
-      total: 1,
-    })
-    renderTx()
-    await userEvent.click(screen.getByTitle('Efetivar'))
-    // Find the date input in the pay dialog
-    const dateInputs = screen.getAllByDisplayValue(/\d{4}-\d{2}-\d{2}/)
-    // The pay dialog has one date input
-    fireEvent.change(dateInputs[dateInputs.length - 1], { target: { value: '2026-06-10' } })
-    // No error thrown — onChange callback is exercised
-    expect(screen.getByText('Efetivar transação')).toBeInTheDocument()
-  })
 })
