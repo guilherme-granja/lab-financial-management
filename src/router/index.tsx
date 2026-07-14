@@ -127,7 +127,7 @@ export const router = createBrowserRouter(
         { path: '/accounts', element: <Accounts /> },
         { path: '/budgets', element: <Budgets /> },
         { path: '/tags', element: <Tags /> },
-        { path: '/perfil', element: <Profile /> },
+        { path: '/profile', element: <Profile /> },
       ],
     },
     {
@@ -137,7 +137,7 @@ export const router = createBrowserRouter(
         { path: '/admin', element: <AdminDashboard /> },
         { path: '/admin/users', element: <AdminUsers /> },
         { path: '/admin/activity', element: <AdminActivity /> },
-        { path: '/perfil', element: <Profile /> },
+        { path: '/profile', element: <Profile /> },
       ],
     },
   ],

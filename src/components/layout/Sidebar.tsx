@@ -143,7 +143,7 @@ function SidebarFooter({ onSignOut, onClose }: { onSignOut: () => void; onClose?
       <Separator className="bg-[#2d3148]" />
       <div className="p-4 space-y-1">
         <NavLink
-          to="/perfil"
+          to="/profile"
           onClick={onClose}
           className={({ isActive }) =>
             cn(
