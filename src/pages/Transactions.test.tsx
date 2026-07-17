@@ -367,6 +367,60 @@ describe('Transactions', () => {
     expect(createTransaction).toHaveBeenCalled()
   })
 
+  it('exibe botão "Salvar e continuar" apenas no modo de criação', async () => {
+    vi.mocked(useTransactions).mockReturnValue({
+      ...baseHookReturn,
+      loading: false,
+      transactions: [baseTx],
+      total: 1,
+    })
+    renderTx()
+    await userEvent.click(screen.getByText('Nova transação'))
+    expect(screen.getByText('Salvar e continuar')).toBeInTheDocument()
+    await userEvent.click(screen.getByText('Cancelar'))
+
+    // Pencil button (edit) is the second-to-last icon-only button — baseTx.paid=true so no Pagar button
+    const allButtons = screen.getAllByRole('button')
+    const iconButtons = allButtons.filter((btn) => !btn.textContent?.trim())
+    await userEvent.click(iconButtons[iconButtons.length - 2])
+    expect(screen.getByText('Editar transação')).toBeInTheDocument()
+    expect(screen.queryByText('Salvar e continuar')).not.toBeInTheDocument()
+  })
+
+  it('salva e continua: mantém dialog aberto e limpa o form', async () => {
+    const createTransaction = vi.fn().mockResolvedValue(undefined)
+    vi.mocked(useTransactions).mockReturnValue({
+      ...baseHookReturn,
+      loading: false,
+      transactions: [],
+      createTransaction,
+    })
+    vi.mocked(useAccounts).mockReturnValue({
+      accounts: [{ id: 'acc1', name: 'Nubank', icon: '💜', type: 'checking', color: '#8B5CF6', include_in_dashboard: true, initial_balance: 0, created_at: '' }],
+      loading: false, error: null, refresh: vi.fn(), createAccount: vi.fn(), updateAccount: vi.fn(),
+      deleteAccount: vi.fn(), getAccountBalance: vi.fn(), getAccountTransactionCount: vi.fn(),
+    })
+    vi.mocked(useCategories).mockReturnValue({
+      categories: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', created_at: '' }],
+      categoryTree: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', created_at: '', subcategories: [] }],
+      loading: false, error: null, refresh: vi.fn(), createCategory: vi.fn(), updateCategory: vi.fn(), deleteCategory: vi.fn(),
+    })
+    renderTx()
+    await userEvent.click(screen.getByText('Nova transação'))
+    const amountInput = document.querySelector<HTMLInputElement>('[inputmode="numeric"]')!
+    await userEvent.clear(amountInput)
+    await userEvent.type(amountInput, '500')
+    const comboboxes = screen.getAllByRole('combobox')
+    await userEvent.click(comboboxes[1])
+    await userEvent.click(screen.getAllByRole('option')[0])
+    const comboboxes2 = screen.getAllByRole('combobox')
+    await userEvent.click(comboboxes2[2])
+    await userEvent.click(screen.getAllByRole('option')[0])
+    await userEvent.click(screen.getByText('Salvar e continuar'))
+    expect(createTransaction).toHaveBeenCalled()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
   it('exibe erro de validação quando valor é inválido', async () => {
     vi.mocked(useTransactions).mockReturnValue({
       ...baseHookReturn,

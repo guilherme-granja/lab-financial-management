@@ -282,7 +282,9 @@ export default function Transactions() {
   const [payForm, setPayForm] = useState<PayFormState>({ paid_amount: '' })
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
+  const [savingAndContinuing, setSavingAndContinuing] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [duplicateWarning, setDuplicateWarning] = useState<Transaction | null>(null)
 
   type RecurrenceScope = 'one' | 'future' | 'all'
@@ -296,6 +298,7 @@ export default function Transactions() {
     setForm(EMPTY_FORM)
     setEditingId(null)
     setFormError(null)
+    setSuccessMessage(null)
     setDuplicateWarning(null)
     setDialogOpen(true)
   }
@@ -316,6 +319,7 @@ export default function Transactions() {
     })
     setEditingId(tx.id)
     setFormError(null)
+    setSuccessMessage(null)
     setDuplicateWarning(null)
     setDialogOpen(true)
   }
@@ -339,7 +343,7 @@ export default function Transactions() {
     })
   }
 
-  async function handleSave() {
+  async function handleSave(keepOpen: boolean = false) {
     const amount = parseFloat(form.amount)
     if (!form.amount || isNaN(amount) || amount <= 0) {
       setFormError('Informe um valor válido')
@@ -391,8 +395,13 @@ export default function Transactions() {
     }
 
     setDuplicateWarning(null)
-    setSaving(true)
+    if (keepOpen) {
+      setSavingAndContinuing(true)
+    } else {
+      setSaving(true)
+    }
     setFormError(null)
+    setSuccessMessage(null)
 
     const paid_amount_val = form.paid ? amount : null
 
@@ -428,15 +437,25 @@ export default function Transactions() {
         }
 
         await updateTransaction(editingId, payload)
+        setDialogOpen(false)
       } else {
         await createTransaction(payload)
+        if (keepOpen) {
+          setForm(EMPTY_FORM)
+          setSuccessMessage('Transação salva. Pronto para a próxima.')
+        } else {
+          setDialogOpen(false)
+        }
       }
-      setDialogOpen(false)
       if (isIdSearchMode) await loadIdSearchResult()
     } catch (e) {
       setFormError((e as Error).message)
     } finally {
-      setSaving(false)
+      if (keepOpen) {
+        setSavingAndContinuing(false)
+      } else {
+        setSaving(false)
+      }
     }
   }
 
@@ -1301,6 +1320,7 @@ export default function Transactions() {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
+            {successMessage && <p className="text-green-400 text-sm">{successMessage}</p>}
             {formError && <p className="text-red-400 text-sm">{formError}</p>}
 
             {duplicateWarning && (
@@ -1540,7 +1560,21 @@ export default function Transactions() {
             <Button variant="ghost" onClick={() => setDialogOpen(false)} className="text-slate-400">
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+            {!editingId && (
+              <Button
+                variant="outline"
+                onClick={() => handleSave(true)}
+                disabled={saving || savingAndContinuing}
+                className="border-indigo-600 text-indigo-400 hover:bg-indigo-950 hover:text-indigo-300"
+              >
+                {savingAndContinuing ? 'Salvando...' : 'Salvar e continuar'}
+              </Button>
+            )}
+            <Button
+              onClick={() => handleSave(false)}
+              disabled={saving || savingAndContinuing}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
               {saving ? 'Salvando...' : 'Salvar'}
             </Button>
           </DialogFooter>
