@@ -36,6 +36,7 @@ export function TransactionCard({
 
   return (
     <div
+      data-tx-row={tx.id}
       className="flex items-center gap-3 bg-[#1a1d27] border border-[#2d3148] rounded-xl p-3 cursor-pointer"
       onClick={() => onOpenDetail(tx)}
     >

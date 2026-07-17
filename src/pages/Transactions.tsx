@@ -18,7 +18,9 @@ import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CreditCard, X, AlertTriangle, Columns, Check, ChevronDown, Eye } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CreditCard, X, AlertTriangle, Columns, Check, ChevronDown, Eye, Search, Filter } from 'lucide-react'
+import { TransactionSearchInput } from '@/components/layout/transaction-search-input'
+import type { TransactionSearchResult } from '@/hooks/useTransactionSearch'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import type { SearchableSelectOption } from '@/components/ui/searchable-select'
 import * as PopoverPrimitive from '@radix-ui/react-popover'
@@ -30,6 +32,13 @@ import { useSupabaseClient } from '@/hooks/useDatabase'
 import { TransactionCard } from '@/components/transactions/TransactionCard'
 
 const CURRENT_MONTH = format(new Date(), 'yyyy-MM')
+
+const TYPE_OPTIONS: { value: TransactionType | 'all'; label: string }[] = [
+  { value: 'all', label: 'Todos' },
+  { value: 'income', label: 'Receita' },
+  { value: 'expense', label: 'Despesa' },
+  { value: 'transfer', label: 'Transferência' },
+]
 
 // Inline multi-select for tags using Popover + Command pattern
 interface TagMultiSelectProps {
@@ -263,6 +272,13 @@ export default function Transactions() {
   const [columnVisibility, setColumnVisibility] = useState<Record<ColumnKey, boolean>>(loadColumnVisibility)
   const [columnPickerOpen, setColumnPickerOpen] = useState(false)
   const [filterPanelOpen, setFilterPanelOpen] = useState(false)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const [typeMenuOpen, setTypeMenuOpen] = useState(false)
+
+  function handleSearchSelect(result: TransactionSearchResult) {
+    const month = result.date.slice(0, 7)
+    navigate(`/transactions?transactionId=${result.id}&month=${month}`)
+  }
 
   function toggleColumn(key: ColumnKey) {
     const FIXED: ColumnKey[] = ['date', 'account', 'category', 'type', 'amount']
@@ -686,8 +702,8 @@ export default function Transactions() {
     <div className="space-y-4">
       {/* Filters */}
       <div>
-        {/* Level 1 — always visible */}
-        <div className="flex items-center gap-2 flex-wrap">
+        {/* Level 1 — always visible, desktop/tablet */}
+        <div className="hidden min-[900px]:flex items-center gap-2 flex-wrap">
           {/* Period selector */}
           <div className="flex items-center gap-0.5 bg-[#1a1d27] border border-[#2d3148] rounded-lg h-9 px-1">
             <Button
@@ -824,6 +840,111 @@ export default function Transactions() {
             <Plus size={16} />
             Nova transação
           </Button>
+        </div>
+
+        {/* Compact toolbar — mobile/tablet abaixo de 900px */}
+        <div className="min-[900px]:hidden space-y-2">
+          {!mobileSearchOpen ? (
+            <div className="flex items-center justify-end">
+              <button
+                disabled={isIdSearchMode}
+                className="w-9 h-9 rounded-lg bg-[#1a1d27] border border-[#2d3148] text-slate-400 flex items-center justify-center disabled:opacity-40 disabled:pointer-events-none"
+                onClick={() => setMobileSearchOpen(true)}
+              >
+                <Search size={16} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <TransactionSearchInput onSelectResult={handleSearchSelect} />
+              </div>
+              <button className="text-slate-400 flex-shrink-0" onClick={() => setMobileSearchOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-0.5 bg-[#1a1d27] border border-[#2d3148] rounded-lg h-9 px-1 flex-shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={isIdSearchMode}
+                className="h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-[#2d3148] disabled:opacity-40 disabled:pointer-events-none"
+                onClick={() => navigatePeriod(-1)}
+              >
+                <ChevronLeft size={14} />
+              </Button>
+              <span className="text-slate-200 text-sm w-24 text-center capitalize select-none">
+                {format(parseISO(`${filters.period}-01`), 'MMM yyyy', { locale: ptBR })}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={isIdSearchMode}
+                className="h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-[#2d3148] disabled:opacity-40 disabled:pointer-events-none"
+                onClick={() => navigatePeriod(1)}
+              >
+                <ChevronRight size={14} />
+              </Button>
+            </div>
+
+            <div className="relative flex-1">
+              <button
+                disabled={isIdSearchMode}
+                className="w-full flex items-center justify-between gap-2 bg-[#1a1d27] border border-[#2d3148] rounded-lg px-3 py-2 text-sm text-white font-medium disabled:opacity-40 disabled:pointer-events-none"
+                onClick={() => setTypeMenuOpen((v) => !v)}
+              >
+                {TYPE_OPTIONS.find((o) => o.value === filters.type)?.label ?? 'Todos'}
+                <ChevronDown size={14} />
+              </button>
+              {typeMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setTypeMenuOpen(false)} />
+                  <div className="absolute top-full left-0 right-0 mt-1.5 z-20 bg-[#1a1d27] border border-[#2d3148] rounded-lg overflow-hidden shadow-xl">
+                    {TYPE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        className={`block w-full text-left px-3 py-2.5 text-sm ${
+                          filters.type === opt.value
+                            ? 'bg-indigo-600/20 text-white font-medium'
+                            : 'text-slate-300 hover:bg-[#242838]'
+                        }`}
+                        onClick={() => {
+                          setFilters((f) => ({ ...f, type: opt.value as TransactionType | 'all' }))
+                          setTypeMenuOpen(false)
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* FABs — Filtros + Nova transação, mobile/tablet abaixo de 900px */}
+        <div className="min-[900px]:hidden fixed right-4 bottom-5 z-30 flex flex-col items-end gap-2.5">
+          <button
+            disabled={isIdSearchMode}
+            className="w-10 h-10 rounded-full bg-[#1a1d27] border border-[#2d3148] text-slate-300 flex items-center justify-center shadow-lg relative disabled:opacity-40 disabled:pointer-events-none"
+            onClick={() => setFilterPanelOpen((v) => !v)}
+          >
+            <Filter size={15} />
+            {secondaryFilterCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-indigo-500 border-2 border-[#0f1117]" />
+            )}
+          </button>
+          <button
+            className="w-13 h-13 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-xl"
+            style={{ width: 52, height: 52 }}
+            onClick={openCreate}
+          >
+            <Plus size={22} />
+          </button>
         </div>
 
         {/* Level 2 — secondary filter panel */}

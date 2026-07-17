@@ -1,8 +1,9 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import type { Transaction } from '@/types'
+import { SelectedMonthProvider } from '@/hooks/useSelectedMonth'
 
 // Mock the three hooks — must come before importing from them
 vi.mock('@/hooks/useTransactions', () => ({
@@ -118,7 +119,13 @@ beforeEach(() => {
 })
 
 function renderTx() {
-  return render(<MemoryRouter><Transactions /></MemoryRouter>)
+  return render(
+    <MemoryRouter>
+      <SelectedMonthProvider>
+        <Transactions />
+      </SelectedMonthProvider>
+    </MemoryRouter>
+  )
 }
 
 describe('Transactions', () => {
@@ -252,14 +259,10 @@ describe('Transactions', () => {
     })
     renderTx()
     // baseTx has paid: true, so there's no "Pagar" button — row has Pencil then Trash2
-    // Find all icon-only buttons (no text content) — exclude "Nova transação"
-    const allButtons = screen.getAllByRole('button')
-    // The Pencil button is the second-to-last button in the table row area
-    // Filter to buttons without visible text
-    const iconButtons = allButtons.filter(btn => !btn.textContent?.trim())
-    // iconButtons: ChevronLeft (period), ChevronRight (period), Pencil, Trash2
-    // Pencil is at index 2 (0-based)
-    await userEvent.click(iconButtons[2])
+    const rowEl = document.querySelector(`[data-tx-row="${baseTx.id}"]`) as HTMLElement
+    const iconButtons = within(rowEl).getAllByRole('button').filter(btn => !btn.textContent?.trim())
+    // iconButtons: Pencil, Trash2 (Pay button absent since paid: true)
+    await userEvent.click(iconButtons[0])
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     expect(screen.getByText('Editar transação')).toBeInTheDocument()
   })
