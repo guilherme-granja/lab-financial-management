@@ -1101,7 +1101,7 @@ export default function Transactions() {
       </div>
 
       {/* Table */}
-      <div className="hidden md:block">
+      <div className="hidden min-[900px]:block">
         {(() => {
           const visibleCount = Object.values(columnVisibility).filter(Boolean).length + 1
           return (
@@ -1111,11 +1111,11 @@ export default function Transactions() {
                   <TableRow className="border-[#2d3148] hover:bg-transparent">
                     {columnVisibility.date        && <TableHead className="text-slate-400">Data</TableHead>}
                     {columnVisibility.description && <TableHead className="text-slate-400">Descrição</TableHead>}
-                    {columnVisibility.account     && <TableHead className="text-slate-400">Conta</TableHead>}
-                    {columnVisibility.category    && <TableHead className="text-slate-400">Categoria</TableHead>}
+                    {columnVisibility.account     && <TableHead className="text-slate-400 hidden lg:table-cell">Conta</TableHead>}
+                    {columnVisibility.category    && <TableHead className="text-slate-400 hidden lg:table-cell">Categoria</TableHead>}
                     {columnVisibility.tag         && <TableHead className="text-slate-400">Tag</TableHead>}
-                    {columnVisibility.type        && <TableHead className="text-slate-400">Tipo</TableHead>}
-                    {columnVisibility.status      && <TableHead className="text-slate-400">Status</TableHead>}
+                    {columnVisibility.type        && <TableHead className="text-slate-400 hidden lg:table-cell">Tipo</TableHead>}
+                    {columnVisibility.status      && <TableHead className="text-slate-400 hidden lg:table-cell">Status</TableHead>}
                     {columnVisibility.amount      && <TableHead className="text-slate-400 text-right">Valor</TableHead>}
                     <TableHead className="text-slate-400 w-28" />
                   </TableRow>
@@ -1159,7 +1159,7 @@ export default function Transactions() {
                           </TableCell>
                         )}
                         {columnVisibility.account && (
-                          <TableCell className="text-slate-300 text-sm">
+                          <TableCell className="text-slate-300 text-sm hidden lg:table-cell">
                             {tx.accounts ? (
                               <span className="flex items-center gap-1">
                                 <span>{tx.accounts.icon}</span>
@@ -1175,7 +1175,7 @@ export default function Transactions() {
                           </TableCell>
                         )}
                         {columnVisibility.category && (
-                          <TableCell className="text-slate-300">
+                          <TableCell className="text-slate-300 hidden lg:table-cell">
                             {tx.type === 'transfer'
                               ? '—'
                               : tx.categories
@@ -1202,14 +1202,14 @@ export default function Transactions() {
                           </TableCell>
                         )}
                         {columnVisibility.type && (
-                          <TableCell>
+                          <TableCell className="hidden lg:table-cell">
                             <Badge variant="outline" className={typeColor(tx.type)}>
                               {typeLabel(tx.type)}
                             </Badge>
                           </TableCell>
                         )}
                         {columnVisibility.status && (
-                          <TableCell>
+                          <TableCell className="hidden lg:table-cell">
                             {(tx.payment || tx.paid) ? (
                               <Badge variant="outline" className="bg-green-950 text-green-400 border-green-800 text-xs">
                                 Pago
