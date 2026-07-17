@@ -27,6 +27,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { MoneyInput } from '@/components/ui/money-input'
 import { checkDuplicate } from '@/hooks/useDuplicateCheck'
 import { useSupabaseClient } from '@/hooks/useDatabase'
+import { TransactionCard } from '@/components/transactions/TransactionCard'
 
 const CURRENT_MONTH = format(new Date(), 'yyyy-MM')
 
@@ -569,6 +570,15 @@ export default function Transactions() {
       : null
   }
 
+  function requestDelete(tx: Transaction) {
+    if (tx.recurrence_group_id) {
+      setDeleteTx(tx)
+      setDeleteScope('only')
+    } else {
+      setDeleteId(tx.id)
+    }
+  }
+
   function navigatePeriod(delta: number) {
     const current = parseISO(`${filters.period}-01`)
     const next = addMonths(current, delta)
@@ -994,13 +1004,21 @@ export default function Transactions() {
         <div className="flex items-center justify-between px-4 py-2.5
                         bg-[#1a1d27] border border-[#2d3148] rounded-xl">
           <span className="text-slate-400 text-sm">
-            Total de{' '}
-            <span className="font-medium text-slate-200">
-              {filters.type === 'income' ? 'Receitas' : filters.type === 'expense' ? 'Despesas' : 'Transferências'}
+            <span className="hidden min-[900px]:inline">
+              Total de{' '}
+              <span className="font-medium text-slate-200">
+                {filters.type === 'income' ? 'Receitas' : filters.type === 'expense' ? 'Despesas' : 'Transferências'}
+              </span>
+              {/* se houver outros filtros ativos além de tipo, acrescentar contexto */}
+              {activeChips.length > 1 && ' (filtros aplicados)'}
+              {activeChips.length === 1 && ' no período'}
             </span>
-            {/* se houver outros filtros ativos além de tipo, acrescentar contexto */}
-            {activeChips.length > 1 && ' (filtros aplicados)'}
-            {activeChips.length === 1 && ' no período'}
+            <span className="min-[900px]:hidden">
+              Total{' '}
+              <span className="font-medium text-slate-200">
+                ({(filters.type === 'income' ? 'Receitas' : filters.type === 'expense' ? 'Despesas' : 'Transferências').toLowerCase()})
+              </span>
+            </span>
           </span>
           <span
             className={`text-lg font-bold tabular-nums ${
@@ -1018,7 +1036,7 @@ export default function Transactions() {
       )}
 
       {/* Mobile cards */}
-      <div className="flex flex-col gap-2 md:hidden">
+      <div className="min-[900px]:hidden flex flex-col gap-2.5 pb-24">
         {loading && (
           <div className="text-center text-slate-500 py-8 text-sm">Carregando...</div>
         )}
@@ -1032,70 +1050,20 @@ export default function Transactions() {
             ? (accounts.find((a) => a.id === tx.to_account_id) ?? null)
             : null
           return (
-            <div
+            <TransactionCard
               key={tx.id}
-              data-tx-row={tx.id}
-              className="bg-[#1a1d27] border border-[#2d3148] rounded-xl px-4 py-3 flex items-center gap-3"
-            >
-              {/* Ícone da categoria */}
-              <div className="text-xl w-8 text-center shrink-0">
-                {tx.type === 'transfer' ? '↔' : tx.categories?.icon ?? '•'}
-              </div>
-
-              {/* Info principal */}
-              <div className="flex-1 min-w-0">
-                <div className="text-slate-200 text-sm font-medium truncate">
-                  {tx.type === 'transfer'
-                    ? `${tx.accounts?.name ?? '—'} → ${toAccount?.name ?? '—'}`
-                    : tx.categories?.name ?? tx.description ?? '—'}
-                </div>
-                <div className="text-slate-500 text-xs mt-0.5 flex items-center gap-1.5">
-                  <span>{formatDate(tx.date)}</span>
-                  {tx.accounts && (
-                    <>
-                      <span>·</span>
-                      <span>{tx.accounts.icon} {tx.accounts.name}</span>
-                    </>
-                  )}
-                  {!(tx.payment || tx.paid) && tx.type !== 'transfer' && (
-                    <>
-                      <span>·</span>
-                      <span className="text-yellow-500">Pendente</span>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Valor */}
-              <div className={`text-sm font-semibold tabular-nums shrink-0 ${amountColor(tx.type)}`}>
-                {amountPrefix(tx.type)}{formatCurrency(tx.amount)}
-              </div>
-
-              {/* Ações */}
-              <div className="flex gap-0.5 shrink-0">
-                {!(tx.payment || tx.paid) && tx.type !== 'transfer' && (
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-yellow-400 hover:text-yellow-300"
-                    onClick={() => openPay(tx)}>
-                    <CreditCard size={14} />
-                  </Button>
-                )}
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-slate-200"
-                  onClick={() => openEdit(tx)}>
-                  <Pencil size={14} />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-400"
-                  onClick={() => {
-                    if (tx.recurrence_group_id) {
-                      setDeleteTx(tx)
-                      setDeleteScope('only')
-                    } else {
-                      setDeleteId(tx.id)
-                    }
-                  }}>
-                  <Trash2 size={14} />
-                </Button>
-              </div>
-            </div>
+              tx={tx}
+              toAccountName={toAccount?.name}
+              typeColor={typeColor}
+              typeLabel={typeLabel}
+              amountColor={amountColor}
+              amountPrefix={amountPrefix}
+              recurrenceBadge={recurrenceBadge}
+              onOpenDetail={(t) => navigate(`/transactions/${t.id}`)}
+              onPay={openPay}
+              onEdit={openEdit}
+              onDelete={requestDelete}
+            />
           )
         })}
       </div>
