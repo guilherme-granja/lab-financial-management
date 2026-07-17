@@ -1,4 +1,4 @@
-import { Transaction, TransactionType } from '@/types'
+import type { Transaction, TransactionType } from '@/types'
 import { formatDate, formatCurrency } from '@/lib/formatters'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
