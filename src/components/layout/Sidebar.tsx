@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
@@ -7,7 +6,6 @@ import {
   Tag,
   Tags,
   Wallet,
-  Menu,
   X,
   LogOut,
   Users,
@@ -170,27 +168,21 @@ function SidebarFooter({ onSignOut, onClose }: { onSignOut: () => void; onClose?
   )
 }
 
-export function Sidebar() {
-  const [drawerOpen, setDrawerOpen] = useState(false)
+interface SidebarDrawerProps {
+  open: boolean
+  onClose: () => void
+}
+
+export function Sidebar({ open, onClose }: SidebarDrawerProps) {
   const { signOut } = useAuth()
 
   return (
     <>
-      {/* Mobile hamburger */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-4 left-4 z-50 md:hidden text-slate-400"
-        onClick={() => setDrawerOpen(true)}
-      >
-        <Menu size={20} />
-      </Button>
-
       {/* Mobile overlay */}
-      {drawerOpen && (
+      {open && (
         <div
           className="fixed inset-0 z-40 bg-black/60 md:hidden"
-          onClick={() => setDrawerOpen(false)}
+          onClick={onClose}
         />
       )}
 
@@ -198,7 +190,7 @@ export function Sidebar() {
       <aside
         className={cn(
           'fixed top-0 left-0 h-full w-64 z-50 bg-[#1a1d27] border-r border-[#2d3148] transition-transform duration-200 md:hidden flex flex-col',
-          drawerOpen ? 'translate-x-0' : '-translate-x-full'
+          open ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         <div className="flex items-center justify-between border-b border-[#2d3148]">
@@ -209,13 +201,13 @@ export function Sidebar() {
             variant="ghost"
             size="icon"
             className="text-slate-400 mr-2"
-            onClick={() => setDrawerOpen(false)}
+            onClick={onClose}
           >
             <X size={18} />
           </Button>
         </div>
-        <NavItems onClose={() => setDrawerOpen(false)} />
-        <SidebarFooter onSignOut={() => { signOut(); setDrawerOpen(false) }} onClose={() => setDrawerOpen(false)} />
+        <NavItems onClose={onClose} />
+        <SidebarFooter onSignOut={() => { signOut(); onClose() }} onClose={onClose} />
       </aside>
 
       {/* Desktop sidebar */}
