@@ -14,6 +14,7 @@ const DB: UserDatabase = {
   paused_at: null,
   health: 'healthy',
   last_checked_at: null,
+  stale: false,
 }
 
 const STATS_ROW = { database_size_bytes: 1000, storage_size_bytes: 2000 }

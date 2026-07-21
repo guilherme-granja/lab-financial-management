@@ -22,6 +22,7 @@ function mockFromOrder(data: unknown, error: unknown = null) {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  localStorage.clear()
 })
 
 describe('useDatabases', () => {
@@ -42,6 +43,7 @@ describe('useDatabases', () => {
         paused_at: null,
         health: 'unknown',
         last_checked_at: null,
+        stale: false,
       },
     ])
   })
@@ -133,5 +135,74 @@ describe('useDatabases', () => {
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     await expect(result.current.deactivate('u1')).rejects.toThrow('falha na management api')
+  })
+
+  it('ping bem-sucedido persiste o resultado em localStorage', async () => {
+    mockFromOrder([ROW])
+    vi.spyOn(global, 'fetch').mockResolvedValue({ ok: true } as Response)
+
+    const { result } = renderHook(() => useDatabases())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    await act(async () => {
+      await result.current.ping('u1')
+    })
+
+    const cached = JSON.parse(localStorage.getItem('lab-financas:ping-health:u1')!)
+    expect(cached.health).toBe('healthy')
+    expect(typeof cached.last_checked_at).toBe('string')
+  })
+
+  it('hidrata health/last_checked_at de um valor já presente em localStorage', async () => {
+    localStorage.setItem(
+      'lab-financas:ping-health:u1',
+      JSON.stringify({ health: 'healthy', last_checked_at: '2026-07-21T10:00:00.000Z' })
+    )
+    mockFromOrder([ROW])
+
+    const { result } = renderHook(() => useDatabases())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    expect(result.current.databases[0].health).toBe('healthy')
+    expect(result.current.databases[0].last_checked_at).toBe('2026-07-21T10:00:00.000Z')
+  })
+
+  it('stale vem true pra last_checked_at de mais de 24h e false pra um recente', async () => {
+    const old = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString()
+    const recent = new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
+    localStorage.setItem('lab-financas:ping-health:u1', JSON.stringify({ health: 'healthy', last_checked_at: old }))
+    mockFromOrder([ROW])
+
+    const { result } = renderHook(() => useDatabases())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.databases[0].stale).toBe(true)
+
+    localStorage.setItem('lab-financas:ping-health:u1', JSON.stringify({ health: 'healthy', last_checked_at: recent }))
+    const { result: result2 } = renderHook(() => useDatabases())
+    await waitFor(() => expect(result2.current.loading).toBe(false))
+    expect(result2.current.databases[0].stale).toBe(false)
+  })
+
+  it('não quebra quando localStorage lança (setItem/getItem indisponíveis)', async () => {
+    mockFromOrder([ROW])
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('localStorage indisponível')
+    })
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('localStorage indisponível')
+    })
+    vi.spyOn(global, 'fetch').mockResolvedValue({ ok: true } as Response)
+
+    const { result } = renderHook(() => useDatabases())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.databases[0].health).toBe('unknown')
+
+    await expect(
+      act(async () => {
+        await result.current.ping('u1')
+      })
+    ).resolves.not.toThrow()
+
+    expect(result.current.databases[0].health).toBe('healthy')
   })
 })

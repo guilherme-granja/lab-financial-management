@@ -146,7 +146,8 @@ export default function DatabaseDetail() {
               </div>
               {db.last_checked_at && (
                 <p className="text-slate-500 text-xs">
-                  Última verificação: há {formatDistanceToNow(new Date(db.last_checked_at), { locale: ptBR })}
+                  {db.stale ? 'Desatualizado · última verificação' : 'Última verificação'} há{' '}
+                  {formatDistanceToNow(new Date(db.last_checked_at), { locale: ptBR })}
                 </p>
               )}
             </div>

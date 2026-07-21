@@ -19,6 +19,7 @@ const DB = {
   paused_at: null,
   health: 'healthy' as const,
   last_checked_at: '2026-07-21T10:00:00.000Z',
+  stale: false,
 }
 
 const ping = vi.fn()

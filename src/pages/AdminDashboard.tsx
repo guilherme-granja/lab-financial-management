@@ -89,6 +89,7 @@ export default function AdminDashboard() {
               <p className="text-slate-500 font-mono text-xs">{db.project_ref}</p>
               <p className="text-slate-500 text-xs mt-2">
                 {HEALTH_LABEL[db.health]}
+                {db.last_checked_at && db.stale && ' · desatualizado'}
                 {db.last_checked_at &&
                   ` · há ${formatDistanceToNow(new Date(db.last_checked_at), { locale: ptBR })}`}
               </p>

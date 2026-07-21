@@ -1,6 +1,36 @@
 import { useState, useEffect, useCallback } from 'react'
 import { choreClient } from '@/lib/chore-client'
 
+const PING_CACHE_PREFIX = 'lab-financas:ping-health:'
+const STALE_AFTER_MS = 24 * 60 * 60 * 1000 // 24h
+
+interface CachedHealth {
+  health: 'healthy' | 'unhealthy'
+  last_checked_at: string
+}
+
+function readCachedHealth(userId: string): CachedHealth | null {
+  try {
+    const raw = localStorage.getItem(PING_CACHE_PREFIX + userId)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null // localStorage indisponível (aba anônima, quota, etc.) — segue sem cache
+  }
+}
+
+function writeCachedHealth(userId: string, health: 'healthy' | 'unhealthy', checkedAt: string) {
+  try {
+    localStorage.setItem(PING_CACHE_PREFIX + userId, JSON.stringify({ health, last_checked_at: checkedAt }))
+  } catch {
+    // silencioso — se não conseguir persistir, a página continua funcionando só sem cache
+  }
+}
+
+function isStale(lastCheckedAt: string | null): boolean {
+  if (!lastCheckedAt) return false
+  return Date.now() - new Date(lastCheckedAt).getTime() > STALE_AFTER_MS
+}
+
 export interface UserDatabase {
   user_id: string
   full_name: string
@@ -11,6 +41,7 @@ export interface UserDatabase {
   paused_at: string | null
   health: 'unknown' | 'checking' | 'healthy' | 'unhealthy'
   last_checked_at: string | null
+  stale: boolean
 }
 
 interface UserDatabaseRow {
@@ -52,6 +83,7 @@ export function useDatabases() {
 
     const mapped: UserDatabase[] = ((data ?? []) as unknown as UserDatabaseRow[]).map((row) => {
       const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles
+      const cached = readCachedHealth(row.user_id)
       return {
         user_id: row.user_id,
         full_name: profile?.name ?? '',
@@ -60,8 +92,9 @@ export function useDatabases() {
         supabase_anon_key: row.supabase_anon_key,
         status: row.status,
         paused_at: row.paused_at,
-        health: 'unknown',
-        last_checked_at: null,
+        health: cached?.health ?? 'unknown',
+        last_checked_at: cached?.last_checked_at ?? null,
+        stale: isStale(cached?.last_checked_at ?? null),
       }
     })
     mapped.sort((a, b) => a.full_name.localeCompare(b.full_name))
@@ -74,12 +107,15 @@ export function useDatabases() {
   }, [fetchDatabases])
 
   function setHealth(userId: string, health: UserDatabase['health'], lastCheckedAt: string | null = null) {
+    if ((health === 'healthy' || health === 'unhealthy') && lastCheckedAt) {
+      writeCachedHealth(userId, health, lastCheckedAt)
+    }
     setDatabases((prev) =>
-      prev.map((d) =>
-        d.user_id === userId
-          ? { ...d, health, last_checked_at: lastCheckedAt ?? d.last_checked_at }
-          : d
-      )
+      prev.map((d) => {
+        if (d.user_id !== userId) return d
+        const nextLastCheckedAt = lastCheckedAt ?? d.last_checked_at
+        return { ...d, health, last_checked_at: nextLastCheckedAt, stale: isStale(nextLastCheckedAt) }
+      })
     )
   }
 

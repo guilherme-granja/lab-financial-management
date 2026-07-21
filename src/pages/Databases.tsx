@@ -18,7 +18,15 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { RefreshCw, Copy, Check, PowerOff, Play } from 'lucide-react'
 
-function HealthBadge({ health, lastCheckedAt }: { health: UserDatabase['health']; lastCheckedAt: string | null }) {
+function HealthBadge({
+  health,
+  lastCheckedAt,
+  stale,
+}: {
+  health: UserDatabase['health']
+  lastCheckedAt: string | null
+  stale: boolean
+}) {
   const label = {
     unknown: 'Nunca verificado',
     checking: 'Verificando...',
@@ -36,7 +44,12 @@ function HealthBadge({ health, lastCheckedAt }: { health: UserDatabase['health']
   return (
     <div className="space-y-0.5">
       <Badge className={className}>{label}</Badge>
-      {lastCheckedAt && (
+      {lastCheckedAt && stale && (
+        <p className="text-slate-500 text-xs">
+          desatualizado · última verificação há {formatDistanceToNow(new Date(lastCheckedAt), { locale: ptBR })}
+        </p>
+      )}
+      {lastCheckedAt && !stale && (
         <p className="text-slate-500 text-xs">
           há {formatDistanceToNow(new Date(lastCheckedAt), { locale: ptBR })}
         </p>
@@ -157,7 +170,7 @@ export default function Databases() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <HealthBadge health={db.health} lastCheckedAt={db.last_checked_at} />
+                    <HealthBadge health={db.health} lastCheckedAt={db.last_checked_at} stale={db.stale} />
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
