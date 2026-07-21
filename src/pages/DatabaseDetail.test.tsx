@@ -4,8 +4,10 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import DatabaseDetail from './DatabaseDetail'
 import { useDatabases } from '@/hooks/useDatabases'
+import { useDatabaseDetails } from '@/hooks/useDatabaseDetails'
 
 vi.mock('@/hooks/useDatabases')
+vi.mock('@/hooks/useDatabaseDetails')
 
 const DB = {
   user_id: 'u1',
@@ -48,6 +50,20 @@ function renderDetail(userId: string) {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.mocked(useDatabaseDetails).mockReturnValue({
+    details: {
+      compute: null,
+      lastBackup: null,
+      egressBytes: null,
+      mau: null,
+      databaseSizeBytes: null,
+      storageSizeBytes: null,
+      lastMigration: null,
+    },
+    loading: false,
+    errors: { details: null, stats: null, migration: null },
+    refresh: vi.fn(),
+  })
 })
 
 describe('DatabaseDetail', () => {
