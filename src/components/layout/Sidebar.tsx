@@ -9,6 +9,7 @@ import {
   X,
   LogOut,
   Users,
+  Database,
   Activity,
   PiggyBank,
   User,
@@ -90,6 +91,21 @@ function NavItems({ onClose }: SidebarProps) {
         >
           <Users size={18} />
           Usuários
+        </NavLink>
+        <NavLink
+          to="/admin/databases"
+          onClick={onClose}
+          className={({ isActive }) =>
+            cn(
+              'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors',
+              isActive
+                ? 'bg-indigo-600 text-white'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-[#252838]'
+            )
+          }
+        >
+          <Database size={18} />
+          Databases
         </NavLink>
         <NavLink
           to="/admin/activity"
