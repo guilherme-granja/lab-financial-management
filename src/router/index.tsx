@@ -16,6 +16,7 @@ import Tags from '@/pages/Tags'
 import ErrorPage from '@/pages/ErrorPage'
 import AdminUsers from '@/pages/AdminUsers'
 import Databases from '@/pages/Databases'
+import DatabaseDetail from '@/pages/DatabaseDetail'
 import AdminDashboard from '@/pages/AdminDashboard'
 import AdminActivity from '@/pages/AdminActivity'
 import FirstLogin from '@/pages/FirstLogin'
@@ -138,6 +139,7 @@ export const router = createBrowserRouter(
         { path: '/admin', element: <AdminDashboard /> },
         { path: '/admin/users', element: <AdminUsers /> },
         { path: '/admin/databases', element: <Databases /> },
+        { path: '/admin/databases/:userId', element: <DatabaseDetail /> },
         { path: '/admin/activity', element: <AdminActivity /> },
         { path: '/profile', element: <Profile /> },
       ],

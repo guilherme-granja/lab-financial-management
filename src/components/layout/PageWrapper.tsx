@@ -22,7 +22,9 @@ export function PageWrapper({ children }: PageWrapperProps) {
   const { pathname } = useLocation()
   const title = pathname.startsWith('/transactions/')
     ? 'Detalhes da Transação'
-    : PAGE_TITLES[pathname] ?? 'Dashboard'
+    : pathname.startsWith('/admin/databases/')
+      ? 'Detalhe do Database'
+      : PAGE_TITLES[pathname] ?? 'Dashboard'
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (

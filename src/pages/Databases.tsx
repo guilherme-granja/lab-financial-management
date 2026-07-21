@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import type { MouseEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useDatabases } from '@/hooks/useDatabases'
@@ -46,7 +48,8 @@ function HealthBadge({ health, lastCheckedAt }: { health: UserDatabase['health']
 function ProjectRefCell({ projectRef }: { projectRef: string }) {
   const [copied, setCopied] = useState(false)
 
-  async function copy() {
+  async function copy(e: MouseEvent) {
+    e.stopPropagation()
     await navigator.clipboard.writeText(projectRef)
     setCopied(true)
     setTimeout(() => setCopied(false), 1000)
@@ -63,6 +66,7 @@ function ProjectRefCell({ projectRef }: { projectRef: string }) {
 }
 
 export default function Databases() {
+  const navigate = useNavigate()
   const { databases, loading, error, ping, pingAll, deactivate, reactivate } = useDatabases()
   const [confirmTarget, setConfirmTarget] = useState<UserDatabase | null>(null)
   const [saving, setSaving] = useState(false)
@@ -136,7 +140,11 @@ export default function Databases() {
             </TableHeader>
             <TableBody>
               {databases.map((db) => (
-                <TableRow key={db.user_id} className="border-[#2d3148] hover:bg-[#1a1d27]">
+                <TableRow
+                  key={db.user_id}
+                  onClick={() => navigate(`/admin/databases/${db.user_id}`)}
+                  className="border-[#2d3148] hover:bg-[#1a1d27] cursor-pointer"
+                >
                   <TableCell className="text-slate-200">{db.full_name}</TableCell>
                   <TableCell>
                     <ProjectRefCell projectRef={db.project_ref} />
@@ -159,7 +167,10 @@ export default function Databases() {
                         title="Ping"
                         disabled={db.health === 'checking'}
                         className="h-7 w-7 text-slate-400 hover:text-slate-200"
-                        onClick={() => ping(db.user_id)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          ping(db.user_id)
+                        }}
                       >
                         <RefreshCw size={13} className={db.health === 'checking' ? 'animate-spin' : ''} />
                       </Button>
@@ -169,7 +180,10 @@ export default function Databases() {
                           size="icon"
                           title="Desativar"
                           className="h-7 w-7 text-slate-400 hover:text-red-400"
-                          onClick={() => openConfirm(db)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            openConfirm(db)
+                          }}
                         >
                           <PowerOff size={13} />
                         </Button>
@@ -179,7 +193,10 @@ export default function Databases() {
                           size="icon"
                           title="Reativar"
                           className="h-7 w-7 text-slate-400 hover:text-green-400"
-                          onClick={() => openConfirm(db)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            openConfirm(db)
+                          }}
                         >
                           <Play size={13} />
                         </Button>
