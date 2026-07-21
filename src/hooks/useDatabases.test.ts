@@ -48,7 +48,7 @@ describe('useDatabases', () => {
 
   it('ping seta checking e depois healthy quando fetch ok', async () => {
     mockFromOrder([ROW])
-    vi.spyOn(global, 'fetch').mockResolvedValue({ ok: true } as Response)
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({ ok: true } as Response)
 
     const { result } = renderHook(() => useDatabases())
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -58,6 +58,15 @@ describe('useDatabases', () => {
     })
 
     expect(result.current.databases[0].health).toBe('healthy')
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://u1.supabase.co/rest/v1/categories?select=id&limit=1',
+      {
+        headers: {
+          apikey: 'anon-key',
+          Authorization: 'Bearer anon-key',
+        },
+      }
+    )
   })
 
   it('ping não lança e marca unhealthy quando fetch falha', async () => {

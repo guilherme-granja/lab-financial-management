@@ -89,8 +89,11 @@ export function useDatabases() {
       if (!db) return
       setHealth(userId, 'checking')
       try {
-        const res = await fetch(`${db.supabase_url}/rest/v1/`, {
-          headers: { apikey: db.supabase_anon_key },
+        const res = await fetch(`${db.supabase_url}/rest/v1/categories?select=id&limit=1`, {
+          headers: {
+            apikey: db.supabase_anon_key,
+            Authorization: `Bearer ${db.supabase_anon_key}`,
+          },
         })
         setHealth(userId, res.ok ? 'healthy' : 'unhealthy', new Date().toISOString())
       } catch {

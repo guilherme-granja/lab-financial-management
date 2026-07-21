@@ -59,8 +59,11 @@ export class ChoreDatabaseConfigResolver implements DatabaseConfigResolver {
 
     let paused = false
     try {
-      const res = await fetch(`${data.supabase_url}/rest/v1/`, {
-        headers: { apikey: data.supabase_anon_key },
+      const res = await fetch(`${data.supabase_url}/rest/v1/categories?select=id&limit=1`, {
+        headers: {
+          apikey: data.supabase_anon_key,
+          Authorization: `Bearer ${data.supabase_anon_key}`,
+        },
       })
       paused = res.status === 503 || res.status === 404
     } catch {
