@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSupabaseClient } from '@/hooks/useDatabase'
-import type { Category, CategoryType, BudgetBucket } from '@/types'
+import type { Category, CategoryType } from '@/types'
 
 export function useCategories() {
   const supabase = useSupabaseClient()
@@ -42,7 +42,6 @@ export function useCategories() {
     icon: string
     type: CategoryType
     parent_id?: string | null
-    budget_bucket?: BudgetBucket | null
   }) => {
     const { error: err } = await supabase.from('categories').insert(payload)
     if (err) throw new Error(err.message)
@@ -51,7 +50,7 @@ export function useCategories() {
 
   const updateCategory = async (
     id: string,
-    payload: Partial<{ name: string; color: string; icon: string; type: CategoryType; parent_id: string | null; budget_bucket: BudgetBucket | null }>
+    payload: Partial<{ name: string; color: string; icon: string; type: CategoryType; parent_id: string | null }>
   ) => {
     const { error: err } = await supabase
       .from('categories')

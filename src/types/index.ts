@@ -13,7 +13,6 @@ export interface Category {
   parent_id: string | null
   created_at: string
   subcategories?: Category[]
-  budget_bucket?: BudgetBucket | null
 }
 
 export interface Account {
@@ -77,6 +76,7 @@ export interface Transaction {
   tags?: Tag
   type_id: string | null
   transaction_tags?: TransactionTag[]
+  budget_bucket: BudgetBucket | null
 }
 
 export interface Goal {

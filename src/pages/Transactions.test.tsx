@@ -81,6 +81,7 @@ const baseTx: Transaction = {
   categories: undefined,
   accounts: undefined,
   to_accounts: undefined,
+  budget_bucket: null,
 }
 
 let baseHookReturn: {
@@ -366,6 +367,7 @@ describe('Transactions', () => {
     const comboboxes2 = screen.getAllByRole('combobox')
     await userEvent.click(comboboxes2[2])
     await userEvent.click(screen.getAllByRole('option')[0])
+    await userEvent.click(screen.getByText('🏠 Contas'))
     await userEvent.click(screen.getByText('Salvar'))
     expect(createTransaction).toHaveBeenCalled()
   })
@@ -419,6 +421,7 @@ describe('Transactions', () => {
     const comboboxes2 = screen.getAllByRole('combobox')
     await userEvent.click(comboboxes2[2])
     await userEvent.click(screen.getAllByRole('option')[0])
+    await userEvent.click(screen.getByText('🏠 Contas'))
     await userEvent.click(screen.getByText('Salvar e continuar'))
     expect(createTransaction).toHaveBeenCalled()
     expect(screen.getByRole('dialog')).toBeInTheDocument()
@@ -604,7 +607,7 @@ describe('Transactions', () => {
   it('chama updateTransaction ao salvar form de edição', async () => {
     const updateTransaction = vi.fn().mockResolvedValue(undefined)
     // Transacao com account_id e category_id preenchidos para bypassar validacao
-    const txWithAccount = { ...baseTx, account_id: 'acc1', category_id: 'cat1' }
+    const txWithAccount = { ...baseTx, account_id: 'acc1', category_id: 'cat1', budget_bucket: 'needs' as const }
     vi.mocked(useTransactions).mockReturnValue({
       ...baseHookReturn,
       loading: false,

@@ -17,6 +17,7 @@ const DEFAULT_FILTERS = {
   dateTo: null,
   account_id: null,
   tagId: 'all',
+  budgetBucket: 'all' as const,
 }
 
 beforeEach(() => {
@@ -49,6 +50,7 @@ describe('useTransactions', () => {
       recurrence_group_id: null,
       paid_at: null,
       paid_amount: null,
+      budget_bucket: null,
     }
     mockSupabaseResult({ data: [tx], count: 1 })
     const { result } = renderHook(() => useTransactions(DEFAULT_FILTERS))
@@ -131,6 +133,7 @@ describe('useTransactions', () => {
       paid: true,
       paid_at: '2026-06-15',
       paid_amount: 100,
+      budget_bucket: null,
     }
     await expect(result.current.createTransaction(payload)).resolves.toBeUndefined()
   })
@@ -152,6 +155,7 @@ describe('useTransactions', () => {
       paid: false,
       paid_at: null,
       paid_amount: null,
+      budget_bucket: null,
     }
     await expect(result.current.createTransaction(payload)).rejects.toThrow('insert error')
   })
@@ -173,6 +177,7 @@ describe('useTransactions', () => {
       paid: false,
       paid_at: null,
       paid_amount: null,
+      budget_bucket: null,
     }
     await expect(result.current.createTransaction(payload)).resolves.toBeUndefined()
   })
@@ -194,6 +199,7 @@ describe('useTransactions', () => {
       paid: false,
       paid_at: null,
       paid_amount: null,
+      budget_bucket: null,
     }
     await expect(result.current.createTransaction(payload)).resolves.toBeUndefined()
   })

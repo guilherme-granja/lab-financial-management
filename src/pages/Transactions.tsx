@@ -7,7 +7,7 @@ import type { TransactionFilters, TransactionPayload } from '@/hooks/useTransact
 import { useCategories } from '@/hooks/useCategories'
 import { useAccounts } from '@/hooks/useAccounts'
 import { useTags } from '@/hooks/useTags'
-import type { Transaction, TransactionType, RecurrenceType } from '@/types'
+import type { Transaction, TransactionType, RecurrenceType, BudgetBucket } from '@/types'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
+import { Separator } from '@/components/ui/separator'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CreditCard, X, AlertTriangle, Columns, Check, ChevronDown, Eye, Search, Filter } from 'lucide-react'
 import { TransactionSearchInput } from '@/components/layout/transaction-search-input'
@@ -124,7 +125,7 @@ function TagMultiSelect({ selectedIds, onChange, tags }: TagMultiSelectProps) {
   )
 }
 
-type ColumnKey = 'date' | 'account' | 'category' | 'type' | 'amount' | 'description' | 'tag' | 'status'
+type ColumnKey = 'date' | 'account' | 'category' | 'type' | 'amount' | 'description' | 'tag' | 'status' | 'budget_bucket'
 
 const DEFAULT_VISIBLE: Record<ColumnKey, boolean> = {
   date: true,
@@ -135,6 +136,7 @@ const DEFAULT_VISIBLE: Record<ColumnKey, boolean> = {
   description: false,
   tag: false,
   status: false,
+  budget_bucket: false,
 }
 
 const STORAGE_KEY = 'transactions_column_visibility'
@@ -161,6 +163,7 @@ interface FormState {
   installments: string
   paid: boolean
   tag_ids: string[]
+  budget_bucket: BudgetBucket | null
 }
 
 const EMPTY_FORM: FormState = {
@@ -175,6 +178,7 @@ const EMPTY_FORM: FormState = {
   installments: '',
   paid: true,
   tag_ids: [],
+  budget_bucket: null,
 }
 
 interface PayFormState {
@@ -202,6 +206,7 @@ export default function Transactions() {
     tagId: 'all',
     dateFrom: null,
     dateTo: null,
+    budgetBucket: 'all',
   })
 
   const transactionIdParam = searchParams.get('transactionId')
@@ -333,6 +338,7 @@ export default function Transactions() {
       installments: tx.installments ? String(tx.installments) : '',
       paid: tx.paid ?? true,
       tag_ids: tx.transaction_tags?.map((tt) => tt.tag_id) ?? [],
+      budget_bucket: tx.budget_bucket ?? null,
     })
     setEditingId(tx.id)
     setFormError(null)
@@ -376,6 +382,10 @@ export default function Transactions() {
     }
     if (form.type !== 'transfer' && !form.category_id) {
       setFormError('Selecione uma categoria')
+      return
+    }
+    if (form.type === 'expense' && !form.budget_bucket) {
+      setFormError('Selecione a classificação no orçamento')
       return
     }
     if (form.type === 'transfer') {
@@ -435,6 +445,7 @@ export default function Transactions() {
       paid: form.paid,
       paid_amount: paid_amount_val,
       tag_ids: form.tag_ids,
+      budget_bucket: form.type === 'expense' ? form.budget_bucket : null,
     }
 
     try {
@@ -617,6 +628,7 @@ export default function Transactions() {
     tagId: 'all',
     dateFrom: null,
     dateTo: null,
+    budgetBucket: 'all',
   }
 
   function clearFilters() {
@@ -812,6 +824,7 @@ export default function Transactions() {
                       { key: 'tag',         label: 'Tag',       fixed: false },
                       { key: 'type',        label: 'Tipo',      fixed: true  },
                       { key: 'status',      label: 'Status',    fixed: false },
+                      { key: 'budget_bucket', label: 'Classificação', fixed: false },
                       { key: 'amount',      label: 'Valor',     fixed: true  },
                     ] as { key: ColumnKey; label: string; fixed: boolean }[]
                   ).map(({ key, label, fixed }) => (
@@ -1077,6 +1090,24 @@ export default function Transactions() {
                     className="bg-[#1a1d27] border-[#2d3148] text-slate-200 w-40"
                   />
                 </div>
+
+                <div className="space-y-1">
+                  <Label className="text-slate-400 text-xs">Classificação</Label>
+                  <Select
+                    value={filters.budgetBucket}
+                    onValueChange={(v) => setFilters((f) => ({ ...f, budgetBucket: v as TransactionFilters['budgetBucket'] }))}
+                  >
+                    <SelectTrigger className="bg-[#1a1d27] border-[#2d3148] text-slate-200 w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
+                      <SelectItem value="all">Todas</SelectItem>
+                      <SelectItem value="needs">🏠 Contas</SelectItem>
+                      <SelectItem value="leisure">🎉 Lazer</SelectItem>
+                      <SelectItem value="unclassified">Não classificado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {secondaryFilterCount > 0 && (
@@ -1205,6 +1236,7 @@ export default function Transactions() {
                     {columnVisibility.tag         && <TableHead className="text-slate-400">Tag</TableHead>}
                     {columnVisibility.type        && <TableHead className="text-slate-400 hidden lg:table-cell">Tipo</TableHead>}
                     {columnVisibility.status      && <TableHead className="text-slate-400 hidden lg:table-cell">Status</TableHead>}
+                    {columnVisibility.budget_bucket && <TableHead className="text-slate-400 hidden lg:table-cell">Classificação</TableHead>}
                     {columnVisibility.amount      && <TableHead className="text-slate-400 text-right">Valor</TableHead>}
                     <TableHead className="text-slate-400 w-28" />
                   </TableRow>
@@ -1306,6 +1338,25 @@ export default function Transactions() {
                             ) : (
                               <Badge variant="outline" className="bg-yellow-950 text-yellow-400 border-yellow-800 text-xs">
                                 Pendente
+                              </Badge>
+                            )}
+                          </TableCell>
+                        )}
+                        {columnVisibility.budget_bucket && (
+                          <TableCell className="hidden lg:table-cell">
+                            {tx.type !== 'expense' ? (
+                              '—'
+                            ) : tx.budget_bucket === 'needs' ? (
+                              <Badge variant="outline" className="bg-indigo-950 text-indigo-400 border-indigo-800 text-xs">
+                                🏠 Contas
+                              </Badge>
+                            ) : tx.budget_bucket === 'leisure' ? (
+                              <Badge variant="outline" className="bg-amber-950 text-amber-400 border-amber-800 text-xs">
+                                🎉 Lazer
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="border-dashed border-slate-600 text-slate-500 text-xs">
+                                Não classificado
                               </Badge>
                             )}
                           </TableCell>
@@ -1443,6 +1494,7 @@ export default function Transactions() {
                       category_id: '',
                       to_account_id: '',
                       tag_ids: [],
+                      budget_bucket: v === 'expense' ? f.budget_bucket : null,
                     }))
                   }
                 >
@@ -1596,6 +1648,46 @@ export default function Transactions() {
                 placeholder="Opcional"
               />
             </div>
+
+            {form.type === 'expense' && (
+              <div className="space-y-2">
+                <div className="space-y-1">
+                  <Separator className="bg-[#2d3148]" />
+                  <Label className="text-slate-400 text-xs pt-2 block">
+                    Como classificar esse gasto? <span className="text-red-400">*</span>
+                  </Label>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, budget_bucket: 'needs' }))}
+                    className={`h-14 rounded-lg text-sm font-medium border transition-colors flex flex-col items-center justify-center gap-0.5 ${
+                      form.budget_bucket === 'needs'
+                        ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500'
+                        : 'text-slate-400 border-[#2d3148] hover:text-slate-200 hover:border-slate-500 bg-transparent'
+                    }`}
+                  >
+                    <span>🏠 Contas</span>
+                    <span className="text-xs opacity-70">Necessidade</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, budget_bucket: 'leisure' }))}
+                    className={`h-14 rounded-lg text-sm font-medium border transition-colors flex flex-col items-center justify-center gap-0.5 ${
+                      form.budget_bucket === 'leisure'
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500'
+                        : 'text-slate-400 border-[#2d3148] hover:text-slate-200 hover:border-slate-500 bg-transparent'
+                    }`}
+                  >
+                    <span>🎉 Lazer</span>
+                    <span className="text-xs opacity-70">Supérfluo</span>
+                  </button>
+                </div>
+                {formError === 'Selecione a classificação no orçamento' && (
+                  <p className="text-red-400 text-sm">{formError}</p>
+                )}
+              </div>
+            )}
 
             {!editingId && (
               <div className="space-y-1">

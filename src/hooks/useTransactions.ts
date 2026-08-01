@@ -4,7 +4,7 @@ import { useSupabaseClient } from '@/hooks/useDatabase'
 import { useAuth } from '@/hooks/useAuth'
 import { setTransactionTagsStandalone } from '@/hooks/useTags'
 import { logActivity } from '@/lib/activity-log'
-import type { Transaction, TransactionType, RecurrenceType } from '@/types'
+import type { Transaction, TransactionType, RecurrenceType, BudgetBucket } from '@/types'
 
 export interface TransactionFilters {
   period: string
@@ -16,6 +16,7 @@ export interface TransactionFilters {
   tagId: string
   dateFrom: string | null
   dateTo: string | null
+  budgetBucket: 'all' | 'needs' | 'leisure' | 'unclassified'
 }
 
 export interface TransactionPayload {
@@ -32,6 +33,7 @@ export interface TransactionPayload {
   paid_amount: number | null
   tag_id?: string | null
   tag_ids?: string[]
+  budget_bucket: BudgetBucket | null
 }
 
 const PAGE_SIZE = 20
@@ -113,6 +115,11 @@ export function useTransactions(filters: TransactionFilters) {
     if (filters.tagId !== 'all') {
       query = query.eq('tag_id', filters.tagId)
     }
+    if (filters.budgetBucket === 'needs' || filters.budgetBucket === 'leisure') {
+      query = query.eq('budget_bucket', filters.budgetBucket)
+    } else if (filters.budgetBucket === 'unclassified') {
+      query = query.is('budget_bucket', null)
+    }
 
     // Sum query — only runs when type filter is active
     let sumQuery: Promise<{ data: { amount: number }[] | null; error: unknown }> | null = null
@@ -138,6 +145,11 @@ export function useTransactions(filters: TransactionFilters) {
       }
       if (filters.tagId !== 'all') {
         sq = sq.eq('tag_id', filters.tagId)
+      }
+      if (filters.budgetBucket === 'needs' || filters.budgetBucket === 'leisure') {
+        sq = sq.eq('budget_bucket', filters.budgetBucket)
+      } else if (filters.budgetBucket === 'unclassified') {
+        sq = sq.is('budget_bucket', null)
       }
 
       sumQuery = sq.then(({ data, error }) => ({ data: data as { amount: number }[] | null, error }))
@@ -212,6 +224,7 @@ export function useTransactions(filters: TransactionFilters) {
           paid_at: isPaid ? nowIso : null,
           paid_amount: isPaid ? payload.paid_amount : null,
           tag_id: (payload.tag_ids ?? [])[0] ?? null,
+          budget_bucket: payload.budget_bucket,
         }
       })
       const { data: insertedRows, error: err } = await supabase
@@ -274,6 +287,7 @@ export function useTransactions(filters: TransactionFilters) {
           paid_at: isPaid ? nowIso : null,
           paid_amount: isPaid ? payload.paid_amount : null,
           tag_id: (payload.tag_ids ?? [])[0] ?? null,
+          budget_bucket: payload.budget_bucket,
         }
       })
       const { data: insertedRows, error: err } = await supabase
@@ -319,6 +333,7 @@ export function useTransactions(filters: TransactionFilters) {
       paid_at: payload.paid ? nowIso : null,
       paid_amount: payload.paid_amount,
       tag_id: (payload.tag_ids ?? [])[0] ?? null,
+      budget_bucket: payload.budget_bucket,
     }).select('id').single()
     if (err) throw new Error(err.message)
     if (payload.paid && payload.paid_amount != null) {

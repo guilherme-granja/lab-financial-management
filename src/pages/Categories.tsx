@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useCategories } from '@/hooks/useCategories'
-import type { Category, CategoryType, BudgetBucket } from '@/types'
+import type { Category, CategoryType } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,25 +22,15 @@ const CATEGORY_TYPE_COLORS: Record<CategoryType, string> = {
   both: 'bg-indigo-950 text-indigo-400 border-indigo-800',
 }
 
-const BUCKET_LABELS: Record<BudgetBucket, string> = {
-  needs: 'Contas',
-  leisure: 'Lazer',
-}
-const BUCKET_COLORS: Record<BudgetBucket, string> = {
-  needs: 'bg-blue-950 text-blue-400 border-blue-800',
-  leisure: 'bg-purple-950 text-purple-400 border-purple-800',
-}
-
 interface FormState {
   name: string
   icon: string
   color: string
   type: CategoryType
   parent_id: string | null
-  budget_bucket: BudgetBucket | null
 }
 
-const EMPTY_FORM: FormState = { name: '', icon: '📦', color: '#6366f1', type: 'expense', parent_id: null, budget_bucket: null }
+const EMPTY_FORM: FormState = { name: '', icon: '📦', color: '#6366f1', type: 'expense', parent_id: null }
 
 export default function Categories() {
   const { categoryTree, categories, loading, createCategory, updateCategory, deleteCategory, checkCategoryUsage, deleteCategoryWithTransfer } = useCategories()
@@ -68,7 +58,7 @@ export default function Categories() {
   }
 
   function openCreateSub(parent: Category) {
-    setForm({ name: '', icon: '📦', color: parent.color, type: parent.type, parent_id: parent.id, budget_bucket: null })
+    setForm({ name: '', icon: '📦', color: parent.color, type: parent.type, parent_id: parent.id })
     setEditingId(null)
     setFormError(null)
     setDialogOpen(true)
@@ -81,7 +71,6 @@ export default function Categories() {
       color: cat.color,
       type: cat.type,
       parent_id: cat.parent_id,
-      budget_bucket: cat.budget_bucket ?? null,
     })
     setEditingId(cat.id)
     setFormError(null)
@@ -97,13 +86,6 @@ export default function Categories() {
       setFormError('Informe um ícone (emoji)')
       return
     }
-    if (form.type === 'expense' && !form.budget_bucket) {
-      setFormError('Selecione a classificação no orçamento')
-      return
-    }
-
-    const budgetBucket = form.type === 'expense' ? form.budget_bucket : null
-
     setSaving(true)
     setFormError(null)
 
@@ -115,7 +97,6 @@ export default function Categories() {
           color: form.color,
           type: form.type,
           parent_id: form.parent_id,
-          budget_bucket: budgetBucket,
         })
       } else {
         await createCategory({
@@ -124,7 +105,6 @@ export default function Categories() {
           color: form.color,
           type: form.type,
           parent_id: form.parent_id || null,
-          budget_bucket: budgetBucket,
         })
       }
       setDialogOpen(false)
@@ -278,11 +258,6 @@ export default function Categories() {
                         <Badge variant="outline" className={`text-xs ${CATEGORY_TYPE_COLORS[sub.type]}`}>
                           {CATEGORY_TYPE_LABELS[sub.type]}
                         </Badge>
-                        {sub.budget_bucket && (
-                          <Badge variant="outline" className={`text-xs ${BUCKET_COLORS[sub.budget_bucket]}`}>
-                            {BUCKET_LABELS[sub.budget_bucket]}
-                          </Badge>
-                        )}
                       </div>
                     </div>
                     <div className="flex flex-col gap-0.5">
@@ -405,26 +380,6 @@ export default function Categories() {
                 </SelectContent>
               </Select>
             </div>
-
-            {form.type === 'expense' && (
-              <div className="space-y-1">
-                <Label className="text-slate-400 text-xs">
-                  Classificação no Orçamento <span className="text-red-400">*</span>
-                </Label>
-                <Select
-                  value={form.budget_bucket ?? ''}
-                  onValueChange={(v) => setForm((f) => ({ ...f, budget_bucket: v as BudgetBucket }))}
-                >
-                  <SelectTrigger className="bg-[#0f1117] border-[#2d3148]">
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1a1d27] border-[#2d3148]">
-                    <SelectItem value="needs">Contas (necessidades)</SelectItem>
-                    <SelectItem value="leisure">Lazer</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
           </div>
 
           <DialogFooter>
