@@ -125,7 +125,7 @@ function TagMultiSelect({ selectedIds, onChange, tags }: TagMultiSelectProps) {
   )
 }
 
-type ColumnKey = 'date' | 'account' | 'category' | 'type' | 'amount' | 'description' | 'tag' | 'status' | 'budget_bucket'
+type ColumnKey = 'date' | 'account' | 'category' | 'type' | 'amount' | 'description' | 'tag' | 'status' | 'budget_bucket' | 'apply_budget'
 
 const DEFAULT_VISIBLE: Record<ColumnKey, boolean> = {
   date: true,
@@ -137,6 +137,7 @@ const DEFAULT_VISIBLE: Record<ColumnKey, boolean> = {
   tag: false,
   status: false,
   budget_bucket: false,
+  apply_budget: false,
 }
 
 const STORAGE_KEY = 'transactions_column_visibility'
@@ -164,6 +165,7 @@ interface FormState {
   paid: boolean
   tag_ids: string[]
   budget_bucket: BudgetBucket | null
+  apply_budget: boolean
 }
 
 const EMPTY_FORM: FormState = {
@@ -179,6 +181,7 @@ const EMPTY_FORM: FormState = {
   paid: true,
   tag_ids: [],
   budget_bucket: null,
+  apply_budget: true,
 }
 
 interface PayFormState {
@@ -339,6 +342,7 @@ export default function Transactions() {
       paid: tx.paid ?? true,
       tag_ids: tx.transaction_tags?.map((tt) => tt.tag_id) ?? [],
       budget_bucket: tx.budget_bucket ?? null,
+      apply_budget: tx.apply_budget,
     })
     setEditingId(tx.id)
     setFormError(null)
@@ -446,6 +450,7 @@ export default function Transactions() {
       paid_amount: paid_amount_val,
       tag_ids: form.tag_ids,
       budget_bucket: form.type === 'expense' ? form.budget_bucket : null,
+      apply_budget: form.type === 'income' ? form.apply_budget : false,
     }
 
     try {
@@ -825,6 +830,7 @@ export default function Transactions() {
                       { key: 'type',        label: 'Tipo',      fixed: true  },
                       { key: 'status',      label: 'Status',    fixed: false },
                       { key: 'budget_bucket', label: 'Classificação', fixed: false },
+                      { key: 'apply_budget', label: 'Orçamento', fixed: false },
                       { key: 'amount',      label: 'Valor',     fixed: true  },
                     ] as { key: ColumnKey; label: string; fixed: boolean }[]
                   ).map(({ key, label, fixed }) => (
@@ -1237,6 +1243,7 @@ export default function Transactions() {
                     {columnVisibility.type        && <TableHead className="text-slate-400 hidden lg:table-cell">Tipo</TableHead>}
                     {columnVisibility.status      && <TableHead className="text-slate-400 hidden lg:table-cell">Status</TableHead>}
                     {columnVisibility.budget_bucket && <TableHead className="text-slate-400 hidden lg:table-cell">Classificação</TableHead>}
+                    {columnVisibility.apply_budget && <TableHead className="text-slate-400 hidden lg:table-cell">Orçamento</TableHead>}
                     {columnVisibility.amount      && <TableHead className="text-slate-400 text-right">Valor</TableHead>}
                     <TableHead className="text-slate-400 w-28" />
                   </TableRow>
@@ -1357,6 +1364,21 @@ export default function Transactions() {
                             ) : (
                               <Badge variant="outline" className="border-dashed border-slate-600 text-slate-500 text-xs">
                                 Não classificado
+                              </Badge>
+                            )}
+                          </TableCell>
+                        )}
+                        {columnVisibility.apply_budget && (
+                          <TableCell className="hidden lg:table-cell">
+                            {tx.type !== 'income' ? (
+                              '—'
+                            ) : tx.apply_budget ? (
+                              <Badge variant="outline" className="bg-green-950 text-green-400 border-green-800 text-xs">
+                                ✓ Contabiliza
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="border-dashed border-slate-600 text-slate-500 text-xs">
+                                Não contabiliza
                               </Badge>
                             )}
                           </TableCell>
@@ -1495,6 +1517,7 @@ export default function Transactions() {
                       to_account_id: '',
                       tag_ids: [],
                       budget_bucket: v === 'expense' ? f.budget_bucket : null,
+                      apply_budget: v === 'income' ? f.apply_budget : true,
                     }))
                   }
                 >
@@ -1648,6 +1671,19 @@ export default function Transactions() {
                 placeholder="Opcional"
               />
             </div>
+
+            {form.type === 'income' && (
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="apply_budget"
+                  checked={form.apply_budget}
+                  onCheckedChange={(v) => setForm((f) => ({ ...f, apply_budget: v }))}
+                />
+                <Label htmlFor="apply_budget" className="text-slate-300 text-sm cursor-pointer">
+                  Contabilizar no Orçamento
+                </Label>
+              </div>
+            )}
 
             {form.type === 'expense' && (
               <div className="space-y-2">

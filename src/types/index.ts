@@ -77,6 +77,7 @@ export interface Transaction {
   type_id: string | null
   transaction_tags?: TransactionTag[]
   budget_bucket: BudgetBucket | null
+  apply_budget: boolean
 }
 
 export interface Goal {

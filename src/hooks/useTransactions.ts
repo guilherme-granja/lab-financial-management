@@ -34,6 +34,7 @@ export interface TransactionPayload {
   tag_id?: string | null
   tag_ids?: string[]
   budget_bucket: BudgetBucket | null
+  apply_budget: boolean
 }
 
 const PAGE_SIZE = 20
@@ -225,6 +226,7 @@ export function useTransactions(filters: TransactionFilters) {
           paid_amount: isPaid ? payload.paid_amount : null,
           tag_id: (payload.tag_ids ?? [])[0] ?? null,
           budget_bucket: payload.budget_bucket,
+          apply_budget: payload.apply_budget,
         }
       })
       const { data: insertedRows, error: err } = await supabase
@@ -288,6 +290,7 @@ export function useTransactions(filters: TransactionFilters) {
           paid_amount: isPaid ? payload.paid_amount : null,
           tag_id: (payload.tag_ids ?? [])[0] ?? null,
           budget_bucket: payload.budget_bucket,
+          apply_budget: payload.apply_budget,
         }
       })
       const { data: insertedRows, error: err } = await supabase
@@ -334,6 +337,7 @@ export function useTransactions(filters: TransactionFilters) {
       paid_amount: payload.paid_amount,
       tag_id: (payload.tag_ids ?? [])[0] ?? null,
       budget_bucket: payload.budget_bucket,
+      apply_budget: payload.apply_budget,
     }).select('id').single()
     if (err) throw new Error(err.message)
     if (payload.paid && payload.paid_amount != null) {

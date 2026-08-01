@@ -82,6 +82,7 @@ const baseTx: Transaction = {
   accounts: undefined,
   to_accounts: undefined,
   budget_bucket: null,
+  apply_budget: true,
 }
 
 let baseHookReturn: {
