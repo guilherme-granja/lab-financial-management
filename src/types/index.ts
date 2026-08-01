@@ -123,3 +123,24 @@ export interface MonthlyBudget {
   savings_pct: number
   created_at: string
 }
+
+export type BudgetStatus = 'verde' | 'amarelo' | 'vermelho' | 'neutro'
+
+export interface BudgetBucketSummary {
+  amount: number
+  pct: number
+  targetPct: number | null
+  status: BudgetStatus
+}
+
+export interface BudgetSummary {
+  month: string
+  base: number
+  needs: BudgetBucketSummary
+  leisure: BudgetBucketSummary
+  unclassified: BudgetBucketSummary
+  savings: BudgetBucketSummary
+  unclassifiedExpenseCount: number
+  unflaggedIncomeCount: number
+  unflaggedIncomeAmount: number
+}
