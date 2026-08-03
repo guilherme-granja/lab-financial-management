@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { RelatedPosts } from '@/components/blog/related-posts'
 
 const PRESETS: Record<Exclude<BudgetPreset, 'custom'>, { needs: number; leisure: number; savings: number; label: string }> = {
   '50_30_20': { needs: 50, leisure: 30, savings: 20, label: '50 / 30 / 20' },
@@ -329,6 +330,8 @@ export default function Budgets() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <RelatedPosts screen="budgets" />
     </div>
   )
 }

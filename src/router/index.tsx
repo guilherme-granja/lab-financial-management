@@ -21,6 +21,8 @@ import AdminDashboard from '@/pages/AdminDashboard'
 import AdminActivity from '@/pages/AdminActivity'
 import FirstLogin from '@/pages/FirstLogin'
 import Profile from '@/pages/Profile'
+import Blog from '@/pages/Blog'
+import BlogPost from '@/pages/BlogPost'
 
 function PrivateRoute() {
   const { user, loading, isAdmin, firstLogin } = useAuth()
@@ -129,6 +131,8 @@ export const router = createBrowserRouter(
         { path: '/accounts', element: <Accounts /> },
         { path: '/budgets', element: <Budgets /> },
         { path: '/tags', element: <Tags /> },
+        { path: '/blog', element: <Blog /> },
+        { path: '/blog/:slug', element: <BlogPost /> },
         { path: '/profile', element: <Profile /> },
       ],
     },

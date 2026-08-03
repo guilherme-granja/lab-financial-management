@@ -9,6 +9,10 @@ vi.mock('@/hooks/useBudgets', () => ({
   useBudgets: vi.fn(),
 }))
 
+vi.mock('@/components/blog/related-posts', () => ({
+  RelatedPosts: () => null,
+}))
+
 const mockedUseBudgets = vi.mocked(useBudgets)
 
 beforeEach(() => {

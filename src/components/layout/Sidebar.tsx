@@ -13,6 +13,7 @@ import {
   Activity,
   PiggyBank,
   User,
+  Newspaper,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,7 @@ const navItems = [
   { to: '/budgets', label: 'Orçamentos', icon: PiggyBank },
   { to: '/categories', label: 'Categorias', icon: Tag },
   { to: '/tags', label: 'Tags', icon: Tags },
+  { to: '/blog', label: 'Blog', icon: Newspaper },
 ]
 
 interface SidebarProps {

@@ -60,3 +60,9 @@ body {
   color: hsl(var(--foreground));
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
+
+.prose-blog h2 { color: #e2e8f0; font-size: 17px; font-weight: 600; margin: 28px 0 10px; }
+.prose-blog p { color: #cbd5e1; font-size: 14.5px; line-height: 1.75; margin: 0 0 14px; }
+.prose-blog ul { margin: 0 0 16px; padding-left: 20px; }
+.prose-blog li { color: #cbd5e1; font-size: 14.5px; line-height: 1.7; margin-bottom: 6px; }
+.prose-blog strong { color: #e2e8f0; font-weight: 600; }
