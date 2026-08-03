@@ -83,23 +83,11 @@ const baseTx: Transaction = {
   to_accounts: undefined,
   budget_bucket: null,
   apply_budget: true,
+  tag_id: null,
+  type_id: null,
 }
 
-let baseHookReturn: {
-  total: number
-  totalPages: number
-  page: number
-  setPage: ReturnType<typeof vi.fn>
-  error: null
-  refresh: ReturnType<typeof vi.fn>
-  createTransaction: ReturnType<typeof vi.fn>
-  updateTransaction: ReturnType<typeof vi.fn>
-  updateTransactionPayment: ReturnType<typeof vi.fn>
-  deleteTransaction: ReturnType<typeof vi.fn>
-  deleteTransactionGroupUnpaid: ReturnType<typeof vi.fn>
-  deleteTransactionGroup: ReturnType<typeof vi.fn>
-  filteredTotal: number | null
-}
+let baseHookReturn: Omit<ReturnType<typeof useTransactions>, 'transactions' | 'loading'>
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -116,6 +104,9 @@ beforeEach(() => {
     deleteTransaction: vi.fn(),
     deleteTransactionGroupUnpaid: vi.fn(),
     deleteTransactionGroup: vi.fn(),
+    updateRecurrenceGroup: vi.fn(),
+    updateRecurrenceFromHere: vi.fn(),
+    unefetivateTransaction: vi.fn(),
     filteredTotal: null,
   }
 })
@@ -346,12 +337,13 @@ describe('Transactions', () => {
     vi.mocked(useAccounts).mockReturnValue({
       accounts: [{ id: 'acc1', name: 'Nubank', icon: '💜', type: 'checking', color: '#8B5CF6', include_in_dashboard: true, initial_balance: 0, created_at: '' }],
       loading: false, error: null, refresh: vi.fn(), createAccount: vi.fn(), updateAccount: vi.fn(),
-      deleteAccount: vi.fn(), getAccountBalance: vi.fn(), getAccountTransactionCount: vi.fn(),
+      deleteAccount: vi.fn(), getAccountBalance: vi.fn(), getAccountTransactionCount: vi.fn(), getAccountStats: vi.fn(),
     })
     vi.mocked(useCategories).mockReturnValue({
-      categories: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', created_at: '' }],
-      categoryTree: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', created_at: '', subcategories: [] }],
+      categories: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', color: '#F97316', parent_id: null, created_at: '' }],
+      categoryTree: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', color: '#F97316', parent_id: null, created_at: '', subcategories: [] }],
       loading: false, error: null, refresh: vi.fn(), createCategory: vi.fn(), updateCategory: vi.fn(), deleteCategory: vi.fn(),
+      checkCategoryUsage: vi.fn(), deleteCategoryWithTransfer: vi.fn(),
     })
     renderTx()
     await userEvent.click(screen.getByText('Nova transação'))
@@ -404,12 +396,13 @@ describe('Transactions', () => {
     vi.mocked(useAccounts).mockReturnValue({
       accounts: [{ id: 'acc1', name: 'Nubank', icon: '💜', type: 'checking', color: '#8B5CF6', include_in_dashboard: true, initial_balance: 0, created_at: '' }],
       loading: false, error: null, refresh: vi.fn(), createAccount: vi.fn(), updateAccount: vi.fn(),
-      deleteAccount: vi.fn(), getAccountBalance: vi.fn(), getAccountTransactionCount: vi.fn(),
+      deleteAccount: vi.fn(), getAccountBalance: vi.fn(), getAccountTransactionCount: vi.fn(), getAccountStats: vi.fn(),
     })
     vi.mocked(useCategories).mockReturnValue({
-      categories: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', created_at: '' }],
-      categoryTree: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', created_at: '', subcategories: [] }],
+      categories: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', color: '#F97316', parent_id: null, created_at: '' }],
+      categoryTree: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', color: '#F97316', parent_id: null, created_at: '', subcategories: [] }],
       loading: false, error: null, refresh: vi.fn(), createCategory: vi.fn(), updateCategory: vi.fn(), deleteCategory: vi.fn(),
+      checkCategoryUsage: vi.fn(), deleteCategoryWithTransfer: vi.fn(),
     })
     renderTx()
     await userEvent.click(screen.getByText('Nova transação'))
@@ -583,7 +576,7 @@ describe('Transactions', () => {
       loading: false,
       transactions: [{
         ...baseTx,
-        accounts: { id: 'acc1', name: 'Nubank', icon: '💜', type: 'checking', initial_balance: 0, created_at: '' },
+        accounts: { id: 'acc1', name: 'Nubank', icon: '💜', type: 'checking', color: '#8B5CF6', include_in_dashboard: true, initial_balance: 0, created_at: '' },
       }],
       total: 1,
     })
@@ -597,7 +590,7 @@ describe('Transactions', () => {
       loading: false,
       transactions: [{
         ...baseTx,
-        categories: { id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', created_at: '' },
+        categories: { id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', color: '#F97316', parent_id: null, created_at: '' },
       }],
       total: 1,
     })
@@ -619,12 +612,13 @@ describe('Transactions', () => {
     vi.mocked(useAccounts).mockReturnValue({
       accounts: [{ id: 'acc1', name: 'Nubank', icon: '💜', type: 'checking', color: '#8B5CF6', include_in_dashboard: true, initial_balance: 0, created_at: '' }],
       loading: false, error: null, refresh: vi.fn(), createAccount: vi.fn(), updateAccount: vi.fn(),
-      deleteAccount: vi.fn(), getAccountBalance: vi.fn(), getAccountTransactionCount: vi.fn(),
+      deleteAccount: vi.fn(), getAccountBalance: vi.fn(), getAccountTransactionCount: vi.fn(), getAccountStats: vi.fn(),
     })
     vi.mocked(useCategories).mockReturnValue({
-      categories: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', created_at: '' }],
-      categoryTree: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', created_at: '', subcategories: [] }],
+      categories: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', color: '#F97316', parent_id: null, created_at: '' }],
+      categoryTree: [{ id: 'cat1', name: 'Alimentação', icon: '🍔', type: 'expense', color: '#F97316', parent_id: null, created_at: '', subcategories: [] }],
       loading: false, error: null, refresh: vi.fn(), createCategory: vi.fn(), updateCategory: vi.fn(), deleteCategory: vi.fn(),
+      checkCategoryUsage: vi.fn(), deleteCategoryWithTransfer: vi.fn(),
     })
     renderTx()
     // Open edit dialog

@@ -35,4 +35,4 @@ class MockResizeObserver {
   unobserve() {}
   disconnect() {}
 }
-global.ResizeObserver = MockResizeObserver
+globalThis.ResizeObserver = MockResizeObserver

@@ -5,6 +5,7 @@ import { validatePassword } from '@/lib/password-rules'
 import { getInitials } from '@/lib/formatters'
 import { PasswordRulesHint } from '@/components/auth/password-rules-hint'
 import { PasswordStrengthBar } from '@/components/auth/password-strength-bar'
+import { DangerZone } from '@/components/profile/danger-zone'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -225,6 +226,8 @@ export default function Profile() {
             </div>
           </CardContent>
         </Card>
+
+        {!isAdmin && <DangerZone />}
       </div>
     </div>
   )

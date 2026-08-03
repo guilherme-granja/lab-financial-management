@@ -21,7 +21,7 @@ const STATS_ROW = { database_size_bytes: 1000, storage_size_bytes: 2000 }
 const MIGRATION_ROW = { version: '20260721000000', name: 'add_x', inserted_at: '2026-07-21T00:00:00.000Z' }
 
 function mockRpcFetch(impl: (fn: string) => Promise<Response>) {
-  vi.spyOn(global, 'fetch').mockImplementation((url) => {
+  vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
     const fn = String(url).split('/rpc/')[1]
     return impl(fn)
   })

@@ -50,7 +50,7 @@ describe('useDatabases', () => {
 
   it('ping seta checking e depois healthy quando fetch ok', async () => {
     mockFromOrder([ROW])
-    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({ ok: true } as Response)
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true } as Response)
 
     const { result } = renderHook(() => useDatabases())
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -73,7 +73,7 @@ describe('useDatabases', () => {
 
   it('ping não lança e marca unhealthy quando fetch falha', async () => {
     mockFromOrder([ROW])
-    vi.spyOn(global, 'fetch').mockRejectedValue(new Error('network down'))
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network down'))
 
     const { result } = renderHook(() => useDatabases())
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -90,7 +90,7 @@ describe('useDatabases', () => {
   it('pingAll roda ping pra cada linha sem quebrar se uma rejeitar', async () => {
     const ROW2 = { ...ROW, user_id: 'u2', supabase_url: 'https://u2.supabase.co', profiles: { name: 'Ciclano' } }
     mockFromOrder([ROW, ROW2])
-    vi.spyOn(global, 'fetch').mockImplementation((url) =>
+    vi.spyOn(globalThis, 'fetch').mockImplementation((url) =>
       String(url).includes('u1.supabase.co')
         ? Promise.resolve({ ok: true } as Response)
         : Promise.reject(new Error('down'))
@@ -139,7 +139,7 @@ describe('useDatabases', () => {
 
   it('ping bem-sucedido persiste o resultado em localStorage', async () => {
     mockFromOrder([ROW])
-    vi.spyOn(global, 'fetch').mockResolvedValue({ ok: true } as Response)
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true } as Response)
 
     const { result } = renderHook(() => useDatabases())
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -191,7 +191,7 @@ describe('useDatabases', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('localStorage indisponível')
     })
-    vi.spyOn(global, 'fetch').mockResolvedValue({ ok: true } as Response)
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true } as Response)
 
     const { result } = renderHook(() => useDatabases())
     await waitFor(() => expect(result.current.loading).toBe(false))

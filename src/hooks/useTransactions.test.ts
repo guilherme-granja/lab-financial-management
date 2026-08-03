@@ -1,13 +1,13 @@
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { useTransactions } from './useTransactions'
-import type { TransactionPayload } from './useTransactions'
-import { mockSupabaseResult, mockLike, mockGte, mockLte, mockFrom, mockNeq } from '@/test/mocks/supabase'
+import type { TransactionPayload, TransactionFilters } from './useTransactions'
+import { mockSupabaseResult, mockLike, mockGte, mockLte, mockNeq } from '@/test/mocks/supabase'
 
 vi.mock('@/hooks/useDatabase', () => import('@/test/mocks/supabase'))
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 'user-1' } }) }))
 
-const DEFAULT_FILTERS = {
+const DEFAULT_FILTERS: TransactionFilters = {
   period: '2026-06',
   periodType: 'monthly' as const,
   type: 'all' as const,
@@ -131,9 +131,9 @@ describe('useTransactions', () => {
       recurrence: 'none',
       installments: null,
       paid: true,
-      paid_at: '2026-06-15',
       paid_amount: 100,
       budget_bucket: null,
+      apply_budget: false,
     }
     await expect(result.current.createTransaction(payload)).resolves.toBeUndefined()
   })
@@ -153,9 +153,9 @@ describe('useTransactions', () => {
       recurrence: 'none',
       installments: null,
       paid: false,
-      paid_at: null,
       paid_amount: null,
       budget_bucket: null,
+      apply_budget: false,
     }
     await expect(result.current.createTransaction(payload)).rejects.toThrow('insert error')
   })
@@ -175,9 +175,9 @@ describe('useTransactions', () => {
       recurrence: 'installment',
       installments: 3,
       paid: false,
-      paid_at: null,
       paid_amount: null,
       budget_bucket: null,
+      apply_budget: false,
     }
     await expect(result.current.createTransaction(payload)).resolves.toBeUndefined()
   })
@@ -197,9 +197,9 @@ describe('useTransactions', () => {
       recurrence: 'fixed',
       installments: null,
       paid: false,
-      paid_at: null,
       paid_amount: null,
       budget_bucket: null,
+      apply_budget: false,
     }
     await expect(result.current.createTransaction(payload)).resolves.toBeUndefined()
   })
@@ -227,7 +227,7 @@ describe('useTransactions', () => {
     const { result } = renderHook(() => useTransactions(DEFAULT_FILTERS))
     await waitFor(() => expect(result.current.loading).toBe(false))
     await expect(
-      result.current.updateTransactionPayment('tx-1', '2026-06-15', 100)
+      result.current.updateTransactionPayment('tx-1', 100)
     ).resolves.toBeUndefined()
   })
 
