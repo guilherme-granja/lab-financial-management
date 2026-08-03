@@ -144,3 +144,14 @@ export interface BudgetSummary {
   unflaggedIncomeCount: number
   unflaggedIncomeAmount: number
 }
+
+export interface BlogPost {
+  id: string
+  slug: string
+  title: string
+  excerpt: string
+  content: string
+  related_screen: string | null
+  published_at: string
+  created_at: string
+}
